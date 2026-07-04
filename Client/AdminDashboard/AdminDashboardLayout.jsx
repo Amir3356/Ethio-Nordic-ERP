@@ -5,7 +5,7 @@ import {
   Search, Bell, User, Settings, ChevronDown, LogOut
 } from 'lucide-react';
 import UserAccessManagementSidebar from './UserAccessManagementSidebar';
-import './AdminLayout.css';
+import './AdminDashboardLayout.css';
 
 const routeTitles = {
   '/users': 'User Management',

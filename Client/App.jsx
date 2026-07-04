@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Layout from './AdminDashboard/AdminLayout';
+import Layout from './AdminDashboard/AdminDashboardLayout';
 import Login from './auth/Login';
 import Logout from './auth/Logout';
 import UserManagement from './AdminDashboard/User';
