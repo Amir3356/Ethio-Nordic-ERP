@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { userService, roleService } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { userService, roleService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Search, AlertTriangle, UserCircle, Pencil, Lock, Unlock, Key, Trash2 } from 'lucide-react';
-import './UserManagement.css';
+import './User.css';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -357,11 +357,6 @@ export default function UserManagement() {
       <div className="um-table-wrapper">
         {loading ? (
           <div className="um-loading">
-            <div className="um-spinner">
-              <div className="um-spinner-ring"></div>
-              <div className="um-spinner-ring"></div>
-              <div className="um-spinner-ring"></div>
-            </div>
             <p>Loading users...</p>
           </div>
         ) : error ? (

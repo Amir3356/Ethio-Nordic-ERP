@@ -142,26 +142,6 @@
   box-sizing: border-box;
 }
 
-.btn-force-logout-all {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #fff;
-  color: #dc2626;
-  border: 1px solid #fca5a5;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-force-logout-all:hover {
-  background: #fef2f2;
-  border-color: #f87171;
-}
-
 .session-table-wrapper {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -491,20 +471,6 @@
   justify-content: center;
   padding: 80px 40px;
   color: #6b7280;
-}
-
-.session-loading .spinner-small {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #6366f1;
-  border-radius: 50%;
-  animation: sessionSpin 0.8s linear infinite;
-  margin-bottom: 12px;
-}
-
-@keyframes sessionSpin {
-  to { transform: rotate(360deg); }
 }
 
 .session-empty {

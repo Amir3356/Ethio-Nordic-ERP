@@ -1,14 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import Layout from './components/Layout/Layout';
+import Layout from './AdminDashboard/AdminLayout';
 import Login from './auth/Login';
-import Dashboard from './components/Dashboard/Dashboard';
-import UserManagement from './components/UserManagement/UserManagement';
-import RoleManagement from './components/RoleManagement/RoleManagement';
-import LoginActivity from './components/LoginActivity/LoginActivity';
-import AuditTrail from './components/AuditTrail/AuditTrail';
-import SessionManagement from './components/SessionManagement/SessionManagement';
+import Logout from './auth/Logout';
+import UserManagement from './AdminDashboard/User';
+import RoleManagement from './AdminDashboard/RoleManagement';
+import LoginActivity from './AdminDashboard/LoginActivity';
+import AuditTrail from './AdminDashboard/AuditTrail';
+import SessionManagement from './AdminDashboard/SessionManagement';
 
 function App() {
   return (
@@ -16,58 +15,16 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route
-              path="users"
-              element={
-                <ProtectedRoute permission="users.view">
-                  <UserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="roles"
-              element={
-                <ProtectedRoute permission="roles.view">
-                  <RoleManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="login-activity"
-              element={
-                <ProtectedRoute permission="login-activity.view">
-                  <LoginActivity />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="audit-logs"
-              element={
-                <ProtectedRoute permission="audit-logs.view">
-                  <AuditTrail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="sessions"
-              element={
-                <ProtectedRoute permission="sessions.view">
-                  <SessionManagement />
-                </ProtectedRoute>
-              }
-            />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Navigate to="/users" replace />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="roles" element={<RoleManagement />} />
+            <Route path="login-activity" element={<LoginActivity />} />
+            <Route path="audit-logs" element={<AuditTrail />} />
+            <Route path="sessions" element={<SessionManagement />} />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/users" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

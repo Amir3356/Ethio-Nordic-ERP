@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { loginActivityService, userService } from '../../services/api';
+import { loginActivityService, userService } from '../services/api';
 import { Download, BarChart2, CheckCircle, XCircle, Users, ClipboardList, Monitor, Smartphone, Tablet } from 'lucide-react';
 import './LoginActivity.css';
 
@@ -259,7 +259,6 @@ export default function LoginActivity() {
       <div className="la-table-wrap">
         {loading ? (
           <div className="la-loading">
-            <div className="la-spinner" />
             <p>Loading activity...</p>
           </div>
         ) : activities.length === 0 ? (
@@ -381,7 +380,6 @@ export default function LoginActivity() {
             <div className="la-modal-body">
               {detailLoading ? (
                 <div className="la-loading">
-                  <div className="la-spinner" />
                   <p>Loading history...</p>
                 </div>
               ) : detailActivities.length === 0 ? (

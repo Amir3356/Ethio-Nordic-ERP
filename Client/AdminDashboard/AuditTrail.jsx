@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { auditLogService } from '../../services/api';
+import { auditLogService } from '../services/api';
 import { ClipboardList, Clock, AlertTriangle, X } from 'lucide-react';
 import './AuditTrail.css';
 
@@ -269,7 +269,6 @@ export default function AuditTrail() {
       <div className="audit-trail-table-wrapper">
         {loading ? (
           <div className="audit-trail-loading">
-            <div className="spinner-small"></div>
             Loading audit logs...
           </div>
         ) : logs.length === 0 ? (
@@ -487,7 +486,6 @@ function EntityHistoryModal({ title, entries, loading, onClose }) {
         <div className="entity-history-modal-body">
           {loading ? (
             <div className="audit-trail-loading">
-              <div className="spinner-small"></div>
               Loading entity history...
             </div>
           ) : entries.length === 0 ? (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { sessionService } from '../../services/api';
+import { sessionService } from '../services/api';
 import { Monitor, Smartphone, Tablet, Users, AlertTriangle, X, XCircle, LogOut } from 'lucide-react';
 import './SessionManagement.css';
 
@@ -247,7 +247,6 @@ export default function SessionManagement() {
       <div className="session-table-wrapper">
         {loading ? (
           <div className="session-loading">
-            <div className="spinner-small"></div>
             Loading sessions...
           </div>
         ) : sessions.length === 0 ? (

@@ -119,20 +119,6 @@
   color: #6b7280;
 }
 
-.rm-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #4f46e5;
-  border-radius: 50%;
-  animation: rm-spin 0.8s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes rm-spin {
-  to { transform: rotate(360deg); }
-}
-
 .rm-empty {
   text-align: center;
   padding: 80px 20px;

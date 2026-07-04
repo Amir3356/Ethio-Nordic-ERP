@@ -187,14 +187,7 @@ export default function Login() {
               className="login-btn"
               disabled={loading}
             >
-              {loading ? (
-                <span className="btn-loading">
-                  <span className="btn-spinner"></span>
-                  Signing in...
-                </span>
-              ) : (
-                'Sign In'
-              )}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
         ) : (
@@ -234,14 +227,7 @@ export default function Login() {
               className="login-btn"
               disabled={twoFactorLoading}
             >
-              {twoFactorLoading ? (
-                <span className="btn-loading">
-                  <span className="btn-spinner"></span>
-                  Verifying...
-                </span>
-              ) : (
-                'Verify Code'
-              )}
+              {twoFactorLoading ? 'Verifying...' : 'Verify Code'}
             </button>
 
             <button

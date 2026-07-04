@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { roleService, permissionService } from '../../services/api';
+import { roleService, permissionService } from '../services/api';
 import { Shield, Key, User, Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import UserAccessManagementSidebar from './UserAccessManagementSidebar';
 import './RoleManagement.css';
 
 const MODULES = ['users', 'roles', 'login-activity', 'sessions', 'audit-logs', 'dashboard'];
@@ -188,7 +189,6 @@ export default function RoleManagement() {
         <div className="rm-content">
           {loading ? (
             <div className="rm-loading">
-              <div className="rm-spinner" />
               <p>Loading roles...</p>
             </div>
           ) : roles.length === 0 ? (
@@ -243,7 +243,6 @@ export default function RoleManagement() {
         <div className="rm-content">
           {loading ? (
             <div className="rm-loading">
-              <div className="rm-spinner" />
               <p>Loading permissions...</p>
             </div>
           ) : (
