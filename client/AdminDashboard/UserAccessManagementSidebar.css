@@ -1,26 +1,32 @@
 .uam-layout {
   display: flex;
   min-height: 100vh;
+  background: #f9fafb;
 }
 
 .uam-sidebar {
   width: 260px;
-  background: var(--bg);
-  border-right: 1px solid var(--border);
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
 }
 
 .uam-sidebar-header {
   padding: 24px 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .uam-sidebar-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-h);
+  color: #111827;
   margin: 0;
 }
 
@@ -39,38 +45,64 @@
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: var(--text);
+  color: #6b7280;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
   width: 100%;
-  font-family: var(--sans);
+  font-family: inherit;
 }
 
 .uam-nav-item:hover {
-  background: var(--code-bg);
-  color: var(--text-h);
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .uam-nav-item--active {
-  background: var(--accent-bg);
-  color: var(--accent);
+  background: #eef2ff;
+  color: #4f46e5;
 }
 
 .uam-nav-item--active:hover {
-  background: var(--accent-bg);
+  background: #e0e7ff;
 }
 
 .uam-nav-arrow {
   margin-left: auto;
 }
 
+.uam-main {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.uam-header {
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  height: 64px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.uam-header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
 .uam-content {
   flex: 1;
-  overflow-y: auto;
-  min-width: 0;
+  padding: 24px 32px;
 }
 
 @media (max-width: 768px) {
@@ -79,9 +111,10 @@
   }
 
   .uam-sidebar {
+    position: relative;
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid #e5e7eb;
   }
 
   .uam-nav {
@@ -99,5 +132,9 @@
 
   .uam-nav-arrow {
     display: none;
+  }
+
+  .uam-main {
+    margin-left: 0;
   }
 }

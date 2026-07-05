@@ -8,15 +8,17 @@ import SessionManagement from './SessionManagement';
 import './UserAccessManagementSidebar.css';
 
 const TABS = [
-  { id: 'users', label: 'User Management', icon: Users },
-  { id: 'roles', label: 'Roles & Permissions', icon: Shield },
-  { id: 'sessions', label: 'Sessions', icon: Monitor },
-  { id: 'login-activity', label: 'Login Activity', icon: Activity },
-  { id: 'audit', label: 'Audit Trail', icon: ClipboardList },
+  { id: 'users', label: 'User Management', icon: Users, title: 'User Management' },
+  { id: 'roles', label: 'Roles & Permissions', icon: Shield, title: 'Roles & Permissions' },
+  { id: 'sessions', label: 'Sessions', icon: Monitor, title: 'Session Management' },
+  { id: 'login-activity', label: 'Login Activity', icon: Activity, title: 'Login Activity' },
+  { id: 'audit', label: 'Audit Trail', icon: ClipboardList, title: 'Audit Trail' },
 ];
 
 export default function UserAccessManagementSidebar() {
   const [activeTab, setActiveTab] = useState('users');
+
+  const activeTabData = TABS.find((t) => t.id === activeTab) || TABS[0];
 
   const renderContent = () => {
     switch (activeTab) {
@@ -59,8 +61,13 @@ export default function UserAccessManagementSidebar() {
           })}
         </nav>
       </aside>
-      <main className="uam-content">
-        {renderContent()}
+      <main className="uam-main">
+        <header className="uam-header">
+          <h1 className="uam-header-title">{activeTabData.title}</h1>
+        </header>
+        <div className="uam-content">
+          {renderContent()}
+        </div>
       </main>
     </div>
   );
