@@ -104,6 +104,46 @@
   border-bottom: 1px solid #f3f4f6;
 }
 
+.user-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.user-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.user-action-edit {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #dbeafe;
+}
+
+.user-action-edit:hover {
+  background: #dbeafe;
+}
+
+.user-action-delete {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fee2e2;
+}
+
+.user-action-delete:hover {
+  background: #fee2e2;
+}
+
 .user-table .user-email {
   color: #6b7280;
 }

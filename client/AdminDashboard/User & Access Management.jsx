@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ShieldCheck, Search, Users, Mail, BadgeCheck, CircleX, CircleCheck } from 'lucide-react';
+import { ShieldCheck, Search, CircleX, CircleCheck } from 'lucide-react';
 import './User & Access Management.css';
 
 export default function UserAccessManagement() {
@@ -19,6 +19,36 @@ export default function UserAccessManagement() {
     String(u.name).toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleEditUser = (user) => {
+    const nextName = window.prompt('Edit user name', user.name);
+
+    if (nextName === null) {
+      return;
+    }
+
+    const trimmedName = nextName.trim();
+
+    if (!trimmedName) {
+      return;
+    }
+
+    setUsers((currentUsers) =>
+      currentUsers.map((currentUser) =>
+        currentUser.id === user.id ? { ...currentUser, name: trimmedName } : currentUser
+      )
+    );
+  };
+
+  const handleDeleteUser = (user) => {
+    const shouldDelete = window.confirm(`Delete ${user.name}?`);
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setUsers((currentUsers) => currentUsers.filter((currentUser) => currentUser.id !== user.id));
+  };
 
   return (
     <div className="user-layout">
@@ -48,11 +78,12 @@ export default function UserAccessManagement() {
             <table className="user-table">
               <thead>
                 <tr>
-                  <th><span className="user-th"><Users size={14} /> Full Name</span></th>
-                  <th><span className="user-th"><Mail size={14} /> Email</span></th>
-                  <th><span className="user-th"><BadgeCheck size={14} /> Department</span></th>
-                  <th><span className="user-th"><ShieldCheck size={14} /> Role</span></th>
-                  <th><span className="user-th"><BadgeCheck size={14} /> Status</span></th>
+                  <th><span className="user-th">Full Name</span></th>
+                  <th><span className="user-th">Email</span></th>
+                  <th><span className="user-th">Department</span></th>
+                  <th><span className="user-th">Role</span></th>
+                  <th><span className="user-th">Status</span></th>
+                  <th><span className="user-th">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -67,6 +98,24 @@ export default function UserAccessManagement() {
                         {u.status === 'Active' ? <CircleCheck size={14} /> : <CircleX size={14} />}
                         <span>{u.status}</span>
                       </span>
+                    </td>
+                    <td>
+                      <div className="user-actions">
+                        <button
+                          type="button"
+                          className="user-action-btn user-action-edit"
+                          onClick={() => handleEditUser(u)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="user-action-btn user-action-delete"
+                          onClick={() => handleDeleteUser(u)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
