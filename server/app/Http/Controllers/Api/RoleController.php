@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
 use App\Models\Role;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,19 +36,6 @@ class RoleController extends Controller
 
         $role->permissions()->sync($request->permission_ids);
 
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'user_name' => $request->user()->name,
-            'action' => 'created',
-            'module' => 'role_management',
-            'entity_type' => Role::class,
-            'entity_id' => $role->id,
-            'new_values' => $role->toArray(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'description' => "Created role {$role->name}",
-        ]);
-
         return $this->successResponse(
             $role->load('permissions'),
             'Role created successfully.',
@@ -80,24 +66,8 @@ class RoleController extends Controller
             'permission_ids.*' => 'exists:permissions,id',
         ]);
 
-        $oldValues = $role->toArray();
-
         $role->update($request->only(['name', 'slug', 'description']));
         $role->permissions()->sync($request->permission_ids);
-
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'user_name' => $request->user()->name,
-            'action' => 'updated',
-            'module' => 'role_management',
-            'entity_type' => Role::class,
-            'entity_id' => $role->id,
-            'old_values' => $oldValues,
-            'new_values' => $role->fresh()->toArray(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'description' => "Updated role {$role->name}",
-        ]);
 
         return $this->successResponse(
             $role->fresh()->load('permissions'),
@@ -116,19 +86,6 @@ class RoleController extends Controller
         if ($role->users()->count() > 0) {
             return $this->errorResponse('Cannot delete a role with assigned users. Reassign users first.', 422);
         }
-
-        AuditLog::create([
-            'user_id' => request()->user()->id,
-            'user_name' => request()->user()->name,
-            'action' => 'deleted',
-            'module' => 'role_management',
-            'entity_type' => Role::class,
-            'entity_id' => $role->id,
-            'old_values' => $role->toArray(),
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'description' => "Deleted role {$role->name}",
-        ]);
 
         $role->permissions()->detach();
         $role->delete();

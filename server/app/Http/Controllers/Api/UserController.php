@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -62,19 +61,6 @@ class UserController extends Controller
 
         $user->roles()->sync($request->role_ids);
 
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'user_name' => $request->user()->full_name,
-            'action' => 'created',
-            'module' => 'user_management',
-            'entity_type' => User::class,
-            'entity_id' => $user->id,
-            'new_values' => $user->toArray(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'description' => "Created user {$user->full_name}",
-        ]);
-
         return $this->successResponse([
             'user' => $user->load('roles'),
             'temp_password' => $tempPassword,
@@ -100,27 +86,11 @@ class UserController extends Controller
             'role_ids.*' => 'exists:roles,id',
         ]);
 
-        $oldValues = $user->toArray();
-
         $user->update($request->only(['full_name', 'email', 'department']));
 
         if ($request->has('role_ids')) {
             $user->roles()->sync($request->role_ids);
         }
-
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'user_name' => $request->user()->full_name,
-            'action' => 'updated',
-            'module' => 'user_management',
-            'entity_type' => User::class,
-            'entity_id' => $user->id,
-            'old_values' => $oldValues,
-            'new_values' => $user->fresh()->toArray(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'description' => "Updated user {$user->full_name}",
-        ]);
 
         return $this->successResponse($user->fresh()->load('roles'), 'User updated successfully.');
     }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
 use App\Models\LoginActivity;
 use App\Models\Role;
 use App\Models\User;
@@ -21,11 +20,6 @@ class DashboardController extends Controller
         $recentLogins = LoginActivity::with('user')
             ->where('status', 'success')
             ->orderBy('login_at', 'desc')
-            ->limit(5)
-            ->get();
-
-        $recentAuditLogs = AuditLog::with('user')
-            ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
@@ -49,7 +43,6 @@ class DashboardController extends Controller
             'online_users_count' => $onlineUsersCount,
             'failed_logins_24h' => $failedLogins24h,
             'recent_logins' => $recentLogins,
-            'recent_audit_logs' => $recentAuditLogs,
         ]);
     }
 }

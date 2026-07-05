@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { ShieldCheck, Search, CircleX, CircleCheck, X } from 'lucide-react';
+import { ShieldCheck, Search, CircleX, CircleCheck, X, AlertTriangle, Clock, ShieldAlert, CheckCircle } from 'lucide-react';
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import './User & Access Management.css';
+import './UserAccessManagement.css';
 
-export default function UserAccessManagement() {
+export default function UserAccessManagement({ compact = false } = {}) {
   const [users, setUsers] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [sessionConfig, setSessionConfig] = useState({
@@ -14,9 +14,9 @@ export default function UserAccessManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [sessionLoading, setSessionLoading] = useState(true);
-  const [auditLogs, setAuditLogs] = useState([]);
-  const [auditLoading, setAuditLoading] = useState(true);
   const [showNewUserForm, setShowNewUserForm] = useState(false);
+  const [periodicData, setPeriodicData] = useState(null);
+  const [periodicLoading, setPeriodicLoading] = useState(true);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -46,15 +46,14 @@ export default function UserAccessManagement() {
   }, []);
 
   useEffect(() => {
-    axios.get('/Audit.json')
-      .then((res) => setAuditLogs(Array.isArray(res.data?.auditLogs) ? res.data.auditLogs : []))
-      .catch((err) => console.error('Failed to load audit logs:', err))
-      .finally(() => setAuditLoading(false));
+    axios.get('/Periodic.json')
+      .then((res) => setPeriodicData(res.data || null))
+      .catch((err) => console.error('Failed to load periodic review data:', err))
+      .finally(() => setPeriodicLoading(false));
   }, []);
 
   const safeUsers = Array.isArray(users) ? users : [];
   const safeSessions = Array.isArray(sessions) ? sessions : [];
-  const safeAuditLogs = Array.isArray(auditLogs) ? auditLogs : [];
   const safeSessionConfig = sessionConfig || {
     idleTimeoutMinutes: 15,
     refreshTokenRotation: true,
@@ -67,17 +66,9 @@ export default function UserAccessManagement() {
 
   function handleEditUser(user) {
     const nextName = window.prompt('Edit user name', user.name);
-
-    if (nextName === null) {
-      return;
-    }
-
+    if (nextName === null) return;
     const trimmedName = nextName.trim();
-
-    if (!trimmedName) {
-      return;
-    }
-
+    if (!trimmedName) return;
     setUsers((currentUsers) =>
       currentUsers.map((currentUser) =>
         currentUser.id === user.id ? { ...currentUser, name: trimmedName } : currentUser
@@ -87,21 +78,13 @@ export default function UserAccessManagement() {
 
   function handleDeleteUser(user) {
     const shouldDelete = window.confirm(`Delete ${user.name}?`);
-
-    if (!shouldDelete) {
-      return;
-    }
-
+    if (!shouldDelete) return;
     setUsers((currentUsers) => currentUsers.filter((currentUser) => currentUser.id !== user.id));
   }
 
   function handleTerminateSession(session) {
     const shouldTerminate = window.confirm(`Terminate session for ${session.user}?`);
-
-    if (!shouldTerminate) {
-      return;
-    }
-
+    if (!shouldTerminate) return;
     setSessions((currentSessions) =>
       currentSessions.map((currentSession) =>
         currentSession.id === session.id
@@ -136,7 +119,6 @@ export default function UserAccessManagement() {
       header: 'Status',
       cell: (info) => {
         const status = info.getValue();
-
         return (
           <span className={status === 'Active' ? 'user-status-active' : 'user-status-inactive'}>
             {status === 'Active' ? <CircleCheck size={14} /> : <CircleX size={14} />}
@@ -150,18 +132,10 @@ export default function UserAccessManagement() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="user-actions">
-          <button
-            type="button"
-            className="user-action-btn user-action-edit"
-            onClick={() => handleEditUser(row.original)}
-          >
+          <button type="button" className="user-action-btn user-action-edit" onClick={() => handleEditUser(row.original)}>
             Edit
           </button>
-          <button
-            type="button"
-            className="user-action-btn user-action-delete"
-            onClick={() => handleDeleteUser(row.original)}
-          >
+          <button type="button" className="user-action-btn user-action-delete" onClick={() => handleDeleteUser(row.original)}>
             Delete
           </button>
         </div>
@@ -195,7 +169,6 @@ export default function UserAccessManagement() {
       header: 'Session Status',
       cell: (info) => {
         const status = info.getValue();
-
         return (
           <span className={status === 'Active' ? 'session-status-active' : 'session-status-idle'}>
             {status}
@@ -226,58 +199,6 @@ export default function UserAccessManagement() {
     },
   ], []);
 
-  const auditColumns = useMemo(() => [
-    {
-      accessorKey: 'user',
-      header: 'User',
-      cell: (info) => String(info.getValue()),
-    },
-    {
-      accessorKey: 'action',
-      header: 'Action',
-      cell: (info) => {
-        const action = info.getValue();
-        const actionClass = {
-          'Created': 'audit-action-created',
-          'Updated': 'audit-action-updated',
-          'Deleted': 'audit-action-deleted',
-          'Approved': 'audit-action-approved',
-        };
-        return (
-          <span className={actionClass[action] || 'audit-action-default'}>
-            {action}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: 'module',
-      header: 'Module',
-    },
-    {
-      accessorKey: 'entity',
-      header: 'Entity',
-    },
-    {
-      accessorKey: 'entityId',
-      header: 'Entity ID',
-    },
-    {
-      accessorKey: 'timestamp',
-      header: 'Timestamp',
-    },
-    {
-      accessorKey: 'beforeSnapshot',
-      header: 'Before',
-      cell: (info) => info.getValue() || '—',
-    },
-    {
-      accessorKey: 'afterSnapshot',
-      header: 'After',
-      cell: (info) => info.getValue() || '—',
-    },
-  ], []);
-
   const table = useReactTable({
     data: filteredUsers,
     columns,
@@ -290,28 +211,15 @@ export default function UserAccessManagement() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const auditTable = useReactTable({
-    data: safeAuditLogs,
-    columns: auditColumns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   const handleNewUserChange = (field, value) => {
-    setNewUser((currentUser) => ({
-      ...currentUser,
-      [field]: value,
-    }));
+    setNewUser((currentUser) => ({ ...currentUser, [field]: value }));
   };
 
   const handleCreateUser = (event) => {
     event.preventDefault();
-
     const trimmedName = newUser.name.trim();
     const trimmedEmail = newUser.email.trim();
-
-    if (!trimmedName || !trimmedEmail) {
-      return;
-    }
+    if (!trimmedName || !trimmedEmail) return;
 
     const nextUser = {
       id: Date.now(),
@@ -323,26 +231,32 @@ export default function UserAccessManagement() {
     };
 
     setUsers((currentUsers) => [nextUser, ...currentUsers]);
-    setNewUser({
-      name: '',
-      email: '',
-      department: '',
-      role: 'Viewer',
-      status: 'Active',
-    });
+    setNewUser({ name: '', email: '', department: '', role: 'Viewer', status: 'Active' });
     setShowNewUserForm(false);
   };
 
   return (
-    <div className="user-layout">
-      <aside className="user-sidebar">
-        <a href="/users" onClick={(e) => e.preventDefault()} className="user-sidebar-link">
-          <ShieldCheck size={16} />
-          User & Access Management
-        </a>
-      </aside>
+    <div className={compact ? 'user-embedded-panel' : 'user-layout'}>
+      {!compact ? (
+        <aside className="user-sidebar">
+          <a href="/users" onClick={(e) => e.preventDefault()} className="user-sidebar-link">
+            <ShieldCheck size={16} />
+            User & Access Management
+          </a>
+        </aside>
+      ) : null}
 
-      <main className="user-main">
+      <main className={compact ? 'user-main user-main-embedded' : 'user-main'}>
+        {compact ? (
+          <div className="user-title-row user-title-row-compact">
+            <ShieldCheck size={18} className="user-title-icon" />
+            <div>
+              <p className="user-compact-eyebrow">Security Operations</p>
+              <h2 className="user-title">User & Access Management</h2>
+            </div>
+          </div>
+        ) : null}
+
         <div className="user-search-wrap">
           <Search size={16} className="user-search-icon" />
           <input
@@ -355,28 +269,19 @@ export default function UserAccessManagement() {
         </div>
 
         <div className="user-toolbar">
-          <button
-            type="button"
-            className="user-new-btn"
-            onClick={() => setShowNewUserForm(true)}
-          >
+          <button type="button" className="user-new-btn" onClick={() => setShowNewUserForm(true)}>
             + New User
           </button>
         </div>
 
         {showNewUserForm && (
           <div className="user-modal-backdrop" onClick={() => setShowNewUserForm(false)}>
-            <form className="user-modal" onSubmit={handleCreateUser} onClick={(event) => event.stopPropagation()}>
+            <form className="user-modal" onSubmit={handleCreateUser} onClick={(e) => e.stopPropagation()}>
               <div className="user-modal-header">
                 <div>
                   <h2 className="user-modal-title">New User</h2>
                 </div>
-                <button
-                  type="button"
-                  className="user-modal-close"
-                  onClick={() => setShowNewUserForm(false)}
-                  aria-label="Close modal"
-                >
+                <button type="button" className="user-modal-close" onClick={() => setShowNewUserForm(false)} aria-label="Close modal">
                   <X size={22} />
                 </button>
               </div>
@@ -384,52 +289,27 @@ export default function UserAccessManagement() {
               <div className="user-form-grid">
                 <label className="user-form-field">
                   <span>Full Name</span>
-                  <input
-                    type="text"
-                    value={newUser.name}
-                    onChange={(event) => handleNewUserChange('name', event.target.value)}
-                    placeholder="Enter full name"
-                  />
+                  <input type="text" value={newUser.name} onChange={(e) => handleNewUserChange('name', e.target.value)} placeholder="Enter full name" />
                 </label>
-
                 <label className="user-form-field">
                   <span>Email</span>
-                  <input
-                    type="email"
-                    value={newUser.email}
-                    onChange={(event) => handleNewUserChange('email', event.target.value)}
-                    placeholder="Enter email address"
-                  />
+                  <input type="email" value={newUser.email} onChange={(e) => handleNewUserChange('email', e.target.value)} placeholder="Enter email address" />
                 </label>
-
                 <label className="user-form-field">
                   <span>Department</span>
-                  <input
-                    type="text"
-                    value={newUser.department}
-                    onChange={(event) => handleNewUserChange('department', event.target.value)}
-                    placeholder="Enter department"
-                  />
+                  <input type="text" value={newUser.department} onChange={(e) => handleNewUserChange('department', e.target.value)} placeholder="Enter department" />
                 </label>
-
                 <label className="user-form-field">
                   <span>Role</span>
-                  <select
-                    value={newUser.role}
-                    onChange={(event) => handleNewUserChange('role', event.target.value)}
-                  >
+                  <select value={newUser.role} onChange={(e) => handleNewUserChange('role', e.target.value)}>
                     <option value="Admin">Admin</option>
                     <option value="Editor">Editor</option>
                     <option value="Viewer">Viewer</option>
                   </select>
                 </label>
-
                 <label className="user-form-field">
                   <span>Status</span>
-                  <select
-                    value={newUser.status}
-                    onChange={(event) => handleNewUserChange('status', event.target.value)}
-                  >
+                  <select value={newUser.status} onChange={(e) => handleNewUserChange('status', e.target.value)}>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
@@ -459,9 +339,7 @@ export default function UserAccessManagement() {
                     {headerGroup.headers.map((header) => (
                       <th key={header.id}>
                         <span className="user-th">
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </span>
                       </th>
                     ))}
@@ -488,7 +366,6 @@ export default function UserAccessManagement() {
             <div>
               <h2 className="session-title">Session Monitoring & Management</h2>
             </div>
-
             <div className="session-summary">
               <div className="session-summary-card">
                 <span className="session-summary-label">Idle timeout</span>
@@ -512,9 +389,7 @@ export default function UserAccessManagement() {
                       {headerGroup.headers.map((header) => (
                         <th key={header.id}>
                           <span className="user-th">
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(header.column.columnDef.header, header.getContext())}
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                           </span>
                         </th>
                       ))}
@@ -537,50 +412,137 @@ export default function UserAccessManagement() {
           )}
         </section>
 
-        <section className="audit-section">
-          <div className="audit-header">
-            <h2 className="audit-title">Audit Trail Logging</h2>
-            <p className="audit-description">
-              Every create, update, approve, or delete action across all 27 ERP modules is intercepted
-              by a system-wide audit observer, which records the acting user, timestamp, the module/entity
-              affected, and a before/after snapshot of the changed data. Audit records are immutable and
-              cannot be edited or deleted, even by system administrators.
-            </p>
+        <section className="periodic-section">
+          <div className="periodic-header">
+            <div>
+              <h2 className="periodic-title">Periodic Access Review</h2>
+              <p className="periodic-description">
+                On a scheduled basis (quarterly), this report lists all users, their assigned roles,
+                and last login date — enabling management to identify dormant accounts or excessive
+                privilege accumulation ("privilege creep") for remediation.
+              </p>
+            </div>
           </div>
 
-          {auditLoading ? (
-            <p>Loading audit trail data...</p>
-          ) : (
-            <div className="audit-table-wrapper">
-              <table className="audit-table">
-                <thead>
-                  {auditTable.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <th key={header.id}>
-                          <span className="user-th">
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(header.column.columnDef.header, header.getContext())}
-                          </span>
-                        </th>
-                      ))}
+          {periodicLoading ? (
+            <p>Loading periodic access review data...</p>
+          ) : periodicData ? (
+            <>
+              <div className="periodic-meta-bar">
+                <span className="periodic-meta-item">Review Period: <strong>{periodicData.reviewMeta.period}</strong></span>
+                <span className="periodic-meta-item">Frequency: <strong>{periodicData.reviewMeta.frequency}</strong></span>
+                <span className="periodic-meta-item">Generated: <strong>{periodicData.reviewMeta.generatedAt.slice(0, 10)}</strong></span>
+                <span className="periodic-meta-item">Next Review: <strong>{periodicData.reviewMeta.nextReviewDate.slice(0, 10)}</strong></span>
+              </div>
+
+              <div className="periodic-summary">
+                <div className="periodic-summary-card">
+                  <span className="periodic-summary-icon periodic-icon-total"><ShieldCheck size={18} /></span>
+                  <div>
+                    <span className="periodic-summary-label">Total Users</span>
+                    <strong>{periodicData.summary.totalUsers}</strong>
+                  </div>
+                </div>
+                <div className="periodic-summary-card">
+                  <span className="periodic-summary-icon periodic-icon-active"><CheckCircle size={18} /></span>
+                  <div>
+                    <span className="periodic-summary-label">Active Users</span>
+                    <strong>{periodicData.summary.activeUsers}</strong>
+                  </div>
+                </div>
+                <div className="periodic-summary-card">
+                  <span className="periodic-summary-icon periodic-icon-dormant"><Clock size={18} /></span>
+                  <div>
+                    <span className="periodic-summary-label">Dormant Accounts</span>
+                    <strong>{periodicData.summary.dormantAccounts}</strong>
+                  </div>
+                </div>
+                <div className="periodic-summary-card">
+                  <span className="periodic-summary-icon periodic-icon-creep"><AlertTriangle size={18} /></span>
+                  <div>
+                    <span className="periodic-summary-label">Privilege Creep</span>
+                    <strong>{periodicData.summary.privilegeCreepFlags}</strong>
+                  </div>
+                </div>
+                <div className="periodic-summary-card">
+                  <span className="periodic-summary-icon periodic-icon-review"><ShieldAlert size={18} /></span>
+                  <div>
+                    <span className="periodic-summary-label">Roles to Review</span>
+                    <strong>{periodicData.summary.rolesNeedingReview}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="periodic-table-wrapper">
+                <table className="periodic-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Department</th>
+                      <th>Role</th>
+                      <th>Permissions</th>
+                      <th>Last Login</th>
+                      <th>Days Since Login</th>
+                      <th>Risk Level</th>
+                      <th>Flags</th>
+                      <th>Review Status</th>
                     </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {auditTable.getRowModel().rows.map((row) => (
-                    <tr key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </thead>
+                  <tbody>
+                    {periodicData.reviews.map((review) => (
+                      <tr key={review.id}>
+                        <td>
+                          <div className="periodic-user-cell">
+                            <strong>{review.name}</strong>
+                            <span className="periodic-user-email">{review.email}</span>
+                          </div>
                         </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <td>{review.department}</td>
+                        <td><span className="periodic-role-badge">{review.role}</span></td>
+                        <td>
+                          <div className="periodic-permissions">
+                            {review.permissions.map((perm) => (
+                              <span key={perm} className="periodic-perm-tag">{perm}</span>
+                            ))}
+                          </div>
+                        </td>
+                        <td>{review.lastLoginDisplay}</td>
+                        <td>
+                          <span className={review.daysSinceLastLogin > 90 ? 'periodic-days dormant' : review.daysSinceLastLogin > 30 ? 'periodic-days warning' : 'periodic-days'}>
+                            {review.daysSinceLastLogin} days
+                          </span>
+                        </td>
+                        <td>
+                          <span className={review.riskLevel === 'High' ? 'periodic-risk high' : review.riskLevel === 'Medium' ? 'periodic-risk medium' : review.riskLevel === 'Low' ? 'periodic-risk low' : 'periodic-risk none'}>
+                            {review.riskLevel}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="periodic-flags">
+                            {review.flags.length > 0 ? (
+                              review.flags.map((flag) => (
+                                <span key={flag} className={flag === 'Dormant Account' ? 'periodic-flag dormant' : flag === 'Privilege Creep' ? 'periodic-flag creep' : 'periodic-flag other'}>
+                                  {flag}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="periodic-flag none">—</span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <span className={review.reviewStatus === 'Approved' ? 'periodic-review-status approved' : review.reviewStatus === 'Flagged for Remediation' ? 'periodic-review-status flagged' : 'periodic-review-status pending'}>
+                            {review.reviewStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <p>Failed to load periodic access review data.</p>
           )}
         </section>
       </main>
