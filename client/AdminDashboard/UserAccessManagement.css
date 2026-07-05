@@ -452,9 +452,10 @@
 .periodic-header {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   margin-bottom: 18px;
+  text-align: center;
 }
 
 .periodic-title {

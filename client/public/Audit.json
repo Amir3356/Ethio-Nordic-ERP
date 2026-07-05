@@ -1,0 +1,48 @@
+{
+  "auditLogs": [
+    {
+      "id": 1,
+      "user": "Amir Siraj",
+      "action": "Created",
+      "module": "Inventory Management",
+      "entity": "Stock Item",
+      "entityId": "INV-001",
+      "timestamp": "2026-07-05 14:32:10",
+      "beforeSnapshot": null,
+      "afterSnapshot": "Added 500 units of Amoxicillin 500mg"
+    },
+    {
+      "id": 2,
+      "user": "Elham Siraj",
+      "action": "Updated",
+      "module": "Sales & CRM",
+      "entity": "Sales Order",
+      "entityId": "SO-1042",
+      "timestamp": "2026-07-05 13:18:45",
+      "beforeSnapshot": "Status: Pending",
+      "afterSnapshot": "Status: Approved"
+    },
+    {
+      "id": 3,
+      "user": "Hana Mohammed",
+      "action": "Approved",
+      "module": "HR & Payroll",
+      "entity": "Leave Request",
+      "entityId": "LR-0287",
+      "timestamp": "2026-07-05 11:05:33",
+      "beforeSnapshot": "Status: Pending Approval",
+      "afterSnapshot": "Status: Approved"
+    },
+    {
+      "id": 4,
+      "user": "Daniel Assefa",
+      "action": "Deleted",
+      "module": "Procurement",
+      "entity": "Purchase Request",
+      "entityId": "PR-0098",
+      "timestamp": "2026-07-04 16:42:19",
+      "beforeSnapshot": "Draft purchase request for Office Supplies",
+      "afterSnapshot": null
+    }
+  ]
+}
