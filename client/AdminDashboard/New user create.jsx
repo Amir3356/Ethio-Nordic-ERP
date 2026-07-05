@@ -695,10 +695,6 @@ export default function UserManagement() {
 
                 <div className="um-detail-grid">
                 <div className="um-detail-item">
-                  <span className="um-detail-label">Phone</span>
-                  <span className="um-detail-value">{detailUser.phone || '—'}</span>
-                </div>
-                <div className="um-detail-item">
                   <span className="um-detail-label">Status</span>
                   <span
                     className={`um-status-badge ${
