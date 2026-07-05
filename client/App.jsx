@@ -26,7 +26,7 @@ function App() {
             <Route path="users" element={<UserManagement openAddModal={openAddUser} onAddModalOpened={() => setOpenAddUser(false)} />} />
             <Route path="roles" element={<RoleManagement />} />
             <Route path="login-activity" element={<LoginActivity />} />
-            <Route path="audit-logs" element={<AuditTrail />} />
+            <Route path="audit-trail" element={<AuditTrail />} />
             <Route path="sessions" element={<SessionManagement />} />
           </Route>
           <Route path="*" element={<Navigate to="/users" replace />} />

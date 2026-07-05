@@ -11,19 +11,15 @@
 }
 
 .uam-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.uam-sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .uam-logo-icon {
   color: #818cf8;
-  flex-shrink: 0;
 }
 
 .uam-logo-text h1 {
@@ -40,7 +36,7 @@
 
 .uam-sidebar-nav {
   flex: 1;
-  padding: 12px;
+  padding: 16px 12px;
   overflow-y: auto;
 }
 
@@ -48,14 +44,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   transition: all 0.15s ease;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .uam-nav-item:hover {
@@ -68,18 +64,9 @@
   color: #818cf8;
 }
 
-.uam-nav-item--active:hover {
-  background: rgba(99, 102, 241, 0.2);
-}
-
-.uam-nav-icon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.uam-sidebar-actions {
-  padding: 0 12px 12px;
+.uam-sidebar-bottom {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .uam-add-user-btn {
@@ -88,7 +75,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 10px;
   background: #6366f1;
   border: none;
   border-radius: 8px;
@@ -96,17 +83,11 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  margin-bottom: 16px;
 }
 
 .uam-add-user-btn:hover {
   background: #4f46e5;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}
-
-.uam-sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .uam-user-info {
@@ -127,22 +108,17 @@
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  flex-shrink: 0;
 }
 
 .uam-user-details {
   display: flex;
   flex-direction: column;
-  min-width: 0;
 }
 
 .uam-user-name {
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .uam-user-role {
@@ -162,7 +138,6 @@
   color: rgba(255, 255, 255, 0.6);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .uam-logout-btn:hover {

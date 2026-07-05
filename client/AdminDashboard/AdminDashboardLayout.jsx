@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import UserAccessManagementSidebar from './UserAccessManagementSidebar';
 import './AdminDashboardLayout.css';
@@ -7,7 +6,7 @@ const routeTitles = {
   '/users': 'User Management',
   '/roles': 'Roles & Permissions',
   '/login-activity': 'Login Activity',
-  '/audit-logs': 'Audit Trail',
+  '/audit-trail': 'Audit Trail',
   '/sessions': 'Session Management',
 };
 
