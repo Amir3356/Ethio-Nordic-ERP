@@ -122,11 +122,18 @@ class AuthController extends Controller
             LoginActivity::where('user_id', $user->id)
                 ->whereNull('logout_at')
                 ->update(['logout_at' => now()]);
+
+            $user->currentAccessToken()->delete();
         }
 
         Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+
+        try {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } catch (\Exception $e) {
+            // Session may not exist for token-based auth
+        }
 
         return $this->successResponse(null, 'Logged out successfully.');
     }

@@ -1,95 +1,103 @@
+.uam-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
 .uam-sidebar {
   width: 260px;
-  height: 100vh;
-  background: #1a1f36;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 100;
+  flex-shrink: 0;
 }
 
 .uam-sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.uam-sidebar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.uam-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 4px;
+}
+
+.uam-nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.uam-logo-icon {
-  color: #818cf8;
-}
-
-.uam-logo-text h1 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.uam-logo-text span {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.uam-sidebar-bottom {
-  padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.uam-user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.uam-user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #6366f1;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.uam-user-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.uam-user-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.uam-user-role {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.uam-logout-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 8px;
   border: none;
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 13px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  width: 100%;
+  font-family: var(--sans);
 }
 
-.uam-logout-btn:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+.uam-nav-item:hover {
+  background: var(--code-bg);
+  color: var(--text-h);
+}
+
+.uam-nav-item--active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.uam-nav-item--active:hover {
+  background: var(--accent-bg);
+}
+
+.uam-nav-arrow {
+  margin-left: auto;
+}
+
+.uam-content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .uam-layout {
+    flex-direction: column;
+  }
+
+  .uam-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .uam-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .uam-nav-item {
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .uam-nav-arrow {
+    display: none;
+  }
 }

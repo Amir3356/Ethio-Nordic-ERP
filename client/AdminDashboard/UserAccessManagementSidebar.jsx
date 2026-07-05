@@ -1,53 +1,67 @@
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { LogOut, Zap } from 'lucide-react';
+import { useState } from 'react';
+import { Users, Shield, Activity, ClipboardList, Monitor, ChevronRight } from 'lucide-react';
+import UserManagement from './New user create';
+import RoleManagement from './Role & Permission Assignment';
+import LoginActivity from './LoginActivity';
+import AuditTrail from './AuditTrail';
+import SessionManagement from './SessionManagement';
 import './UserAccessManagementSidebar.css';
 
-function getUserInitials(name) {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
+const TABS = [
+  { id: 'users', label: 'User Management', icon: Users },
+  { id: 'roles', label: 'Roles & Permissions', icon: Shield },
+  { id: 'sessions', label: 'Sessions', icon: Monitor },
+  { id: 'login-activity', label: 'Login Activity', icon: Activity },
+  { id: 'audit', label: 'Audit Trail', icon: ClipboardList },
+];
 
 export default function UserAccessManagementSidebar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('users');
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'users':
+        return <UserManagement />;
+      case 'roles':
+        return <RoleManagement />;
+      case 'sessions':
+        return <SessionManagement />;
+      case 'login-activity':
+        return <LoginActivity />;
+      case 'audit':
+        return <AuditTrail />;
+      default:
+        return <UserManagement />;
+    }
   };
 
   return (
-    <aside className="uam-sidebar">
-      <div className="uam-sidebar-header">
-        <Zap className="uam-logo-icon" size={24} />
-        <div className="uam-logo-text">
-          <h1>Ethio Nordic ERP</h1>
-          <span>User & Access Management</span>
+    <div className="uam-layout">
+      <aside className="uam-sidebar">
+        <div className="uam-sidebar-header">
+          <h2 className="uam-sidebar-title">Access Management</h2>
         </div>
-      </div>
-
-      <div className="uam-sidebar-bottom">
-        <div className="uam-user-info">
-          <div className="uam-user-avatar">
-            {getUserInitials(user?.full_name)}
-          </div>
-          <div className="uam-user-details">
-            <span className="uam-user-name">{user?.full_name || 'Guest'}</span>
-            <span className="uam-user-role">{user?.roles?.[0]?.name || 'No Role'}</span>
-          </div>
-        </div>
-
-        <button className="uam-logout-btn" onClick={handleLogout}>
-          <LogOut size={18} />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+        <nav className="uam-nav">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                className={`uam-nav-item ${isActive ? 'uam-nav-item--active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <Icon size={18} />
+                <span>{tab.label}</span>
+                {isActive && <ChevronRight size={16} className="uam-nav-arrow" />}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+      <main className="uam-content">
+        {renderContent()}
+      </main>
+    </div>
   );
 }
