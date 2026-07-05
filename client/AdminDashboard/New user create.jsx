@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { userService, roleService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Search, AlertTriangle, UserCircle, Pencil, Lock, Unlock, Key, Trash2, Copy, CheckCircle, Mail } from 'lucide-react';
-import './User.css';
+import './New user Create.css';
 
 const ITEMS_PER_PAGE = 10;
 
-export default function UserManagement({ openAddModal: openAddModalProp, onAddModalOpened }) {
+export default function UserManagement() {
   const { canPerform } = useAuth();
 
   const [users, setUsers] = useState([]);
@@ -36,7 +36,6 @@ export default function UserManagement({ openAddModal: openAddModalProp, onAddMo
     full_name: '',
     email: '',
     department: '',
-    phone: '',
     role_ids: [],
   });
   const [formErrors, setFormErrors] = useState({});
@@ -58,13 +57,6 @@ export default function UserManagement({ openAddModal: openAddModalProp, onAddMo
   useEffect(() => {
     fetchUsers();
   }, [search, filterRole, filterStatus, currentPage]);
-
-  useEffect(() => {
-    if (openAddModalProp) {
-      openAddModal();
-      onAddModalOpened();
-    }
-  }, [openAddModalProp]);
 
   const fetchMetaData = async () => {
     try {
@@ -143,19 +135,12 @@ export default function UserManagement({ openAddModal: openAddModalProp, onAddMo
     });
   };
 
-  const openAddModal = () => {
-    setFormData({ full_name: '', email: '', department: '', phone: '', role_ids: [] });
-    setFormErrors({});
-    setShowAddModal(true);
-  };
-
   const openEditModal = (user) => {
     setCurrentUser(user);
     setFormData({
       full_name: user.full_name || '',
       email: user.email || '',
       department: user.department || '',
-      phone: user.phone || '',
       role_ids: user.roles ? user.roles.map((r) => r.id) : [],
     });
     setFormErrors({});
@@ -295,12 +280,6 @@ export default function UserManagement({ openAddModal: openAddModalProp, onAddMo
           <h1 className="um-title">User Management</h1>
           <span className="um-count">{totalCount} users</span>
         </div>
-        {canCreate && (
-          <button className="um-btn um-btn--primary" onClick={openAddModal}>
-            <span className="um-btn-icon">+</span>
-            Add User
-          </button>
-        )}
       </div>
 
       {/* Filters */}
@@ -613,16 +592,6 @@ export default function UserManagement({ openAddModal: openAddModalProp, onAddMo
                   onChange={handleFormChange('department')}
                 />
                 {formErrors.department && <span className="um-field-error">{formErrors.department}</span>}
-              </div>
-              <div className="um-form-group">
-                <label className="um-label">Phone</label>
-                <input
-                  type="tel"
-                  className="um-input"
-                  placeholder="+251 9XX XXX XXX"
-                  value={formData.phone}
-                  onChange={handleFormChange('phone')}
-                />
               </div>
               <div className="um-form-group">
                 <label className="um-label">Roles</label>

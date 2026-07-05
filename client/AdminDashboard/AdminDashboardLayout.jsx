@@ -10,13 +10,13 @@ const routeTitles = {
   '/sessions': 'Session Management',
 };
 
-export default function Layout({ children, onAddUser }) {
+export default function Layout({ children }) {
   const location = useLocation();
   const pageTitle = routeTitles[location.pathname] || 'Ethio Nordic ERP';
 
   return (
     <div className="layout">
-      <UserAccessManagementSidebar onAddUser={onAddUser} />
+      <UserAccessManagementSidebar />
 
       <div className="layout-main">
         <header className="layout-header">

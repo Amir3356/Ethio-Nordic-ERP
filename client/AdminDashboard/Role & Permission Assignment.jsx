@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { roleService, permissionService } from '../services/api';
 import { Shield, Key, User, Pencil, Trash2, AlertTriangle } from 'lucide-react';
-import './RoleManagement.css';
+import './Role & Permission Assignment.css';
 
 const MODULES = ['users', 'roles', 'login-activity', 'sessions', 'audit-logs', 'dashboard'];
 const ACTIONS = ['view', 'create', 'edit', 'delete', 'approve', 'export'];

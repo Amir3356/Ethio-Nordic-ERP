@@ -1,17 +1,7 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {
-  Users, Shield, ClipboardList, FileText, Monitor, LogOut, Zap, UserPlus
-} from 'lucide-react';
+import { LogOut, Zap } from 'lucide-react';
 import './UserAccessManagementSidebar.css';
-
-const navItems = [
-  { path: '/users', label: 'Users', icon: Users },
-  { path: '/roles', label: 'Roles & Permissions', icon: Shield },
-  { path: '/login-activity', label: 'Login Activity', icon: ClipboardList },
-  { path: '/audit-trail', label: 'Audit Trail', icon: FileText },
-  { path: '/sessions', label: 'Sessions', icon: Monitor },
-];
 
 function getUserInitials(name) {
   if (!name) return '?';
@@ -23,7 +13,7 @@ function getUserInitials(name) {
     .slice(0, 2);
 }
 
-export default function UserAccessManagementSidebar({ onAddUser }) {
+export default function UserAccessManagementSidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -42,25 +32,7 @@ export default function UserAccessManagementSidebar({ onAddUser }) {
         </div>
       </div>
 
-      <nav className="uam-sidebar-nav">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `uam-nav-item ${isActive ? 'uam-nav-item--active' : ''}`}
-          >
-            <item.icon size={20} />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
-      </nav>
-
       <div className="uam-sidebar-bottom">
-        <button className="uam-add-user-btn" onClick={onAddUser}>
-          <UserPlus size={18} />
-          <span>Add User</span>
-        </button>
-
         <div className="uam-user-info">
           <div className="uam-user-avatar">
             {getUserInitials(user?.full_name)}
