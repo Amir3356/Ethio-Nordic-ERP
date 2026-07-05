@@ -83,7 +83,6 @@ class AuthController extends Controller
             'full_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'department' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
             'role_ids' => 'required|array',
             'role_ids.*' => 'exists:roles,id',
         ]);
@@ -94,7 +93,6 @@ class AuthController extends Controller
             'full_name' => $request->full_name,
             'email' => $request->email,
             'department' => $request->department,
-            'phone' => $request->phone,
             'password' => $tempPassword,
             'is_active' => false,
             'temp_password_expires_at' => now()->addHours(24),

@@ -18,7 +18,6 @@ class User extends Authenticatable
         'full_name',
         'email',
         'department',
-        'phone',
         'password',
         'is_active',
         'activation_token',

@@ -21,8 +21,7 @@ class UserController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('department', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('department', 'like', "%{$search}%");
             });
         }
 
@@ -48,7 +47,6 @@ class UserController extends Controller
             'full_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'department' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
             'role_ids' => 'required|array|min:1',
             'role_ids.*' => 'exists:roles,id',
         ]);
@@ -59,7 +57,6 @@ class UserController extends Controller
             'full_name' => $request->full_name,
             'email' => $request->email,
             'department' => $request->department,
-            'phone' => $request->phone,
             'password' => $tempPassword,
             'is_active' => false,
             'temp_password_expires_at' => now()->addHours(24),
@@ -109,14 +106,13 @@ class UserController extends Controller
             'full_name' => 'sometimes|string|max:255',
             'email' => "sometimes|email|unique:users,email,{$id}",
             'department' => 'sometimes|string|max:255',
-            'phone' => 'nullable|string|max:20',
             'role_ids' => 'sometimes|array|min:1',
             'role_ids.*' => 'exists:roles,id',
         ]);
 
         $oldValues = $user->toArray();
 
-        $user->update($request->only(['full_name', 'email', 'department', 'phone']));
+        $user->update($request->only(['full_name', 'email', 'department']));
 
         if ($request->has('role_ids')) {
             $user->roles()->sync($request->role_ids);
