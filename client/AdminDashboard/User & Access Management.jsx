@@ -187,7 +187,7 @@ export default function UserAccessManagement() {
           <button
             type="button"
             className="user-new-btn"
-            onClick={() => setShowNewUserForm((currentValue) => !currentValue)}
+            onClick={() => setShowNewUserForm(true)}
           >
             + New User
           </button>
