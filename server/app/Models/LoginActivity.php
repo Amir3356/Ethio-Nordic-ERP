@@ -9,20 +9,21 @@ class LoginActivity extends Model
 {
     use HasFactory;
 
+    protected $table = 'login_activity';
+
     protected $fillable = [
         'user_id',
         'email',
         'ip_address',
         'user_agent',
-        'device_name',
         'device_type',
         'browser',
-        'os',
+        'platform',
+        'location',
         'status',
         'failure_reason',
         'login_at',
         'logout_at',
-        'is_active',
     ];
 
     protected function casts(): array
@@ -30,12 +31,57 @@ class LoginActivity extends Model
         return [
             'login_at' => 'datetime',
             'logout_at' => 'datetime',
-            'is_active' => 'boolean',
         ];
     }
 
+    /**
+     * Get the user associated with this login activity
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope to get successful logins only
+     */
+    public function scopeSuccessful($query)
+    {
+        return $query->where('status', 'success');
+    }
+
+    /**
+     * Scope to get failed login attempts
+     */
+    public function scopeFailed($query)
+    {
+        return $query->where('status', 'failed');
+    }
+
+    /**
+     * Scope to get blocked login attempts
+     */
+    public function scopeBlocked($query)
+    {
+        return $query->where('status', 'blocked');
+    }
+
+    /**
+     * Scope to filter by date range
+     */
+    public function scopeBetweenDates($query, $startDate, $endDate)
+    {
+        return $query->whereBetween('login_at', [$startDate, $endDate]);
+    }
+
+    /**
+     * Get login duration in minutes
+     */
+    public function getDurationInMinutes(): ?int
+    {
+        if (!$this->logout_at) {
+            return null;
+        }
+        return $this->login_at->diffInMinutes($this->logout_at);
     }
 }

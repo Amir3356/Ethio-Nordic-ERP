@@ -1,0 +1,35 @@
+.content-description {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4b5563;
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.content-audit-action {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.content-audit-action.action-created {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.content-audit-action.action-updated {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.content-audit-action.action-approved {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.content-audit-action.action-deleted {
+  background: #fef2f2;
+  color: #b91c1c;
+}
