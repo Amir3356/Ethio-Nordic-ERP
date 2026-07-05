@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call([
+            PermissionSeeder::class,
+        ]);
+
         $admin = Role::firstOrCreate(
             ['slug' => 'admin'],
             [
