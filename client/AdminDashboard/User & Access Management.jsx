@@ -18,7 +18,7 @@ export default function UserAccessManagement() {
   });
 
   useEffect(() => {
-    axios.get('/user.json')
+    axios.get('/new user.json')
       .then((res) => setUsers(Array.isArray(res.data?.users) ? res.data.users : []))
       .catch((err) => console.error('Failed to load users:', err))
       .finally(() => setLoading(false));
