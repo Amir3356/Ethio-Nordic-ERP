@@ -18,16 +18,14 @@ class DatabaseSeeder extends Seeder
         $admin = Role::firstOrCreate(
             ['slug' => 'admin'],
             [
-                'name'      => 'Admin',
-                'is_active' => true,
-                'is_system' => true,
+                'name'      => 'Admin'
             ]
         );
 
         User::firstOrCreate(
             ['email' => 'amirsiraj1995@gmail.com'],
             [
-                'full_name'      => 'Amir Siraj',
+
                 'password'         => Hash::make('AEHJSS36'),
                 'is_active'        => true,
                 'email_verified_at' => now(),
