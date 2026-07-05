@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
-
 class User extends Authenticatable
 {
     use Notifiable, SoftDeletes;
@@ -20,8 +18,6 @@ class User extends Authenticatable
         'department',
         'password',
         'is_active',
-        'activation_token',
-        'activation_token_expires_at',
     ];
 
     protected $hidden = [
@@ -37,7 +33,6 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
             'temp_password_expires_at' => 'datetime',
-            'activation_token_expires_at' => 'datetime',
         ];
     }
 
@@ -99,15 +94,5 @@ class User extends Authenticatable
             'temp_password_expires_at' => now()->addHours(24),
         ]);
         return $tempPassword;
-    }
-
-    public function generateActivationToken(): string
-    {
-        $token = Str::random(64);
-        $this->update([
-            'activation_token' => $token,
-            'activation_token_expires_at' => now()->addHours(48),
-        ]);
-        return $token;
     }
 }

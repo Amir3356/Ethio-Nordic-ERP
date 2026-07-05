@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\ActivationEmail;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -58,13 +56,11 @@ class UserController extends Controller
             'email' => $request->email,
             'department' => $request->department,
             'password' => $tempPassword,
-            'is_active' => false,
+            'is_active' => true,
             'temp_password_expires_at' => now()->addHours(24),
         ]);
 
         $user->roles()->sync($request->role_ids);
-
-        $activationToken = $user->generateActivationToken();
 
         AuditLog::create([
             'user_id' => $request->user()->id,
@@ -79,16 +75,10 @@ class UserController extends Controller
             'description' => "Created user {$user->full_name}",
         ]);
 
-        try {
-            Mail::to($user->email)->send(new ActivationEmail($user, $activationToken));
-        } catch (\Exception $e) {
-            \Log::error('Failed to send activation email: ' . $e->getMessage());
-        }
-
         return $this->successResponse([
             'user' => $user->load('roles'),
             'temp_password' => $tempPassword,
-        ], 'User created successfully. Activation email sent.', 201);
+        ], 'User created successfully.', 201);
     }
 
     public function show($id): JsonResponse

@@ -192,78 +192,6 @@
   cursor: not-allowed;
 }
 
-/* ── Two-Factor ── */
-.two-factor-form {
-  text-align: center;
-}
-
-.two-factor-header {
-  margin-bottom: 8px;
-}
-
-.tfa-icon {
-  font-size: 36px;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.two-factor-header h2 {
-  margin: 0 0 6px;
-  font-size: 18px;
-  color: #1f2937;
-}
-
-.two-factor-header p {
-  margin: 0;
-  font-size: 13px;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-.code-inputs {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin: 24px 0;
-}
-
-.code-input {
-  width: 48px;
-  height: 56px;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 700;
-  color: #1f2937;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fafafa;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-}
-
-.code-input:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-  background: #fff;
-}
-
-.back-to-login {
-  margin-top: 16px;
-  background: none;
-  border: none;
-  color: #4f46e5;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 6px;
-  transition: background 0.15s;
-}
-
-.back-to-login:hover {
-  background: rgba(79, 70, 229, 0.06);
-}
-
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .login-card {
@@ -275,11 +203,5 @@
   .login-footer {
     padding-left: 24px;
     padding-right: 24px;
-  }
-
-  .code-input {
-    width: 42px;
-    height: 50px;
-    font-size: 20px;
   }
 }

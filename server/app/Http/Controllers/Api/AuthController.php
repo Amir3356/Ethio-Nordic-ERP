@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\ActivationEmail;
 use App\Models\LoginActivity;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -53,24 +51,16 @@ class AuthController extends Controller
             'email' => $request->email,
             'department' => $request->department,
             'password' => $tempPassword,
-            'is_active' => false,
+            'is_active' => true,
             'temp_password_expires_at' => now()->addHours(24),
         ]);
 
         $user->roles()->sync($request->role_ids);
 
-        $activationToken = $user->generateActivationToken();
-
-        try {
-            Mail::to($user->email)->send(new ActivationEmail($user, $activationToken));
-        } catch (\Exception $e) {
-            \Log::error('Failed to send activation email: ' . $e->getMessage());
-        }
-
         return $this->successResponse([
             'user' => $user->load('roles'),
             'temp_password' => $tempPassword,
-        ], 'User registered successfully. Activation email sent.', 201);
+        ], 'User registered successfully.', 201);
     }
 
     public function logout(Request $request): JsonResponse
@@ -121,31 +111,6 @@ class AuthController extends Controller
         ]);
 
         return $this->successResponse(null, 'Password changed successfully.');
-    }
-
-    public function activateAccount(Request $request): JsonResponse
-    {
-        $request->validate([
-            'token' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::where('temp_password_expires_at', '>', now())
-            ->where('is_active', false)
-            ->first();
-
-        if (!$user) {
-            return $this->errorResponse('Invalid or expired activation token.', 422);
-        }
-
-        $user->update([
-            'is_active' => true,
-            'password' => $request->password,
-            'temp_password_expires_at' => null,
-            'email_verified_at' => now(),
-        ]);
-
-        return $this->successResponse(null, 'Account activated successfully.');
     }
 
     private function loginUser(Request $request, User $user): JsonResponse
