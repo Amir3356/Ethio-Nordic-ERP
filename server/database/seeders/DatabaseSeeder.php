@@ -11,25 +11,24 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([
-            PermissionSeeder::class,
-        ]);
-
-        $admin = Role::firstOrCreate(
+        $adminRole = Role::firstOrCreate(
             ['slug' => 'admin'],
-            [
-                'name'      => 'Admin'
-            ]
+            ['name' => 'Admin']
+        );
+
+        $userRole = Role::firstOrCreate(
+            ['slug' => 'user'],
+            ['name' => 'User']
         );
 
         User::firstOrCreate(
             ['email' => 'amirsiraj1995@gmail.com'],
             [
-
-                'password'         => Hash::make('AEHJSS36'),
-                'is_active'        => true,
+                'full_name' => 'Admin User',
+                'password' => Hash::make('AEHJSS36'),
+                'is_active' => true,
                 'email_verified_at' => now(),
             ]
-        )->roles()->syncWithoutDetaching([$admin->id]);
+        )->roles()->syncWithoutDetaching([$adminRole->id]);
     }
 }

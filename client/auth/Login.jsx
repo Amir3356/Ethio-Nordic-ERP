@@ -29,7 +29,7 @@ export default function Login() {
       const data = response.data;
 
       localStorage.setItem('user', JSON.stringify(data.data.user));
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       const msg =
         err.response?.data?.message ||

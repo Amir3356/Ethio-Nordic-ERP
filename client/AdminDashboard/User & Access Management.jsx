@@ -14,6 +14,8 @@ export default function UserAccessManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [sessionLoading, setSessionLoading] = useState(true);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(true);
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [newUser, setNewUser] = useState({
     name: '',
@@ -24,14 +26,14 @@ export default function UserAccessManagement() {
   });
 
   useEffect(() => {
-    axios.get('/new user.json')
+    axios.get('/User.json')
       .then((res) => setUsers(Array.isArray(res.data?.users) ? res.data.users : []))
       .catch((err) => console.error('Failed to load users:', err))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    axios.get('/Session%20Monitoring%20%26%20Management.json')
+    axios.get('/Session.json')
       .then((res) => {
         setSessions(Array.isArray(res.data?.sessions) ? res.data.sessions : []);
         setSessionConfig(res.data?.config || {
@@ -43,8 +45,16 @@ export default function UserAccessManagement() {
       .finally(() => setSessionLoading(false));
   }, []);
 
+  useEffect(() => {
+    axios.get('/Audit.json')
+      .then((res) => setAuditLogs(Array.isArray(res.data?.auditLogs) ? res.data.auditLogs : []))
+      .catch((err) => console.error('Failed to load audit logs:', err))
+      .finally(() => setAuditLoading(false));
+  }, []);
+
   const safeUsers = Array.isArray(users) ? users : [];
   const safeSessions = Array.isArray(sessions) ? sessions : [];
+  const safeAuditLogs = Array.isArray(auditLogs) ? auditLogs : [];
   const safeSessionConfig = sessionConfig || {
     idleTimeoutMinutes: 15,
     refreshTokenRotation: true,
@@ -216,6 +226,58 @@ export default function UserAccessManagement() {
     },
   ], []);
 
+  const auditColumns = useMemo(() => [
+    {
+      accessorKey: 'user',
+      header: 'User',
+      cell: (info) => String(info.getValue()),
+    },
+    {
+      accessorKey: 'action',
+      header: 'Action',
+      cell: (info) => {
+        const action = info.getValue();
+        const actionClass = {
+          'Created': 'audit-action-created',
+          'Updated': 'audit-action-updated',
+          'Deleted': 'audit-action-deleted',
+          'Approved': 'audit-action-approved',
+        };
+        return (
+          <span className={actionClass[action] || 'audit-action-default'}>
+            {action}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'module',
+      header: 'Module',
+    },
+    {
+      accessorKey: 'entity',
+      header: 'Entity',
+    },
+    {
+      accessorKey: 'entityId',
+      header: 'Entity ID',
+    },
+    {
+      accessorKey: 'timestamp',
+      header: 'Timestamp',
+    },
+    {
+      accessorKey: 'beforeSnapshot',
+      header: 'Before',
+      cell: (info) => info.getValue() || '—',
+    },
+    {
+      accessorKey: 'afterSnapshot',
+      header: 'After',
+      cell: (info) => info.getValue() || '—',
+    },
+  ], []);
+
   const table = useReactTable({
     data: filteredUsers,
     columns,
@@ -225,6 +287,12 @@ export default function UserAccessManagement() {
   const sessionTable = useReactTable({
     data: safeSessions,
     columns: sessionColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const auditTable = useReactTable({
+    data: safeAuditLogs,
+    columns: auditColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -419,11 +487,6 @@ export default function UserAccessManagement() {
           <div className="session-header">
             <div>
               <h2 className="session-title">Session Monitoring & Management</h2>
-              <p className="session-description">
-                Administrators can review active sessions in real time, including device and location metadata,
-                and can terminate any session when needed. Idle sessions automatically expire after a configured
-                timeout, and refresh tokens are rotated on each renewal to reduce token replay risk.
-              </p>
             </div>
 
             <div className="session-summary">
@@ -460,6 +523,53 @@ export default function UserAccessManagement() {
                 </thead>
                 <tbody>
                   {sessionTable.getRowModel().rows.map((row) => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section className="audit-section">
+          <div className="audit-header">
+            <h2 className="audit-title">Audit Trail Logging</h2>
+            <p className="audit-description">
+              Every create, update, approve, or delete action across all 27 ERP modules is intercepted
+              by a system-wide audit observer, which records the acting user, timestamp, the module/entity
+              affected, and a before/after snapshot of the changed data. Audit records are immutable and
+              cannot be edited or deleted, even by system administrators.
+            </p>
+          </div>
+
+          {auditLoading ? (
+            <p>Loading audit trail data...</p>
+          ) : (
+            <div className="audit-table-wrapper">
+              <table className="audit-table">
+                <thead>
+                  {auditTable.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <th key={header.id}>
+                          <span className="user-th">
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </span>
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {auditTable.getRowModel().rows.map((row) => (
                     <tr key={row.id}>
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id}>
