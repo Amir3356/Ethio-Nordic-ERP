@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ShieldCheck, Search, CircleX, CircleCheck } from 'lucide-react';
+import { ShieldCheck, Search, CircleX, CircleCheck, X } from 'lucide-react';
 import './User & Access Management.css';
 
 export default function UserAccessManagement() {
@@ -132,10 +132,14 @@ export default function UserAccessManagement() {
               <div className="user-modal-header">
                 <div>
                   <h2 className="user-modal-title">New User</h2>
-                  <p className="user-modal-subtitle">Enter the details below to add a new user.</p>
                 </div>
-                <button type="button" className="user-modal-close" onClick={() => setShowNewUserForm(false)}>
-                  Close
+                <button
+                  type="button"
+                  className="user-modal-close"
+                  onClick={() => setShowNewUserForm(false)}
+                  aria-label="Close modal"
+                >
+                  <X size={22} />
                 </button>
               </div>
 

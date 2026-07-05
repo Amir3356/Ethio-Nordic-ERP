@@ -135,6 +135,11 @@
 }
 
 .user-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -327,7 +332,7 @@
   }
 
   .user-modal-close {
-    width: 100%;
+    width: 34px;
   }
 
   .user-form-grid {
