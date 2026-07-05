@@ -7,6 +7,14 @@ export default function UserAccessManagement() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showNewUserForm, setShowNewUserForm] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    department: '',
+    role: 'Viewer',
+    status: 'Active',
+  });
 
   useEffect(() => {
     axios.get('/user.json')
@@ -50,6 +58,43 @@ export default function UserAccessManagement() {
     setUsers((currentUsers) => currentUsers.filter((currentUser) => currentUser.id !== user.id));
   };
 
+  const handleNewUserChange = (field, value) => {
+    setNewUser((currentUser) => ({
+      ...currentUser,
+      [field]: value,
+    }));
+  };
+
+  const handleCreateUser = (event) => {
+    event.preventDefault();
+
+    const trimmedName = newUser.name.trim();
+    const trimmedEmail = newUser.email.trim();
+
+    if (!trimmedName || !trimmedEmail) {
+      return;
+    }
+
+    const nextUser = {
+      id: Date.now(),
+      name: trimmedName,
+      email: trimmedEmail,
+      department: newUser.department.trim(),
+      role: newUser.role,
+      status: newUser.status,
+    };
+
+    setUsers((currentUsers) => [nextUser, ...currentUsers]);
+    setNewUser({
+      name: '',
+      email: '',
+      department: '',
+      role: 'Viewer',
+      status: 'Active',
+    });
+    setShowNewUserForm(false);
+  };
+
   return (
     <div className="user-layout">
       <aside className="user-sidebar">
@@ -70,6 +115,96 @@ export default function UserAccessManagement() {
             className="user-search"
           />
         </div>
+
+        <div className="user-toolbar">
+          <button
+            type="button"
+            className="user-new-btn"
+            onClick={() => setShowNewUserForm((currentValue) => !currentValue)}
+          >
+            New User
+          </button>
+        </div>
+
+        {showNewUserForm && (
+          <div className="user-modal-backdrop" onClick={() => setShowNewUserForm(false)}>
+            <form className="user-modal" onSubmit={handleCreateUser} onClick={(event) => event.stopPropagation()}>
+              <div className="user-modal-header">
+                <div>
+                  <h2 className="user-modal-title">New User</h2>
+                  <p className="user-modal-subtitle">Enter the details below to add a new user.</p>
+                </div>
+                <button type="button" className="user-modal-close" onClick={() => setShowNewUserForm(false)}>
+                  Close
+                </button>
+              </div>
+
+              <div className="user-form-grid">
+                <label className="user-form-field">
+                  <span>Full Name</span>
+                  <input
+                    type="text"
+                    value={newUser.name}
+                    onChange={(event) => handleNewUserChange('name', event.target.value)}
+                    placeholder="Enter full name"
+                  />
+                </label>
+
+                <label className="user-form-field">
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(event) => handleNewUserChange('email', event.target.value)}
+                    placeholder="Enter email address"
+                  />
+                </label>
+
+                <label className="user-form-field">
+                  <span>Department</span>
+                  <input
+                    type="text"
+                    value={newUser.department}
+                    onChange={(event) => handleNewUserChange('department', event.target.value)}
+                    placeholder="Enter department"
+                  />
+                </label>
+
+                <label className="user-form-field">
+                  <span>Role</span>
+                  <select
+                    value={newUser.role}
+                    onChange={(event) => handleNewUserChange('role', event.target.value)}
+                  >
+                    <option value="Admin">Admin</option>
+                    <option value="Editor">Editor</option>
+                    <option value="Viewer">Viewer</option>
+                  </select>
+                </label>
+
+                <label className="user-form-field">
+                  <span>Status</span>
+                  <select
+                    value={newUser.status}
+                    onChange={(event) => handleNewUserChange('status', event.target.value)}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="user-form-actions">
+                <button type="button" className="user-form-cancel" onClick={() => setShowNewUserForm(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="user-form-submit">
+                  Create User
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {loading ? (
           <p>Loading...</p>
