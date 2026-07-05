@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { ShieldCheck, Search, CircleX, CircleCheck, X } from 'lucide-react';
+import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import './User & Access Management.css';
 
 export default function UserAccessManagement() {
@@ -18,15 +19,81 @@ export default function UserAccessManagement() {
 
   useEffect(() => {
     axios.get('/user.json')
-      .then((res) => setUsers(res.data.users))
+      .then((res) => setUsers(Array.isArray(res.data?.users) ? res.data.users : []))
       .catch((err) => console.error('Failed to load users:', err))
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = users.filter((u) =>
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  const filteredUsers = safeUsers.filter((u) =>
     String(u.name).toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'name',
+      header: 'Full Name',
+      cell: (info) => String(info.getValue()),
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      cell: (info) => <span className="user-email">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'department',
+      header: 'Department',
+      cell: (info) => info.getValue() || '—',
+    },
+    {
+      accessorKey: 'role',
+      header: 'Role',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: (info) => {
+        const status = info.getValue();
+
+        return (
+          <span className={status === 'Active' ? 'user-status-active' : 'user-status-inactive'}>
+            {status === 'Active' ? <CircleCheck size={14} /> : <CircleX size={14} />}
+            <span>{status}</span>
+          </span>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="user-actions">
+          <button
+            type="button"
+            className="user-action-btn user-action-edit"
+            onClick={() => handleEditUser(row.original)}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="user-action-btn user-action-delete"
+            onClick={() => handleDeleteUser(row.original)}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ], []);
+
+  const table = useReactTable({
+    data: filteredUsers,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   const handleEditUser = (user) => {
     const nextName = window.prompt('Edit user name', user.name);
@@ -122,7 +189,7 @@ export default function UserAccessManagement() {
             className="user-new-btn"
             onClick={() => setShowNewUserForm((currentValue) => !currentValue)}
           >
-            New User
+            + New User
           </button>
         </div>
 
@@ -216,46 +283,28 @@ export default function UserAccessManagement() {
           <div className="user-table-wrapper">
             <table className="user-table">
               <thead>
-                <tr>
-                  <th><span className="user-th">Full Name</span></th>
-                  <th><span className="user-th">Email</span></th>
-                  <th><span className="user-th">Department</span></th>
-                  <th><span className="user-th">Role</span></th>
-                  <th><span className="user-th">Status</span></th>
-                  <th><span className="user-th">Actions</span></th>
-                </tr>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th key={header.id}>
+                        <span className="user-th">
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {filtered.map((u) => (
-                  <tr key={u.id}>
-                    <td>{String(u.name)}</td>
-                    <td className="user-email">{u.email}</td>
-                    <td>{u.department || '—'}</td>
-                    <td>{u.role}</td>
-                    <td>
-                      <span className={u.status === 'Active' ? 'user-status-active' : 'user-status-inactive'}>
-                        {u.status === 'Active' ? <CircleCheck size={14} /> : <CircleX size={14} />}
-                        <span>{u.status}</span>
-                      </span>
-                    </td>
-                    <td>
-                      <div className="user-actions">
-                        <button
-                          type="button"
-                          className="user-action-btn user-action-edit"
-                          onClick={() => handleEditUser(u)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="user-action-btn user-action-delete"
-                          onClick={() => handleDeleteUser(u)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

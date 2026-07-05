@@ -140,10 +140,10 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #f9fafb;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
   color: #374151;
   font-size: 13px;
   font-weight: 600;
@@ -151,7 +151,7 @@
 }
 
 .user-modal-close:hover {
-  background: #f3f4f6;
+  background: rgba(17, 24, 39, 0.06);
 }
 
 .user-form-grid {
