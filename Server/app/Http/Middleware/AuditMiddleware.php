@@ -17,7 +17,7 @@ class AuditMiddleware
         if (Auth::check() && $request->isMethod('POST')) {
             AuditLog::create([
                 'user_id' => Auth::id(),
-                'user_name' => Auth::user()->name,
+                'user_name' => Auth::user()->full_name,
                 'action' => 'api_access',
                 'module' => $this->extractModule($request->route()->getName()),
                 'entity_type' => null,

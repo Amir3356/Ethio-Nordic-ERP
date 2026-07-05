@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { userService, roleService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Search, AlertTriangle, UserCircle, Pencil, Lock, Unlock, Key, Trash2 } from 'lucide-react';
+import { Search, AlertTriangle, UserCircle, Pencil, Lock, Unlock, Key, Trash2, Copy, CheckCircle, Mail } from 'lucide-react';
 import './User.css';
 
 const ITEMS_PER_PAGE = 10;
 
-export default function UserManagement() {
+export default function UserManagement({ openAddModal: openAddModalProp, onAddModalOpened }) {
   const { canPerform } = useAuth();
 
   const [users, setUsers] = useState([]);
@@ -33,13 +33,18 @@ export default function UserManagement() {
   const [detailPermissions, setDetailPermissions] = useState([]);
 
   const [formData, setFormData] = useState({
-    name: '',
+    full_name: '',
     email: '',
+    department: '',
     phone: '',
     role_ids: [],
   });
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdUser, setCreatedUser] = useState(null);
+  const [copiedPassword, setCopiedPassword] = useState(false);
 
   const canManage = canPerform('users', 'manage');
   const canCreate = canPerform('users', 'create');
@@ -53,6 +58,13 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsers();
   }, [search, filterRole, filterStatus, currentPage]);
+
+  useEffect(() => {
+    if (openAddModalProp) {
+      openAddModal();
+      onAddModalOpened();
+    }
+  }, [openAddModalProp]);
 
   const fetchMetaData = async () => {
     try {
@@ -132,7 +144,7 @@ export default function UserManagement() {
   };
 
   const openAddModal = () => {
-    setFormData({ name: '', email: '', phone: '', role_ids: [] });
+    setFormData({ full_name: '', email: '', department: '', phone: '', role_ids: [] });
     setFormErrors({});
     setShowAddModal(true);
   };
@@ -140,8 +152,9 @@ export default function UserManagement() {
   const openEditModal = (user) => {
     setCurrentUser(user);
     setFormData({
-      name: user.name || '',
+      full_name: user.full_name || '',
       email: user.email || '',
+      department: user.department || '',
       phone: user.phone || '',
       role_ids: user.roles ? user.roles.map((r) => r.id) : [],
     });
@@ -182,9 +195,10 @@ export default function UserManagement() {
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.name.trim()) errors.name = 'Name is required';
+    if (!formData.full_name.trim()) errors.full_name = 'Name is required';
     if (!formData.email.trim()) errors.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email';
+    if (!formData.department.trim()) errors.department = 'Department is required';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -195,12 +209,20 @@ export default function UserManagement() {
     try {
       if (showEditModal && currentUser) {
         await userService.update(currentUser.id, formData);
+        setShowEditModal(false);
+        fetchUsers();
       } else {
-        await userService.create(formData);
+        const res = await userService.create(formData);
+        const data = res.data;
+        setCreatedUser({
+          name: data.data.user.full_name,
+          email: data.data.user.email,
+          temp_password: data.data.temp_password,
+        });
+        setShowAddModal(false);
+        setShowSuccessModal(true);
+        fetchUsers();
       }
-      setShowAddModal(false);
-      setShowEditModal(false);
-      fetchUsers();
     } catch (err) {
       const msg = err.response?.data?.message || 'Operation failed';
       setFormErrors({ submit: msg });
@@ -411,9 +433,9 @@ export default function UserManagement() {
                   <td>
                     <div className="um-user-cell">
                       <div className="um-user-avatar">
-                        {(user.name || 'U').charAt(0).toUpperCase()}
+                        {(user.full_name || 'U').charAt(0).toUpperCase()}
                       </div>
-                      <span className="um-user-name">{user.name}</span>
+                      <span className="um-user-name">{user.full_name}</span>
                     </div>
                   </td>
                   <td className="um-td-email">{user.email}</td>
@@ -563,12 +585,12 @@ export default function UserManagement() {
                 <label className="um-label">Full Name *</label>
                 <input
                   type="text"
-                  className={`um-input ${formErrors.name ? 'um-input--error' : ''}`}
+                  className={`um-input ${formErrors.full_name ? 'um-input--error' : ''}`}
                   placeholder="Enter full name"
-                  value={formData.name}
-                  onChange={handleFormChange('name')}
+                  value={formData.full_name}
+                  onChange={handleFormChange('full_name')}
                 />
-                {formErrors.name && <span className="um-field-error">{formErrors.name}</span>}
+                {formErrors.full_name && <span className="um-field-error">{formErrors.full_name}</span>}
               </div>
               <div className="um-form-group">
                 <label className="um-label">Email *</label>
@@ -580,6 +602,17 @@ export default function UserManagement() {
                   onChange={handleFormChange('email')}
                 />
                 {formErrors.email && <span className="um-field-error">{formErrors.email}</span>}
+              </div>
+              <div className="um-form-group">
+                <label className="um-label">Department *</label>
+                <input
+                  type="text"
+                  className={`um-input ${formErrors.department ? 'um-input--error' : ''}`}
+                  placeholder="e.g. IT, Finance, HR"
+                  value={formData.department}
+                  onChange={handleFormChange('department')}
+                />
+                {formErrors.department && <span className="um-field-error">{formErrors.department}</span>}
               </div>
               <div className="um-form-group">
                 <label className="um-label">Phone</label>
@@ -651,7 +684,7 @@ export default function UserManagement() {
               <div className="um-delete-content">
                 <Trash2 className="um-delete-icon" size={48} />
                 <p>
-                  Are you sure you want to delete <strong>{currentUser.name}</strong>?
+                  Are you sure you want to delete <strong>{currentUser.full_name}</strong>?
                 </p>
                 <p className="um-delete-warning">This action cannot be undone.</p>
               </div>
@@ -685,9 +718,9 @@ export default function UserManagement() {
             <div className="um-modal-body">
               <div className="um-detail-section">
                 <div className="um-detail-avatar-lg">
-                  {(detailUser.name || 'U').charAt(0).toUpperCase()}
+                  {(detailUser.full_name || 'U').charAt(0).toUpperCase()}
                 </div>
-                <h3 className="um-detail-name">{detailUser.name}</h3>
+                <h3 className="um-detail-name">{detailUser.full_name}</h3>
                 <p className="um-detail-email">{detailUser.email}</p>
               </div>
 
@@ -759,6 +792,62 @@ export default function UserManagement() {
                   Edit User
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal - User Created */}
+      {showSuccessModal && createdUser && (
+        <div className="um-modal-overlay" onClick={() => { setShowSuccessModal(false); setCreatedUser(null); }}>
+          <div className="um-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="um-modal-header">
+              <h2 className="um-modal-title">User Created Successfully</h2>
+              <button className="um-modal-close" onClick={() => { setShowSuccessModal(false); setCreatedUser(null); }}>
+                ×
+              </button>
+            </div>
+            <div className="um-modal-body">
+              <div className="um-success-content">
+                <div className="um-success-icon-wrapper">
+                  <CheckCircle size={48} />
+                </div>
+                <p className="um-success-text">
+                  An activation email has been sent to <strong>{createdUser.email}</strong>
+                </p>
+                <div className="um-temp-password-box">
+                  <span className="um-temp-password-label">Temporary Password</span>
+                  <div className="um-temp-password-row">
+                    <code className="um-temp-password">{createdUser.temp_password}</code>
+                    <button
+                      className="um-copy-btn"
+                      title="Copy password"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdUser.temp_password);
+                        setCopiedPassword(true);
+                        setTimeout(() => setCopiedPassword(false), 2000);
+                      }}
+                    >
+                      {copiedPassword ? <CheckCircle size={16} /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                  <p className="um-temp-password-hint">
+                    The user will receive an email with a link to set their own password.
+                  </p>
+                </div>
+                <div className="um-email-notice">
+                  <Mail size={16} />
+                  <span>Activation email sent. The user must click the link to activate their account.</span>
+                </div>
+              </div>
+            </div>
+            <div className="um-modal-footer">
+              <button
+                className="um-btn um-btn--primary"
+                onClick={() => { setShowSuccessModal(false); setCreatedUser(null); setCopiedPassword(false); }}
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>

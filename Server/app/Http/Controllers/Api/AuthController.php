@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ActivationEmail;
 use App\Models\LoginActivity;
 use App\Models\TwoFactorSecret;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -43,7 +46,7 @@ class AuthController extends Controller
             ], 'Two-factor authentication required.');
         }
 
-        return $this->issueToken($request, $user);
+        return $this->loginUser($request, $user);
     }
 
     public function verifyTwoFactor(Request $request): JsonResponse
@@ -71,14 +74,15 @@ class AuthController extends Controller
             return $this->errorResponse('Invalid verification code.', 401);
         }
 
-        return $this->issueToken($request, $user);
+        return $this->loginUser($request, $user);
     }
 
     public function register(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'full_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'department' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'role_ids' => 'required|array',
             'role_ids.*' => 'exists:roles,id',
@@ -87,8 +91,9 @@ class AuthController extends Controller
         $tempPassword = strtoupper(bin2hex(random_bytes(4)));
 
         $user = User::create([
-            'name' => $request->name,
+            'full_name' => $request->full_name,
             'email' => $request->email,
+            'department' => $request->department,
             'phone' => $request->phone,
             'password' => $tempPassword,
             'is_active' => false,
@@ -97,7 +102,13 @@ class AuthController extends Controller
 
         $user->roles()->sync($request->role_ids);
 
-        // TODO: Send activation email with temp password
+        $activationToken = $user->generateActivationToken();
+
+        try {
+            Mail::to($user->email)->send(new ActivationEmail($user, $activationToken));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send activation email: ' . $e->getMessage());
+        }
 
         return $this->successResponse([
             'user' => $user->load('roles'),
@@ -108,15 +119,16 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
-        $token = $user->currentAccessToken();
 
-        if ($token) {
+        if ($user) {
             LoginActivity::where('user_id', $user->id)
                 ->whereNull('logout_at')
                 ->update(['logout_at' => now()]);
-
-            $token->delete();
         }
+
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return $this->successResponse(null, 'Logged out successfully.');
     }
@@ -227,9 +239,11 @@ class AuthController extends Controller
         return $this->successResponse(null, 'Two-factor authentication disabled successfully.');
     }
 
-    private function issueToken(Request $request, User $user): JsonResponse
+    private function loginUser(Request $request, User $user): JsonResponse
     {
-        $token = $user->createToken($request->header('User-Agent', 'API Token'))->plainTextToken;
+        Auth::login($user);
+
+        $request->session()->regenerate();
 
         LoginActivity::create([
             'user_id' => $user->id,
@@ -249,8 +263,6 @@ class AuthController extends Controller
 
         return $this->successResponse([
             'user' => $user->load('roles'),
-            'token' => $token,
-            'token_type' => 'Bearer',
         ], 'Login successful.');
     }
 

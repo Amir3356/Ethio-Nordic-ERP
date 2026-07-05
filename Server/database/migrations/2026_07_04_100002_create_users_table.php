@@ -10,8 +10,9 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('full_name');
             $table->string('email')->unique();
+            $table->string('department')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone')->nullable();
@@ -22,6 +23,8 @@ return new class extends Migration
             $table->string('last_login_ip')->nullable();
             $table->string('temp_password')->nullable();
             $table->timestamp('temp_password_expires_at')->nullable();
+            $table->string('activation_token')->nullable();
+            $table->timestamp('activation_token_expires_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

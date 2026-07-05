@@ -8,14 +8,11 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
+  withCredentials: true,
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -25,7 +22,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
@@ -42,6 +38,9 @@ export const authService = {
   enable2FA: () => api.post('/auth/enable-2fa'),
   disable2FA: (code) => api.post('/auth/disable-2fa', { code }),
   activate: (data) => api.post('/auth/activate', data),
+  verifyActivationToken: (token) => api.post('/auth/verify-activation-token', { token }),
+  setPassword: (token, password, password_confirmation) =>
+    api.post('/auth/set-password', { token, password, password_confirmation }),
 };
 
 export const userService = {

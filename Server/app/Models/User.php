@@ -2,32 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'name',
+        'full_name',
         'email',
+        'department',
         'phone',
         'password',
         'is_active',
-        'two_factor_enabled',
+        'activation_token',
+        'activation_token_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
-        'two_factor_secret',
     ];
 
     protected function casts(): array
@@ -36,9 +36,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'two_factor_enabled' => 'boolean',
             'last_login_at' => 'datetime',
             'temp_password_expires_at' => 'datetime',
+            'activation_token_expires_at' => 'datetime',
         ];
     }
 
@@ -105,5 +105,15 @@ class User extends Authenticatable
             'temp_password_expires_at' => now()->addHours(24),
         ]);
         return $tempPassword;
+    }
+
+    public function generateActivationToken(): string
+    {
+        $token = Str::random(64);
+        $this->update([
+            'activation_token' => $token,
+            'activation_token_expires_at' => now()->addHours(48),
+        ]);
+        return $token;
     }
 }

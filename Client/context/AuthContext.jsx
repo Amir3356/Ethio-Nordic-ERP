@@ -10,9 +10,8 @@ export function AuthProvider({ children }) {
   const [twoFactorEmail, setTwoFactorEmail] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('user');
-    if (token && storedUser) {
+    if (storedUser) {
       setUser(JSON.parse(storedUser));
       setLoading(false);
     } else {
@@ -30,7 +29,6 @@ export function AuthProvider({ children }) {
       return { requiresTwoFactor: true };
     }
 
-    localStorage.setItem('auth_token', data.data.token);
     localStorage.setItem('user', JSON.stringify(data.data.user));
     setUser(data.data.user);
     setRequiresTwoFactor(false);
@@ -41,7 +39,6 @@ export function AuthProvider({ children }) {
     const response = await authService.verifyTwoFactor(twoFactorEmail, code);
     const data = response.data;
 
-    localStorage.setItem('auth_token', data.data.token);
     localStorage.setItem('user', JSON.stringify(data.data.user));
     setUser(data.data.user);
     setRequiresTwoFactor(false);
@@ -55,7 +52,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       // ignore
     }
-    localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
     setUser(null);
     setRequiresTwoFactor(false);

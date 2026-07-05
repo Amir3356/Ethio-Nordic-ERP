@@ -2,30 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TwoFactorSecret extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'user_id',
         'secret',
         'recovery_codes',
         'enabled',
-    ];
-
-    protected $hidden = [
-        'secret',
-        'recovery_codes',
+        'enabled_at',
     ];
 
     protected function casts(): array
     {
         return [
             'enabled' => 'boolean',
+            'enabled_at' => 'datetime',
+            'recovery_codes' => 'array',
         ];
     }
 

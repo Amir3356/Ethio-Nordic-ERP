@@ -49,7 +49,7 @@ class LoginActivityController extends Controller
             ->paginate(15);
 
         return $this->successResponse([
-            'user' => $user->only(['id', 'name', 'email']),
+            'user' => $user->only(['id', 'full_name', 'email']),
             'activities' => $activities,
         ]);
     }
@@ -110,7 +110,7 @@ class LoginActivityController extends Controller
 
                 return [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'name' => $user->full_name,
                     'email' => $user->email,
                     'last_activity' => $lastActivity?->login_at,
                     'ip_address' => $lastActivity?->ip_address,

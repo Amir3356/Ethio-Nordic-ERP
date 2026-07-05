@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Users, Shield, ClipboardList, FileText, Monitor, LogOut, Zap
+  Users, Shield, ClipboardList, FileText, Monitor, LogOut, Zap, UserPlus
 } from 'lucide-react';
 import './UserAccessManagementSidebar.css';
 
@@ -23,7 +23,7 @@ function getUserInitials(name) {
     .slice(0, 2);
 }
 
-export default function UserAccessManagementSidebar() {
+export default function UserAccessManagementSidebar({ onAddUser }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -57,13 +57,20 @@ export default function UserAccessManagementSidebar() {
         ))}
       </nav>
 
+      <div className="uam-sidebar-actions">
+        <button className="uam-add-user-btn" onClick={onAddUser}>
+          <UserPlus size={18} />
+          <span>Add User</span>
+        </button>
+      </div>
+
       <div className="uam-sidebar-footer">
         <div className="uam-user-info">
           <div className="uam-user-avatar">
-            {getUserInitials(user?.name)}
+            {getUserInitials(user?.full_name)}
           </div>
           <div className="uam-user-details">
-            <span className="uam-user-name">{user?.name || 'Guest'}</span>
+            <span className="uam-user-name">{user?.full_name || 'Guest'}</span>
             <span className="uam-user-role">
               {user?.roles?.[0]?.name || 'No Role'}
             </span>

@@ -43,7 +43,7 @@ class AuditObserver
 
         AuditLog::create([
             'user_id' => $user?->id,
-            'user_name' => $user?->name ?? 'System',
+            'user_name' => $user?->full_name ?? 'System',
             'action' => $action,
             'module' => $this->guessModule($model),
             'entity_type' => get_class($model),

@@ -25,7 +25,7 @@ class RbacMiddleware
         if (!$user->canPerform($module, $action)) {
             AuditLog::create([
                 'user_id' => $user->id,
-                'user_name' => $user->name,
+                'user_name' => $user->full_name,
                 'action' => 'unauthorized_access',
                 'module' => $module,
                 'entity_type' => null,

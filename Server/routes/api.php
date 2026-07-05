@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivationController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/activate', [AuthController::class, 'activateAccount']);
+Route::post('/auth/verify-activation-token', [ActivationController::class, 'verifyToken']);
+Route::post('/auth/set-password', [ActivationController::class, 'activateAccount']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);

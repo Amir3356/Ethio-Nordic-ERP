@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ActivationEmail;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -17,8 +19,9 @@ class UserController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('full_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('department', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
         }
@@ -42,8 +45,9 @@ class UserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'full_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'department' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'role_ids' => 'required|array|min:1',
             'role_ids.*' => 'exists:roles,id',
@@ -52,8 +56,9 @@ class UserController extends Controller
         $tempPassword = strtoupper(bin2hex(random_bytes(4)));
 
         $user = User::create([
-            'name' => $request->name,
+            'full_name' => $request->full_name,
             'email' => $request->email,
+            'department' => $request->department,
             'phone' => $request->phone,
             'password' => $tempPassword,
             'is_active' => false,
@@ -62,9 +67,11 @@ class UserController extends Controller
 
         $user->roles()->sync($request->role_ids);
 
+        $activationToken = $user->generateActivationToken();
+
         AuditLog::create([
             'user_id' => $request->user()->id,
-            'user_name' => $request->user()->name,
+            'user_name' => $request->user()->full_name,
             'action' => 'created',
             'module' => 'user_management',
             'entity_type' => User::class,
@@ -72,15 +79,19 @@ class UserController extends Controller
             'new_values' => $user->toArray(),
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'description' => "Created user {$user->name}",
+            'description' => "Created user {$user->full_name}",
         ]);
 
-        // TODO: Send activation email with temp password
+        try {
+            Mail::to($user->email)->send(new ActivationEmail($user, $activationToken));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send activation email: ' . $e->getMessage());
+        }
 
         return $this->successResponse([
             'user' => $user->load('roles'),
             'temp_password' => $tempPassword,
-        ], 'User created successfully.', 201);
+        ], 'User created successfully. Activation email sent.', 201);
     }
 
     public function show($id): JsonResponse
@@ -95,8 +106,9 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'full_name' => 'sometimes|string|max:255',
             'email' => "sometimes|email|unique:users,email,{$id}",
+            'department' => 'sometimes|string|max:255',
             'phone' => 'nullable|string|max:20',
             'role_ids' => 'sometimes|array|min:1',
             'role_ids.*' => 'exists:roles,id',
@@ -104,7 +116,7 @@ class UserController extends Controller
 
         $oldValues = $user->toArray();
 
-        $user->update($request->only(['name', 'email', 'phone']));
+        $user->update($request->only(['full_name', 'email', 'department', 'phone']));
 
         if ($request->has('role_ids')) {
             $user->roles()->sync($request->role_ids);
@@ -112,7 +124,7 @@ class UserController extends Controller
 
         AuditLog::create([
             'user_id' => $request->user()->id,
-            'user_name' => $request->user()->name,
+            'user_name' => $request->user()->full_name,
             'action' => 'updated',
             'module' => 'user_management',
             'entity_type' => User::class,
@@ -121,7 +133,7 @@ class UserController extends Controller
             'new_values' => $user->fresh()->toArray(),
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'description' => "Updated user {$user->name}",
+            'description' => "Updated user {$user->full_name}",
         ]);
 
         return $this->successResponse($user->fresh()->load('roles'), 'User updated successfully.');
@@ -199,7 +211,7 @@ class UserController extends Controller
         $permissions = $user->getAllPermissions()->groupBy('module');
 
         return $this->successResponse([
-            'user' => $user->only(['id', 'name', 'email']),
+            'user' => $user->only(['id', 'full_name', 'email']),
             'permissions' => $permissions,
         ]);
     }
