@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\ActivationEmail;
 use App\Models\LoginActivity;
-use App\Models\TwoFactorSecret;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,45 +32,6 @@ class AuthController extends Controller
         if (!$user->is_active) {
             $this->logLoginAttempt($request, $user, 'failed', 'Account is deactivated');
             return $this->errorResponse('Your account has been deactivated. Please contact administrator.', 403);
-        }
-
-        if ($user->two_factor_enabled) {
-            $challenge = Str::random(32);
-            cache()->put("2fa_challenge:{$challenge}", $user->id, 300);
-
-            return $this->successResponse([
-                'requires_2fa' => true,
-                'challenge' => $challenge,
-                'email' => $user->email,
-            ], 'Two-factor authentication required.');
-        }
-
-        return $this->loginUser($request, $user);
-    }
-
-    public function verifyTwoFactor(Request $request): JsonResponse
-    {
-        $request->validate([
-            'challenge' => 'required|string',
-            'code' => 'required|string|size:6',
-        ]);
-
-        $userId = cache()->pull("2fa_challenge:{$request->challenge}");
-
-        if (!$userId) {
-            return $this->errorResponse('Invalid or expired challenge.', 401);
-        }
-
-        $user = User::findOrFail($userId);
-        $twoFactorSecret = $user->twoFactorSecret;
-
-        if (!$twoFactorSecret || !$twoFactorSecret->enabled) {
-            return $this->errorResponse('Two-factor authentication is not enabled.', 400);
-        }
-
-        if (!$this->verifyTotpCode($twoFactorSecret->secret, $request->code)) {
-            $this->logLoginAttempt($request, $user, 'failed', 'Invalid 2FA code');
-            return $this->errorResponse('Invalid verification code.', 401);
         }
 
         return $this->loginUser($request, $user);

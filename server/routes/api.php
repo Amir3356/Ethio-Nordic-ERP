@@ -20,9 +20,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
-    Route::post('/auth/verify-2fa', [AuthController::class, 'verifyTwoFactor']);
-    Route::post('/auth/enable-2fa', [AuthController::class, 'enable2FA']);
-    Route::post('/auth/disable-2fa', [AuthController::class, 'disable2FA']);
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
 

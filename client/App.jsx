@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import api from './context/api';
 import Layout from './AdminDashboard/AdminDashboardLayout';
 import Login from './auth/Login';
 import Logout from './auth/Logout';
@@ -9,7 +10,6 @@ import RoleManagement from './AdminDashboard/Role & Permission Assignment';
 import LoginActivity from './AdminDashboard/LoginActivity';
 import AuditTrail from './AdminDashboard/AuditTrail';
 import SessionManagement from './AdminDashboard/SessionManagement';
-import { authService } from './services/api';
 
 const AuthContext = createContext(null);
 
@@ -28,7 +28,7 @@ function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const response = await authService.login(email, password);
+    const response = await api.post('/auth/login', { email, password });
     const data = response.data;
 
     if (data.requires_two_factor) {
@@ -44,7 +44,7 @@ function AuthProvider({ children }) {
   };
 
   const verifyTwoFactor = async (code) => {
-    const response = await authService.verifyTwoFactor(twoFactorEmail, code);
+    const response = await api.post('/auth/verify-2fa', { email: twoFactorEmail, code });
     const data = response.data;
 
     localStorage.setItem('user', JSON.stringify(data.data.user));
@@ -56,7 +56,7 @@ function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await authService.logout();
+      await api.post('/auth/logout');
     } catch (error) {
       // ignore
     }

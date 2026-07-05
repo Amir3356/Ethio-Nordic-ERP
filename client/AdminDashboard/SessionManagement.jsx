@@ -1,13 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../context/api';
-
-const sessionService = {
-  getAll: (params) => api.get('/sessions', { params }),
-  delete: (tokenId) => api.delete(`/sessions/${tokenId}`),
-  deleteAllForUser: (userId) => api.delete(`/sessions/user/${userId}`),
-  forceLogout: (userId) => api.post(`/sessions/force-logout/${userId}`),
-  getStats: () => api.get('/sessions/stats'),
-};
 import { Monitor, Smartphone, Tablet, Users, AlertTriangle, X, XCircle, LogOut } from 'lucide-react';
 import './SessionManagement.css';
 
@@ -81,7 +73,7 @@ export default function SessionManagement() {
       if (filters.user) params.user = filters.user;
       if (filters.deviceType) params.device_type = filters.deviceType;
 
-      const res = await sessionService.getAll(params);
+      const res = await api.get('/sessions', { params });
       const data = res.data;
       setSessions(data.data || data.sessions || data || []);
       setPagination((prev) => ({
@@ -98,7 +90,7 @@ export default function SessionManagement() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await sessionService.getStats();
+      const res = await api.get('/sessions/stats');
       setStats(res.data);
     } catch {
       // Stats are optional; don't block on failure
@@ -160,9 +152,9 @@ export default function SessionManagement() {
     if (!confirmModal) return;
     try {
       if (confirmModal.type === 'terminate') {
-        await sessionService.delete(confirmModal.sessionId);
+        await api.delete(`/sessions/${confirmModal.sessionId}`);
       } else if (confirmModal.type === 'forceLogout') {
-        await sessionService.forceLogout(confirmModal.userId);
+        await api.post(`/sessions/force-logout/${confirmModal.userId}`);
       }
       setConfirmModal(null);
       handleRefresh();

@@ -1,13 +1,5 @@
-import { useState, useEffect } from 'react';
-import { userService } from './New user create';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../context/api';
-
-const loginActivityService = {
-  getAll: (params) => api.get('/login-activity', { params }),
-  getUserActivity: (id, params) => api.get(`/login-activity/user/${id}`, { params }),
-  getStats: (params) => api.get('/login-activity/stats', { params }),
-  getOnlineUsers: () => api.get('/login-activity/online'),
-};
 import { Download, BarChart2, CheckCircle, XCircle, Users, ClipboardList, Monitor, Smartphone, Tablet } from 'lucide-react';
 import './LoginActivity.css';
 
@@ -84,9 +76,9 @@ export default function LoginActivity() {
         if (filters.date_to) params.date_to = filters.date_to;
 
         const [actRes, statsRes, onlineRes] = await Promise.all([
-          loginActivityService.getAll(params),
-          loginActivityService.getStats(params),
-          loginActivityService.getOnlineUsers(),
+          api.get('/login-activity', { params }),
+          api.get('/login-activity/stats', { params }),
+          api.get('/login-activity/online'),
         ]);
 
         if (!cancelled) {
@@ -118,7 +110,7 @@ export default function LoginActivity() {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const res = await userService.getAll({ per_page: 200 });
+        const res = await api.get('/users', { params: { per_page: 200 } });
         const result = res.data.data || res.data;
         setUsers(Array.isArray(result) ? result : result?.data || []);
       } catch (err) {
@@ -143,7 +135,7 @@ export default function LoginActivity() {
     setDetailLoading(true);
     setShowDetailModal(true);
     try {
-      const res = await loginActivityService.getUserActivity(userId);
+      const res = await api.get(`/login-activity/user/${userId}`);
       const data = res.data.data || res.data || [];
       setDetailActivities(data);
     } catch (err) {

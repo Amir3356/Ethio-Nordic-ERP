@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react';
-import { roleService } from './New user create';
 import api from '../context/api';
-
-const permissionService = {
-  getAll: () => api.get('/permissions'),
-  getById: (id) => api.get(`/permissions/${id}`),
-  getByModule: (module) => api.get(`/permissions/module/${module}`),
-};
 import { Shield, Key, User, Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import './Role & Permission Assignment.css';
 
@@ -39,7 +32,10 @@ export default function RoleManagement() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [rolesRes, permsRes] = await Promise.all([roleService.getAll(), permissionService.getAll()]);
+        const [rolesRes, permsRes] = await Promise.all([
+          api.get('/roles'),
+          api.get('/permissions'),
+        ]);
         if (!cancelled) {
           setRoles(rolesRes.data.data || rolesRes.data || []);
           setPermissions(permsRes.data.data || permsRes.data || []);
@@ -56,7 +52,10 @@ export default function RoleManagement() {
 
   const reloadRoles = async () => {
     try {
-      const [rolesRes, permsRes] = await Promise.all([roleService.getAll(), permissionService.getAll()]);
+      const [rolesRes, permsRes] = await Promise.all([
+        api.get('/roles'),
+        api.get('/permissions'),
+      ]);
       setRoles(rolesRes.data.data || rolesRes.data || []);
       setPermissions(permsRes.data.data || permsRes.data || []);
     } catch (err) {
@@ -133,9 +132,9 @@ export default function RoleManagement() {
     setError('');
     try {
       if (editingRole) {
-        await roleService.update(editingRole.id, formData);
+        await api.put(`/roles/${editingRole.id}`, formData);
       } else {
-        await roleService.create(formData);
+        await api.post('/roles', formData);
       }
       setShowModal(false);
       reloadRoles();
@@ -155,7 +154,7 @@ export default function RoleManagement() {
     if (!deletingRole) return;
     setSaving(true);
     try {
-      await roleService.delete(deletingRole.id);
+      await api.delete(`/roles/${deletingRole.id}`);
       setShowDeleteModal(false);
       setDeletingRole(null);
       reloadRoles();

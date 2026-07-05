@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle, AlertTriangle, Shield } from 'lucide-react';
-import { authService } from '../services/api';
+import api from '../context/api';
 import './Activate.css';
 
 export default function Activate() {
@@ -32,7 +32,7 @@ export default function Activate() {
 
     const verifyToken = async () => {
       try {
-        const res = await authService.verifyActivationToken(token);
+        const res = await api.post('/auth/verify-activation-token', { token });
         const data = res.data;
         setTokenValid(true);
         setUserName(data.data.full_name);
@@ -72,7 +72,11 @@ export default function Activate() {
 
     setSubmitting(true);
     try {
-      await authService.setPassword(token, password, confirmPassword);
+      await api.post('/auth/set-password', {
+        token,
+        password,
+        password_confirmation: confirmPassword,
+      });
       setSuccess('Account activated successfully! Redirecting to login...');
       setTimeout(() => {
         navigate('/login');

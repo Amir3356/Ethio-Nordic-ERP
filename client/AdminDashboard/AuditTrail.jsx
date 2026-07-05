@@ -1,13 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../context/api';
-
-const auditLogService = {
-  getAll: (params) => api.get('/audit-logs', { params }),
-  getById: (id) => api.get(`/audit-logs/${id}`),
-  getEntityHistory: (entityType, entityId) => api.get(`/audit-logs/entity/${entityType}/${entityId}`),
-  getModuleHistory: (module) => api.get(`/audit-logs/module/${module}`),
-  getUserHistory: (userId) => api.get(`/audit-logs/user/${userId}`),
-};
 import { ClipboardList, Clock, AlertTriangle, X } from 'lucide-react';
 import './AuditTrail.css';
 
@@ -104,7 +96,7 @@ export default function AuditTrail() {
       if (filters.dateFrom) params.date_from = filters.dateFrom;
       if (filters.dateTo) params.date_to = filters.dateTo;
 
-      const res = await auditLogService.getAll(params);
+      const res = await api.get('/audit-logs', { params });
       const data = res.data;
       setLogs(data.data || data.logs || data || []);
       setPagination((prev) => ({
@@ -162,7 +154,7 @@ export default function AuditTrail() {
     });
     setEntityHistoryLoading(true);
     try {
-      const res = await auditLogService.getEntityHistory(entityType, entityId);
+      const res = await api.get(`/audit-logs/entity/${entityType}/${entityId}`);
       setEntityHistoryData(res.data?.data || res.data || []);
     } catch (err) {
       setEntityHistoryData([]);

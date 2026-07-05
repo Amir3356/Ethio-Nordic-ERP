@@ -1,26 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../App';
 import api from '../context/api';
-
-export const userService = {
-  getAll: (params) => api.get('/users', { params }),
-  getById: (id) => api.get(`/users/${id}`),
-  create: (data) => api.post('/users', data),
-  update: (id, data) => api.put(`/users/${id}`, data),
-  deactivate: (id) => api.post(`/users/${id}/deactivate`),
-  activate: (id) => api.post(`/users/${id}/activate`),
-  getPermissions: (id) => api.get(`/users/${id}/permissions`),
-  bulkAction: (data) => api.post('/users/bulk-action', data),
-};
-
-export const roleService = {
-  getAll: () => api.get('/roles'),
-  getById: (id) => api.get(`/roles/${id}`),
-  create: (data) => api.post('/roles', data),
-  update: (id, data) => api.put(`/roles/${id}`, data),
-  delete: (id) => api.delete(`/roles/${id}`),
-};
-
 import { Search, AlertTriangle, UserCircle, Pencil, Lock, Unlock, Key, Trash2, Copy, CheckCircle, Mail } from 'lucide-react';
 import './New user Create.css';
 
@@ -71,48 +51,44 @@ export default function UserManagement() {
   const canDelete = canPerform('users', 'delete');
 
   useEffect(() => {
-    fetchMetaData();
+    const fetchRoles = async () => {
+      try {
+        const res = await api.get('/roles');
+        const rData = res.data?.data || res.data;
+        setRoles(Array.isArray(rData) ? rData : rData.roles || []);
+      } catch {
+        // non-critical
+      }
+    };
+    fetchRoles();
   }, []);
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = {
+          page: currentPage,
+          per_page: ITEMS_PER_PAGE,
+        };
+        if (search) params.search = search;
+        if (filterRole) params.role_id = filterRole;
+        if (filterStatus) params.is_active = filterStatus === 'active';
+
+        const res = await api.get('/users', { params });
+        const data = res.data.data || res.data;
+        setUsers(Array.isArray(data) ? data : data.users || []);
+        setTotalPages(data.last_page || data.total_pages || Math.ceil((data.total || 0) / ITEMS_PER_PAGE) || 1);
+        setTotalCount(data.total || data.count || (Array.isArray(data) ? data.length : 0));
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUsers();
   }, [search, filterRole, filterStatus, currentPage]);
-
-  const fetchMetaData = async () => {
-    try {
-      const rolesRes = await roleService.getAll();
-      if (rolesRes.status === 'fulfilled' || rolesRes.data) {
-        const rData = rolesRes.data?.data || rolesRes.data;
-        setRoles(Array.isArray(rData) ? rData : rData.roles || []);
-      }
-    } catch {
-      // non-critical
-    }
-  };
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = {
-        page: currentPage,
-        per_page: ITEMS_PER_PAGE,
-      };
-      if (search) params.search = search;
-      if (filterRole) params.role_id = filterRole;
-      if (filterStatus) params.is_active = filterStatus === 'active';
-
-      const res = await userService.getAll(params);
-      const data = res.data.data || res.data;
-      setUsers(Array.isArray(data) ? data : data.users || []);
-      setTotalPages(data.last_page || data.total_pages || Math.ceil((data.total || 0) / ITEMS_PER_PAGE) || 1);
-      setTotalCount(data.total || data.count || (Array.isArray(data) ? data.length : 0));
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -176,7 +152,7 @@ export default function UserManagement() {
     setDetailUser(user);
     setShowDetailModal(true);
     try {
-      const res = await userService.getPermissions(user.id);
+      const res = await api.get(`/users/${user.id}/permissions`);
       const pData = res.data.data || res.data;
       setDetailPermissions(Array.isArray(pData) ? pData : pData.permissions || []);
     } catch {
@@ -208,16 +184,40 @@ export default function UserManagement() {
     return Object.keys(errors).length === 0;
   };
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = {
+        page: currentPage,
+        per_page: ITEMS_PER_PAGE,
+      };
+      if (search) params.search = search;
+      if (filterRole) params.role_id = filterRole;
+      if (filterStatus) params.is_active = filterStatus === 'active';
+
+      const res = await api.get('/users', { params });
+      const data = res.data.data || res.data;
+      setUsers(Array.isArray(data) ? data : data.users || []);
+      setTotalPages(data.last_page || data.total_pages || Math.ceil((data.total || 0) / ITEMS_PER_PAGE) || 1);
+      setTotalCount(data.total || data.count || (Array.isArray(data) ? data.length : 0));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!validateForm()) return;
     setSubmitting(true);
     try {
       if (showEditModal && currentUser) {
-        await userService.update(currentUser.id, formData);
+        await api.put(`/users/${currentUser.id}`, formData);
         setShowEditModal(false);
         fetchUsers();
       } else {
-        const res = await userService.create(formData);
+        const res = await api.post('/users', formData);
         const data = res.data;
         setCreatedUser({
           name: data.data.user.full_name,
@@ -240,7 +240,7 @@ export default function UserManagement() {
     if (!currentUser) return;
     setSubmitting(true);
     try {
-      await userService.delete(currentUser.id);
+      await api.delete(`/users/${currentUser.id}`);
       setShowDeleteModal(false);
       setCurrentUser(null);
       fetchUsers();
@@ -254,9 +254,9 @@ export default function UserManagement() {
   const handleToggleActive = async (user) => {
     try {
       if (user.is_active) {
-        await userService.deactivate(user.id);
+        await api.post(`/users/${user.id}/deactivate`);
       } else {
-        await userService.activate(user.id);
+        await api.post(`/users/${user.id}/activate`);
       }
       fetchUsers();
     } catch {
@@ -267,7 +267,7 @@ export default function UserManagement() {
   const handleBulkAction = async (action) => {
     if (selectedIds.size === 0) return;
     try {
-      await userService.bulkAction({
+      await api.post('/users/bulk-action', {
         action,
         user_ids: Array.from(selectedIds),
       });
