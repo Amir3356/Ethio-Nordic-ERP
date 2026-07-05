@@ -6,8 +6,14 @@ import './User & Access Management.css';
 
 export default function UserAccessManagement() {
   const [users, setUsers] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [sessionConfig, setSessionConfig] = useState({
+    idleTimeoutMinutes: 15,
+    refreshTokenRotation: true,
+  });
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [newUser, setNewUser] = useState({
     name: '',
@@ -24,12 +30,76 @@ export default function UserAccessManagement() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    axios.get('/Session%20Monitoring%20%26%20Management.json')
+      .then((res) => {
+        setSessions(Array.isArray(res.data?.sessions) ? res.data.sessions : []);
+        setSessionConfig(res.data?.config || {
+          idleTimeoutMinutes: 15,
+          refreshTokenRotation: true,
+        });
+      })
+      .catch((err) => console.error('Failed to load sessions:', err))
+      .finally(() => setSessionLoading(false));
+  }, []);
+
   const safeUsers = Array.isArray(users) ? users : [];
+  const safeSessions = Array.isArray(sessions) ? sessions : [];
+  const safeSessionConfig = sessionConfig || {
+    idleTimeoutMinutes: 15,
+    refreshTokenRotation: true,
+  };
 
   const filteredUsers = safeUsers.filter((u) =>
     String(u.name).toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  function handleEditUser(user) {
+    const nextName = window.prompt('Edit user name', user.name);
+
+    if (nextName === null) {
+      return;
+    }
+
+    const trimmedName = nextName.trim();
+
+    if (!trimmedName) {
+      return;
+    }
+
+    setUsers((currentUsers) =>
+      currentUsers.map((currentUser) =>
+        currentUser.id === user.id ? { ...currentUser, name: trimmedName } : currentUser
+      )
+    );
+  }
+
+  function handleDeleteUser(user) {
+    const shouldDelete = window.confirm(`Delete ${user.name}?`);
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setUsers((currentUsers) => currentUsers.filter((currentUser) => currentUser.id !== user.id));
+  }
+
+  function handleTerminateSession(session) {
+    const shouldTerminate = window.confirm(`Terminate session for ${session.user}?`);
+
+    if (!shouldTerminate) {
+      return;
+    }
+
+    setSessions((currentSessions) =>
+      currentSessions.map((currentSession) =>
+        currentSession.id === session.id
+          ? { ...currentSession, status: 'Terminated', lastActive: 'Terminated now' }
+          : currentSession
+      )
+    );
+  }
 
   const columns = useMemo(() => [
     {
@@ -89,41 +159,74 @@ export default function UserAccessManagement() {
     },
   ], []);
 
+  const sessionColumns = useMemo(() => [
+    {
+      accessorKey: 'user',
+      header: 'User',
+      cell: (info) => String(info.getValue()),
+    },
+    {
+      accessorKey: 'device',
+      header: 'Device',
+      cell: (info) => info.getValue(),
+    },
+    {
+      accessorKey: 'location',
+      header: 'Location',
+      cell: (info) => info.getValue(),
+    },
+    {
+      accessorKey: 'lastActive',
+      header: 'Last Active',
+      cell: (info) => info.getValue(),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Session Status',
+      cell: (info) => {
+        const status = info.getValue();
+
+        return (
+          <span className={status === 'Active' ? 'session-status-active' : 'session-status-idle'}>
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'tokenRotation',
+      header: 'Refresh Token',
+      cell: (info) => (info.getValue() ? 'Rotated on renewal' : 'Rotation pending'),
+    },
+    {
+      id: 'sessionActions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="session-actions">
+          <button
+            type="button"
+            className="session-terminate-btn"
+            onClick={() => handleTerminateSession(row.original)}
+            disabled={row.original.status === 'Terminated'}
+          >
+            Terminate
+          </button>
+        </div>
+      ),
+    },
+  ], []);
+
   const table = useReactTable({
     data: filteredUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const handleEditUser = (user) => {
-    const nextName = window.prompt('Edit user name', user.name);
-
-    if (nextName === null) {
-      return;
-    }
-
-    const trimmedName = nextName.trim();
-
-    if (!trimmedName) {
-      return;
-    }
-
-    setUsers((currentUsers) =>
-      currentUsers.map((currentUser) =>
-        currentUser.id === user.id ? { ...currentUser, name: trimmedName } : currentUser
-      )
-    );
-  };
-
-  const handleDeleteUser = (user) => {
-    const shouldDelete = window.confirm(`Delete ${user.name}?`);
-
-    if (!shouldDelete) {
-      return;
-    }
-
-    setUsers((currentUsers) => currentUsers.filter((currentUser) => currentUser.id !== user.id));
-  };
+  const sessionTable = useReactTable({
+    data: safeSessions,
+    columns: sessionColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   const handleNewUserChange = (field, value) => {
     setNewUser((currentUser) => ({
@@ -311,6 +414,65 @@ export default function UserAccessManagement() {
             </table>
           </div>
         )}
+
+        <section className="session-section">
+          <div className="session-header">
+            <div>
+              <h2 className="session-title">Session Monitoring & Management</h2>
+              <p className="session-description">
+                Administrators can review active sessions in real time, including device and location metadata,
+                and can terminate any session when needed. Idle sessions automatically expire after a configured
+                timeout, and refresh tokens are rotated on each renewal to reduce token replay risk.
+              </p>
+            </div>
+
+            <div className="session-summary">
+              <div className="session-summary-card">
+                <span className="session-summary-label">Idle timeout</span>
+                <strong>{`${safeSessionConfig.idleTimeoutMinutes} minutes`}</strong>
+              </div>
+              <div className="session-summary-card">
+                <span className="session-summary-label">Refresh tokens</span>
+                <strong>{safeSessionConfig.refreshTokenRotation ? 'Rotated on renewal' : 'Rotation disabled'}</strong>
+              </div>
+            </div>
+          </div>
+
+          {sessionLoading ? (
+            <p>Loading session monitoring data...</p>
+          ) : (
+            <div className="session-table-wrapper">
+              <table className="session-table">
+                <thead>
+                  {sessionTable.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <th key={header.id}>
+                          <span className="user-th">
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </span>
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {sessionTable.getRowModel().rows.map((row) => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
