@@ -110,7 +110,8 @@ export default function LoginActivity() {
     const loadUsers = async () => {
       try {
         const res = await userService.getAll({ per_page: 200 });
-        setUsers(res.data.data || res.data || []);
+        const result = res.data.data || res.data;
+        setUsers(Array.isArray(result) ? result : result?.data || []);
       } catch (err) {
         console.error('Failed to load users:', err);
       }
@@ -217,7 +218,7 @@ export default function LoginActivity() {
           >
             <option value="">All Users</option>
             {users.map((u) => (
-              <option key={u.id} value={u.id}>{u.name}</option>
+              <option key={u.id} value={u.id}>{u.full_name}</option>
             ))}
           </select>
           <select
