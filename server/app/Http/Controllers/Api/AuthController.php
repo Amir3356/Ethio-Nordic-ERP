@@ -122,8 +122,6 @@ class AuthController extends Controller
             LoginActivity::where('user_id', $user->id)
                 ->whereNull('logout_at')
                 ->update(['logout_at' => now()]);
-
-            $user->currentAccessToken()->delete();
         }
 
         Auth::guard('web')->logout();

@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { auditLogService } from '../services/api';
+import api from '../context/api';
+
+const auditLogService = {
+  getAll: (params) => api.get('/audit-logs', { params }),
+  getById: (id) => api.get(`/audit-logs/${id}`),
+  getEntityHistory: (entityType, entityId) => api.get(`/audit-logs/entity/${entityType}/${entityId}`),
+  getModuleHistory: (module) => api.get(`/audit-logs/module/${module}`),
+  getUserHistory: (userId) => api.get(`/audit-logs/user/${userId}`),
+};
 import { ClipboardList, Clock, AlertTriangle, X } from 'lucide-react';
 import './AuditTrail.css';
 

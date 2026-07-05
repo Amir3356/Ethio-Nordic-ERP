@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { sessionService } from '../services/api';
+import api from '../context/api';
+
+const sessionService = {
+  getAll: (params) => api.get('/sessions', { params }),
+  delete: (tokenId) => api.delete(`/sessions/${tokenId}`),
+  deleteAllForUser: (userId) => api.delete(`/sessions/user/${userId}`),
+  forceLogout: (userId) => api.post(`/sessions/force-logout/${userId}`),
+  getStats: () => api.get('/sessions/stats'),
+};
 import { Monitor, Smartphone, Tablet, Users, AlertTriangle, X, XCircle, LogOut } from 'lucide-react';
 import './SessionManagement.css';
 

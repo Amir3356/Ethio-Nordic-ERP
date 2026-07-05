@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
-import { loginActivityService, userService } from '../services/api';
+import { userService } from './New user create';
+import api from '../context/api';
+
+const loginActivityService = {
+  getAll: (params) => api.get('/login-activity', { params }),
+  getUserActivity: (id, params) => api.get(`/login-activity/user/${id}`, { params }),
+  getStats: (params) => api.get('/login-activity/stats', { params }),
+  getOnlineUsers: () => api.get('/login-activity/online'),
+};
 import { Download, BarChart2, CheckCircle, XCircle, Users, ClipboardList, Monitor, Smartphone, Tablet } from 'lucide-react';
 import './LoginActivity.css';
 
@@ -82,19 +90,20 @@ export default function LoginActivity() {
         ]);
 
         if (!cancelled) {
-          const actData = actRes.data;
-          setActivities(actData.data || actData || []);
-          setTotalPages(actData.last_page || actData.meta?.last_page || 1);
+          const actData = actRes.data.data;
+          setActivities(Array.isArray(actData) ? actData : actData?.data || []);
+          setTotalPages(actData?.last_page || actData?.meta?.last_page || 1);
 
           const sData = statsRes.data.data || statsRes.data || {};
           setStats({
             total: sData.total || 0,
             successful: sData.successful || sData.success || 0,
             failed: sData.failed || 0,
-            unique_users: sData.unique_users || 0,
+            unique_users: sData.unique_users || sData.unique_ips || 0,
           });
 
-          setOnlineUsers(onlineRes.data.data || onlineRes.data || []);
+          const onlineData = onlineRes.data.data;
+          setOnlineUsers(onlineData?.users || (Array.isArray(onlineData) ? onlineData : []));
         }
       } catch (err) {
         console.error('Failed to load activity:', err);

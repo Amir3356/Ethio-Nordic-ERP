@@ -1,6 +1,26 @@
 import { useState, useEffect } from 'react';
-import { userService, roleService } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../App';
+import api from '../context/api';
+
+export const userService = {
+  getAll: (params) => api.get('/users', { params }),
+  getById: (id) => api.get(`/users/${id}`),
+  create: (data) => api.post('/users', data),
+  update: (id, data) => api.put(`/users/${id}`, data),
+  deactivate: (id) => api.post(`/users/${id}/deactivate`),
+  activate: (id) => api.post(`/users/${id}/activate`),
+  getPermissions: (id) => api.get(`/users/${id}/permissions`),
+  bulkAction: (data) => api.post('/users/bulk-action', data),
+};
+
+export const roleService = {
+  getAll: () => api.get('/roles'),
+  getById: (id) => api.get(`/roles/${id}`),
+  create: (data) => api.post('/roles', data),
+  update: (id, data) => api.put(`/roles/${id}`, data),
+  delete: (id) => api.delete(`/roles/${id}`),
+};
+
 import { Search, AlertTriangle, UserCircle, Pencil, Lock, Unlock, Key, Trash2, Copy, CheckCircle, Mail } from 'lucide-react';
 import './New user Create.css';
 

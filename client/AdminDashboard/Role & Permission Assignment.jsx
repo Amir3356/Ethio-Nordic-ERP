@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { roleService, permissionService } from '../services/api';
+import { roleService } from './New user create';
+import api from '../context/api';
+
+const permissionService = {
+  getAll: () => api.get('/permissions'),
+  getById: (id) => api.get(`/permissions/${id}`),
+  getByModule: (module) => api.get(`/permissions/module/${module}`),
+};
 import { Shield, Key, User, Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import './Role & Permission Assignment.css';
 
