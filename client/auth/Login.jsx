@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../App';
+import axios from 'axios';
 import { AlertTriangle, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import './Login.css';
 
+const api = axios.create({
+  baseURL: '/api',
+  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+  withCredentials: true,
+});
+
 export default function Login() {
-  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -14,19 +19,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      navigate('/', { replace: true });
-    }
-  }, [user, navigate]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await login(email, password);
+      const response = await api.post('/auth/login', { email, password });
+      const data = response.data;
+
+      localStorage.setItem('user', JSON.stringify(data.data.user));
       navigate('/', { replace: true });
     } catch (err) {
       const msg =

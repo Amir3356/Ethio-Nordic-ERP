@@ -1,20 +1,30 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../App';
+import axios from 'axios';
 import { LogOut } from 'lucide-react';
 import './Logout.css';
 
+const api = axios.create({
+  baseURL: '/api',
+  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+  withCredentials: true,
+});
+
 function Logout() {
-  const { logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const performLogout = async () => {
-      await logout();
+      try {
+        await api.post('/auth/logout');
+      } catch (error) {
+        // ignore
+      }
+      localStorage.removeItem('user');
       navigate('/login');
     };
     performLogout();
-  }, [logout, navigate]);
+  }, [navigate]);
 
   return (
     <div className="logout-container">
