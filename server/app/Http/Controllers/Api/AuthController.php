@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -149,59 +148,6 @@ class AuthController extends Controller
         return $this->successResponse(null, 'Account activated successfully.');
     }
 
-    public function enable2FA(Request $request): JsonResponse
-    {
-        $user = $request->user();
-
-        if ($user->two_factor_enabled) {
-            return $this->errorResponse('Two-factor authentication is already enabled.', 422);
-        }
-
-        $secret = $this->generateTotpSecret();
-        $recoveryCodes = $this->generateRecoveryCodes();
-
-        $user->twoFactorSecret()->updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'secret' => $secret,
-                'recovery_codes' => $recoveryCodes,
-                'enabled' => false,
-            ]
-        );
-
-        $qrCodeUrl = $this->getTotpQrUrl($user->email, $secret);
-
-        return $this->successResponse([
-            'secret' => $secret,
-            'qr_code_url' => $qrCodeUrl,
-            'recovery_codes' => $recoveryCodes,
-        ], 'Scan the QR code with your authenticator app, then verify with verify-2fa endpoint.');
-    }
-
-    public function disable2FA(Request $request): JsonResponse
-    {
-        $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
-
-        $user = $request->user();
-
-        if (!$user->two_factor_enabled) {
-            return $this->errorResponse('Two-factor authentication is not enabled.', 422);
-        }
-
-        $twoFactorSecret = $user->twoFactorSecret;
-
-        if (!$this->verifyTotpCode($twoFactorSecret->secret, $request->code)) {
-            return $this->errorResponse('Invalid verification code.', 422);
-        }
-
-        $user->twoFactorSecret()->delete();
-        $user->update(['two_factor_enabled' => false]);
-
-        return $this->successResponse(null, 'Two-factor authentication disabled successfully.');
-    }
-
     private function loginUser(Request $request, User $user): JsonResponse
     {
         Auth::login($user);
@@ -245,60 +191,6 @@ class AuthController extends Controller
             'login_at' => now(),
             'is_active' => false,
         ]);
-    }
-
-    private function generateTotpSecret(int $length = 20): string
-    {
-        return strtoupper(bin2hex(random_bytes($length)));
-    }
-
-    private function generateRecoveryCodes(int $count = 8): array
-    {
-        $codes = [];
-        for ($i = 0; $i < $count; $i++) {
-            $codes[] = strtoupper(bin2hex(random_bytes(4)));
-        }
-        return $codes;
-    }
-
-    private function getTotpQrUrl(string $email, string $secret): string
-    {
-        $issuer = urlencode('EthioNordicERP');
-        $label = urlencode($email);
-        return "otpauth://totp/{$issuer}:{$label}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30";
-    }
-
-    private function generateTotpCode(string $secret, int $timeSlice = null): string
-    {
-        if ($timeSlice === null) {
-            $timeSlice = floor(time() / 30);
-        }
-
-        $time = chr(0) . chr(0) . chr(0) . chr(0) . pack('N*', $timeSlice);
-        $hmac = hash_hmac('sha1', $time, $secret, true);
-
-        $offset = ord(substr($hmac, -1)) & 0x0F;
-        $hashPart = substr($hmac, $offset, 4);
-
-        $value = unpack('N', $hashPart)[1];
-        $value = $value & 0x7FFFFFFF;
-
-        $code = $value % 1000000;
-        return str_pad((string) $code, 6, '0', STR_PAD_LEFT);
-    }
-
-    private function verifyTotpCode(string $secret, string $code, int $tolerance = 1): bool
-    {
-        $currentTimeSlice = floor(time() / 30);
-
-        for ($i = -$tolerance; $i <= $tolerance; $i++) {
-            $calculatedCode = $this->generateTotpCode($secret, $currentTimeSlice + $i);
-            if (hash_equals($calculatedCode, $code)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function parseDeviceType(?string $userAgent): string
