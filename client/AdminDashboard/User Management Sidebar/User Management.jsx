@@ -9,6 +9,8 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showNewUserForm, setShowNewUserForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editUser, setEditUser] = useState(null);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
