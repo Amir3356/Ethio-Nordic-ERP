@@ -1,10 +1,11 @@
-import { Role, NewUser, EditUser, FormErrors, EditFormErrors } from './types';
+import { Role, Permission, NewUser, EditUser, FormErrors, EditFormErrors } from './types';
 
 interface UserFormProps {
   mode: 'create' | 'edit';
   newUser: NewUser;
   editUser: EditUser | null;
   roles: Role[];
+  allPermissions: Record<string, Permission[]>;
   newUserErrors: FormErrors;
   editUserErrors: EditFormErrors;
   loading: boolean;
@@ -21,6 +22,7 @@ export default function UserForm({
   newUser,
   editUser,
   roles,
+  allPermissions,
   newUserErrors,
   editUserErrors,
   loading,
@@ -92,10 +94,27 @@ export default function UserForm({
     }
   };
 
+  const handlePermissionToggle = (permissionId: number) => {
+    if (mode === 'create') {
+      const updatedPermissions = newUser.permissions.includes(permissionId)
+        ? newUser.permissions.filter((p) => p !== permissionId)
+        : [...newUser.permissions, permissionId];
+      onNewUserChange({ ...newUser, permissions: updatedPermissions });
+      onNewUserErrorsChange({ ...newUserErrors, permissions: undefined });
+    } else if (editUser) {
+      const updatedPermissions = editUser.permissions.includes(permissionId)
+        ? editUser.permissions.filter((p) => p !== permissionId)
+        : [...editUser.permissions, permissionId];
+      onEditUserChange({ ...editUser, permissions: updatedPermissions });
+      onEditUserErrorsChange({ ...editUserErrors, permissions: undefined });
+    }
+  };
+
   const getNameValue = () => mode === 'create' ? newUser.name : editUser?.full_name || '';
   const getEmailValue = () => mode === 'create' ? newUser.email : editUser?.email || '';
   const getDepartmentValue = () => mode === 'create' ? newUser.department : editUser?.department || '';
   const getSelectedRoles = () => mode === 'create' ? newUser.roles : editUser?.roles || [];
+  const getSelectedPermissions = () => mode === 'create' ? newUser.permissions : editUser?.permissions || [];
   const getNameError = () => mode === 'create' ? newUserErrors.name : editUserErrors.full_name;
 
   return (
@@ -153,6 +172,31 @@ export default function UserForm({
             ))}
           </div>
           {errors.roles && <span className="content-form-error">{errors.roles}</span>}
+        </label>
+      </div>
+      <div className="content-form-row">
+        <label className="content-form-field">
+          <span>Custom Permission Overrides</span>
+          <div className="content-permissions-group">
+            {Object.entries(allPermissions).map(([module, permissions]) => (
+              <div key={module} className="content-permission-module">
+                <h4 className="content-permission-module-title">{module}</h4>
+                <div className="content-checkbox-group">
+                  {permissions.map((permission) => (
+                    <label key={permission.id} className="content-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={getSelectedPermissions().includes(permission.id)}
+                        onChange={() => handlePermissionToggle(permission.id)}
+                      />
+                      <span>{permission.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          {errors.permissions && <span className="content-form-error">{errors.permissions}</span>}
         </label>
       </div>
       <div className="content-form-actions">

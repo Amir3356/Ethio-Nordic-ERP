@@ -14,7 +14,9 @@ export default function UserModal({ title, onClose, children }: UserModalProps) 
           <h3>{title}</h3>
           <button type="button" className="content-modal-close" onClick={onClose}>×</button>
         </div>
-        {children}
+        <div className="content-modal-body">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import './UserManagement.css';
 export default function UserManagement() {
   const {
     roles,
+    allPermissions,
     search,
     setSearch,
     loading,
@@ -65,6 +66,7 @@ export default function UserManagement() {
             newUser={newUser}
             editUser={null}
             roles={roles}
+            allPermissions={allPermissions}
             newUserErrors={newUserErrors}
             editUserErrors={{}}
             loading={loading}
@@ -85,9 +87,10 @@ export default function UserManagement() {
         <UserModal title="Edit User" onClose={closeEditForm}>
           <UserForm
             mode="edit"
-            newUser={{ name: '', email: '', department: '', roles: [] }}
+            newUser={{ name: '', email: '', department: '', roles: [], permissions: [] }}
             editUser={editUser}
             roles={roles}
+            allPermissions={allPermissions}
             newUserErrors={{}}
             editUserErrors={editUserErrors}
             loading={loading}

@@ -37,4 +37,7 @@ export const userAPI = {
 
   getAccessReview: (inactiveDays: number = 90) =>
     api.get('/users/access-review', { params: { inactive_days: inactiveDays } }),
+
+  getAllPermissionsGrouped: () =>
+    api.get('/permissions/grouped/by-module'),
 };

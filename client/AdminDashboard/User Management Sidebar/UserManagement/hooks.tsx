@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { userAPI, roleAPI } from '../../../services';
-import { User, Role, NewUser, EditUser, FormErrors, EditFormErrors } from './types';
+import { User, Role, Permission, NewUser, EditUser, FormErrors, EditFormErrors } from './types';
 import { validateNewUser, validateEditUser } from './validation';
 
 export function useUserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [allPermissions, setAllPermissions] = useState<Record<string, Permission[]>>({});
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,6 +22,7 @@ export function useUserManagement() {
     email: '',
     department: '',
     roles: [],
+    permissions: [],
   });
 
   const fetchUsers = useCallback(async () => {
@@ -48,10 +50,21 @@ export function useUserManagement() {
     }
   }, []);
 
+  const fetchPermissions = useCallback(async () => {
+    try {
+      const response = await userAPI.getAllPermissionsGrouped();
+      const payload = response.data?.data;
+      setAllPermissions(payload || {});
+    } catch (err) {
+      console.error('Failed to load permissions:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
     fetchRoles();
-  }, [fetchUsers, fetchRoles]);
+    fetchPermissions();
+  }, [fetchUsers, fetchRoles, fetchPermissions]);
 
   const handleCreateUser = async (): Promise<boolean> => {
     if (submittingRef.current) return false;
@@ -70,10 +83,11 @@ export function useUserManagement() {
         email: newUser.email,
         department: newUser.department,
         role_ids: newUser.roles,
+        permission_ids: newUser.permissions,
       });
       const emailSent = response.data?.data?.email_sent;
       setShowNewUserForm(false);
-      setNewUser({ name: '', email: '', department: '', roles: [] });
+      setNewUser({ name: '', email: '', department: '', roles: [], permissions: [] });
       setNewUserErrors({});
       await fetchUsers();
       setSuccess('User created successfully.' + (emailSent ? ' Activation email sent.' : ''));
@@ -114,6 +128,7 @@ export function useUserManagement() {
       email: user.email || '',
       department: user.department || '',
       roles: user.roles ? user.roles.map((r) => r.id) : [],
+      permissions: user.direct_permissions ? user.direct_permissions.map((p) => p.id) : [],
     });
     setEditUserErrors({});
     setShowEditForm(true);
@@ -134,6 +149,7 @@ export function useUserManagement() {
         email: editUser.email,
         department: editUser.department,
         role_ids: editUser.roles,
+        permission_ids: editUser.permissions,
       });
       setShowEditForm(false);
       setEditUser(null);
@@ -175,6 +191,7 @@ export function useUserManagement() {
   return {
     users,
     roles,
+    allPermissions,
     search,
     setSearch,
     loading,

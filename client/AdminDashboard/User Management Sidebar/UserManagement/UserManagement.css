@@ -55,10 +55,22 @@
 
 .content-modal {
   width: min(700px, 90%);
+  max-height: 85vh;
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.content-modal-header {
+  flex-shrink: 0;
+}
+
+.content-modal-body {
+  overflow-y: auto;
+  flex: 1;
 }
 
 .content-modal-header {
@@ -278,4 +290,24 @@
 
 .content-success button:hover {
   background: #bbf7d0;
+}
+
+.content-permissions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content-permission-module {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.content-permission-module-title {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: capitalize;
 }

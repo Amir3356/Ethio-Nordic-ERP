@@ -3,6 +3,7 @@ export interface UserData {
   email: string;
   department: string;
   role_ids: number[];
+  permission_ids?: number[];
 }
 
 export interface PaginationParams {

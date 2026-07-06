@@ -3,6 +3,15 @@ export interface Role {
   name: string;
 }
 
+export interface Permission {
+  id: number;
+  name: string;
+  slug: string;
+  module: string;
+  action: string;
+  description?: string;
+}
+
 export interface User {
   id: number;
   full_name: string;
@@ -10,6 +19,7 @@ export interface User {
   department: string;
   is_active: boolean;
   roles: Role[];
+  direct_permissions?: Permission[];
 }
 
 export interface NewUser {
@@ -17,6 +27,7 @@ export interface NewUser {
   email: string;
   department: string;
   roles: number[];
+  permissions: number[];
 }
 
 export interface EditUser {
@@ -25,6 +36,7 @@ export interface EditUser {
   email: string;
   department: string;
   roles: number[];
+  permissions: number[];
 }
 
 export interface FormErrors {
@@ -32,6 +44,7 @@ export interface FormErrors {
   email?: string;
   department?: string;
   roles?: string;
+  permissions?: string;
 }
 
 export interface EditFormErrors {
@@ -39,4 +52,5 @@ export interface EditFormErrors {
   email?: string;
   department?: string;
   roles?: string;
+  permissions?: string;
 }

@@ -138,7 +138,7 @@ class UserController extends Controller
             DB::commit();
 
             return $this->successResponse([
-                'user' => $user->load('roles'),
+                'user' => $user->load('roles', 'directPermissions'),
                 'temp_password' => $tempPassword,
                 'email_sent' => $emailSent,
             ], 'User created successfully.', 201);
@@ -196,7 +196,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            return $this->successResponse($user->fresh()->load('roles'), 'User updated successfully.');
+            return $this->successResponse($user->fresh()->load('roles', 'directPermissions'), 'User updated successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();
