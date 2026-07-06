@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { AlertTriangle, CheckCircle, Shield, Copy, ArrowRight } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Shield, ArrowRight } from 'lucide-react';
 import { authAPI } from '../services/api';
 import './TwoFactorSetup.css';
 
@@ -18,7 +18,6 @@ export default function TwoFactorSetup() {
   const [verifyCode, setVerifyCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -77,12 +76,6 @@ export default function TwoFactorSetup() {
     } catch {
       navigate('/login', { replace: true });
     }
-  };
-
-  const copySecret = () => {
-    navigator.clipboard.writeText(secret);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const getQrCodeDataUrl = (url: string) => {
