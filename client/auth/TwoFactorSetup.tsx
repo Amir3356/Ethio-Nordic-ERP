@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, Shield, Copy, ArrowRight } from 'lucide-react';
 import { authAPI } from '../services/api';
-import './Login.css';
+import './TwoFactorSetup.css';
 
 type SetupStep = 'loading' | 'error' | 'already_setup' | 'scan' | 'success';
 
@@ -100,7 +100,7 @@ export default function TwoFactorSetup() {
             <AlertTriangle className="error-icon" size={20} />
             <span>{error || 'Invalid setup link. Please activate your account first.'}</span>
           </div>
-          <Link to="/login" className="login-btn" style={{ textAlign: 'center', marginTop: '1rem', display: 'block', textDecoration: 'none' }}>
+          <Link to="/login" className="tfa-error-link">
             Go to Login
           </Link>
         </div>
@@ -111,8 +111,8 @@ export default function TwoFactorSetup() {
   if (step === 'loading') {
     return (
       <div className="login-page">
-        <div className="login-card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <p style={{ color: '#6b7280' }}>Loading 2FA setup...</p>
+        <div className="tfa-loading-card">
+          <p className="tfa-loading-text">Loading 2FA setup...</p>
         </div>
       </div>
     );
@@ -125,13 +125,13 @@ export default function TwoFactorSetup() {
           <div className="login-header">
             <h1 className="login-title">Ethio Nordic ERP</h1>
           </div>
-          <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-            <CheckCircle size={48} color="#22c55e" style={{ marginBottom: '1rem' }} />
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>2FA Already Enabled</h2>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+          <div className="tfa-already-setup">
+            <CheckCircle size={48} color="#22c55e" className="tfa-already-setup-icon" />
+            <h2 className="tfa-already-setup-title">2FA Already Enabled</h2>
+            <p className="tfa-already-setup-text">
               Two-factor authentication is already set up for this account.
             </p>
-            <Link to="/login" className="login-btn" style={{ textAlign: 'center', display: 'block', textDecoration: 'none' }}>
+            <Link to="/login" className="tfa-already-setup-btn">
               Go to Login
             </Link>
           </div>
@@ -147,13 +147,13 @@ export default function TwoFactorSetup() {
           <div className="login-header">
             <h1 className="login-title">Ethio Nordic ERP</h1>
           </div>
-          <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-            <CheckCircle size={48} color="#22c55e" style={{ marginBottom: '1rem' }} />
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>2FA Enabled!</h2>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+          <div className="tfa-success">
+            <CheckCircle size={48} color="#22c55e" className="tfa-success-icon" />
+            <h2 className="tfa-success-title">2FA Enabled!</h2>
+            <p className="tfa-success-text">
               Two-factor authentication has been set up successfully. You can now log in.
             </p>
-            <Link to="/login" className="login-btn" style={{ textAlign: 'center', display: 'block', textDecoration: 'none' }}>
+            <Link to="/login" className="tfa-success-btn">
               Go to Login
             </Link>
           </div>
@@ -167,7 +167,7 @@ export default function TwoFactorSetup() {
       <div className="login-card">
         <div className="login-header">
           <h1 className="login-title">Ethio Nordic ERP</h1>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Set Up Two-Factor Authentication</p>
+          <p className="tfa-subtitle">Set Up Two-Factor Authentication</p>
         </div>
 
         <div className="login-form">
@@ -180,53 +180,34 @@ export default function TwoFactorSetup() {
 
           {step === 'scan' && (
             <>
-              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                <Shield size={40} color="#4f46e5" style={{ marginBottom: '0.5rem' }} />
-                <p style={{ color: '#374151', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              <div className="tfa-scan-header">
+                <Shield size={40} color="#4f46e5" className="tfa-scan-icon" />
+                <p className="tfa-scan-instructions">
                   Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
                 </p>
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                  <div style={{
-                    padding: '12px',
-                    background: '#fff',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '12px',
-                    display: 'inline-block',
-                  }}>
+                <div className="tfa-qr-wrapper">
+                  <div className="tfa-qr-box">
                     <img
                       src={getQrCodeDataUrl(qrCodeUrl)}
                       alt="2FA QR Code"
                       width={200}
                       height={200}
-                      style={{ display: 'block' }}
+                      className="tfa-qr-image"
                     />
                   </div>
                 </div>
 
-                <p style={{ color: '#6b7280', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                <p className="tfa-manual-label">
                   Or enter this code manually:
                 </p>
                 <div
                   onClick={copySecret}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 16px',
-                    background: '#f3f4f6',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: '#1f2937',
-                    letterSpacing: '2px',
-                  }}
+                  className="tfa-secret-box"
                 >
                   {secret}
                   <Copy size={14} color="#6b7280" />
-                  {copied && <span style={{ fontSize: '12px', color: '#22c55e' }}>Copied!</span>}
+                  {copied && <span className="tfa-copied-text">Copied!</span>}
                 </div>
               </div>
 
@@ -245,21 +226,15 @@ export default function TwoFactorSetup() {
                       value={verifyCode}
                       onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       autoFocus
-                      style={{
-                        textAlign: 'center',
-                        fontSize: '20px',
-                        letterSpacing: '8px',
-                        fontWeight: 600,
-                      }}
+                      className="tfa-code-input"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="login-btn"
+                  className="tfa-verify-btn"
                   disabled={loading || verifyCode.length !== 6}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
                   {loading ? 'Verifying...' : 'Verify & Enable 2FA'}
                   {!loading && <ArrowRight size={16} />}
@@ -269,32 +244,19 @@ export default function TwoFactorSetup() {
               <button
                 type="button"
                 onClick={handleSkip}
-                className="login-btn-back"
-                style={{
-                  display: 'block',
-                  textAlign: 'center',
-                  marginTop: '0.75rem',
-                  width: '100%',
-                  padding: '8px',
-                  background: 'none',
-                  border: 'none',
-                  color: '#6b7280',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  textDecoration: 'none',
-                }}
+                className="tfa-skip-btn"
               >
                 Skip for now
               </button>
 
               {recoveryCodes.length > 0 && (
-                <div style={{ marginTop: '1.25rem', padding: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px' }}>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#92400e', fontWeight: 600, marginBottom: '6px' }}>
+                <div className="tfa-recovery-codes">
+                  <p className="tfa-recovery-codes-title">
                     Save your recovery codes:
                   </p>
-                  <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#78350f', lineHeight: 1.8 }}>
+                  <div className="tfa-recovery-codes-list">
                     {recoveryCodes.map((code, i) => (
-                      <span key={i} style={{ marginRight: '12px' }}>{code}</span>
+                      <span key={i} className="tfa-recovery-code">{code}</span>
                     ))}
                   </div>
                 </div>
