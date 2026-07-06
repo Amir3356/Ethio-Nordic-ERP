@@ -65,7 +65,7 @@ export default function UserManagement() {
         department: newUser.department,
         role_ids: newUser.roles,
       });
-      const emailSent = response.data?.email_sent;
+      const emailSent = response.data?.data?.email_sent;
       setShowNewUserForm(false);
       setNewUser({ name: '', email: '', department: '', roles: [] });
       await fetchUsers();
