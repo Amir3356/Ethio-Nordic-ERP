@@ -154,7 +154,7 @@ class UserController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $user = User::with(['roles.permissions', 'loginActivities' => function($query) {
+        $user = User::with(['roles.permissions', 'directPermissions', 'loginActivities' => function($query) {
             $query->latest()->limit(10);
         }])->findOrFail($id);
 
@@ -415,12 +415,18 @@ class UserController extends Controller
     public function getUserPermissions($id): JsonResponse
     {
         $user = User::findOrFail($id);
-        $permissions = $user->permissions()->get()->groupBy('module');
+        $allPermissions = $user->permissions()->get()->groupBy('module');
+        $rolePermissions = Permission::whereHas('roles', function ($query) use ($user) {
+            $query->whereIn('roles.id', $user->roles->pluck('id'));
+        })->get()->pluck('id');
+        $directPermissions = $user->directPermissions->pluck('id');
 
         return $this->successResponse([
             'user' => $user->only(['id', 'full_name', 'email']),
             'roles' => $user->roles,
-            'permissions' => $permissions,
+            'permissions' => $allPermissions,
+            'role_permission_ids' => $rolePermissions->toArray(),
+            'direct_permission_ids' => $directPermissions->toArray(),
         ]);
     }
 
