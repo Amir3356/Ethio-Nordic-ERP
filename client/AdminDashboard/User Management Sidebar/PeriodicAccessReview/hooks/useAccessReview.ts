@@ -12,7 +12,7 @@ export function useAccessReview() {
     try {
       setLoading(true);
       const response = await userAPI.getAccessReview(inactiveDays);
-      setReviews(Array.isArray(response.data?.data) ? response.data.data : []);
+      setReviews(response.data?.data?.users || []);
       setError('');
     } catch (err) {
       setError('Failed to load access review');

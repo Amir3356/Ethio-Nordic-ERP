@@ -11,7 +11,8 @@ export function useSessions() {
     try {
       setLoading(true);
       const response = await sessionAPI.getAll({ per_page: 100 });
-      setSessions(Array.isArray(response.data?.data) ? response.data.data : []);
+      const payload = response.data?.data;
+      setSessions(Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []);
       setError('');
     } catch (err) {
       setError('Failed to load sessions');

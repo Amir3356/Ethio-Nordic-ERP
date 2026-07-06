@@ -13,7 +13,8 @@ export function useAuditLogs() {
     try {
       setLoading(true);
       const response = await auditLogAPI.getAll({ per_page: 100, sort: '-created_at' });
-      setAuditLogs(Array.isArray(response.data?.data) ? response.data.data : []);
+      const payload = response.data?.data;
+      setAuditLogs(Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []);
       setError('');
     } catch (err) {
       setError('Failed to load audit logs');
