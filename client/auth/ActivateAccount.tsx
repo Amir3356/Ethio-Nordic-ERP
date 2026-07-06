@@ -10,7 +10,6 @@ export default function ActivateAccount() {
   const token = searchParams.get('token');
 
   const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,11 +30,6 @@ export default function ActivateAccount() {
   const handleActivate = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (password !== passwordConfirmation) {
-      setError('Passwords do not match.');
-      return;
-    }
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
@@ -68,7 +62,6 @@ export default function ActivateAccount() {
       await api.post('/auth/activate', {
         token,
         password,
-        password_confirmation: passwordConfirmation,
       });
       setSuccess(true);
     } catch (err: unknown) {
@@ -160,7 +153,7 @@ export default function ActivateAccount() {
           )}
 
           <div className="form-group">
-            <label htmlFor="password">New Password</label>
+            <label htmlFor="password">Password</label>
             <div className="input-wrapper">
               <Lock size={18} className="input-icon" />
               <input
@@ -180,21 +173,6 @@ export default function ActivateAccount() {
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password_confirmation">Confirm Password</label>
-            <div className="input-wrapper">
-              <Lock size={18} className="input-icon" />
-              <input
-                id="password_confirmation"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Confirm your new password"
-                value={passwordConfirmation}
-                onChange={(e) => setPasswordConfirmation(e.target.value)}
-                required
-              />
             </div>
           </div>
 
