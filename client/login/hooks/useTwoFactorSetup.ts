@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { authAPI } from '../../services/api';
+import { authAPI } from '../../services';
 import { getAuthErrorMessage } from '../utils';
 
 type SetupStep = 'loading' | 'error' | 'already_setup' | 'scan' | 'success';

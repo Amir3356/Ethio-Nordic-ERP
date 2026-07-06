@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { userAPI, roleAPI } from '../../../services/api';
+import { userAPI, roleAPI } from '../../../services';
 import { User, Role, NewUser, EditUser, FormErrors, EditFormErrors } from './types';
 import { validateNewUser, validateEditUser } from './validation';
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { userAPI } from '../../../../services/api';
+import { userAPI } from '../../../../services';
 import { AccessReview } from '../types';
 
 export function useAccessReview() {

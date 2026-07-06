@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, LogOut, User, Package, AlertTriangle } from 'lucide-react';
-import { authAPI } from '../services/api';
+import { authAPI } from '../services';
 import UserManagement from './User Management Sidebar/UserManagement/UserManagement';
 import Sessions from './User Management Sidebar/Sessions/Sessions';
 import AuditTrailLogging from './User Management Sidebar/AuditTrailLogging/AuditTrailLogging';

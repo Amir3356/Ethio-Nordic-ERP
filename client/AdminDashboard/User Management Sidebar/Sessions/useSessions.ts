@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { sessionAPI } from '../../../services/api';
+import { sessionAPI } from '../../../services';
 import { Session } from './types';
 
 export function useSessions() {

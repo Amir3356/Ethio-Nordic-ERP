@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './AdminDashboard/AdminDashboardLayout';
-import Login from './auth/Login';
-import Logout from './auth/Logout';
-import ActivateAccount from './auth/ActivateAccount';
-import TwoFactorSetup from './auth/TwoFactorSetup';
+import Login from './login/Login';
+import Logout from './login/Logout';
+import ActivateAccount from './login/ActivateAccount';
+import TwoFactorSetup from './login/TwoFactorSetup';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {

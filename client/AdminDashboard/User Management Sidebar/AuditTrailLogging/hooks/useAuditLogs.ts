@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { auditLogAPI } from '../../../../services/api';
+import { auditLogAPI } from '../../../../services';
 import { AuditLog } from '../types';
 import { filterLogs } from '../utils';
 

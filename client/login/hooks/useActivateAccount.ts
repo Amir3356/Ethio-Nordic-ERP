@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api } from '../../services/api';
+import { api } from '../../services';
 import { validatePassword, getAuthErrorMessage } from '../utils';
 
 export function useActivateAccount() {

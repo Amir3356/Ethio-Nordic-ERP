@@ -44,13 +44,25 @@ export default function UserForm({
     }
   };
 
+  const validateEmail = (email: string): string | undefined => {
+    if (!email.trim()) {
+      return 'Email is required';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    return undefined;
+  };
+
   const handleEmailChange = (value: string) => {
     if (mode === 'create') {
       onNewUserChange({ ...newUser, email: value });
-      onNewUserErrorsChange({ ...newUserErrors, email: undefined });
+      const error = validateEmail(value);
+      onNewUserErrorsChange({ ...newUserErrors, email: error });
     } else if (editUser) {
       onEditUserChange({ ...editUser, email: value });
-      onEditUserErrorsChange({ ...editUserErrors, email: undefined });
+      const error = validateEmail(value);
+      onEditUserErrorsChange({ ...editUserErrors, email: error });
     }
   };
 
