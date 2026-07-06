@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -574,18 +575,47 @@ class AuthController extends Controller
 
     private function logLoginAttempt(Request $request, ?User $user, string $status, ?string $reason): void
     {
+        $ip = $request->ip();
+        $location = $this->getGeoLocation($ip);
+
         LoginActivity::create([
             'user_id' => $user?->id,
             'email' => $request->email,
-            'ip_address' => $request->ip(),
+            'ip_address' => $ip,
             'user_agent' => $request->userAgent(),
             'device_type' => $this->parseDeviceType($request->userAgent()),
             'browser' => $this->parseBrowser($request->userAgent()),
             'platform' => $this->parseOs($request->userAgent()),
+            'location' => $location,
             'status' => $status,
             'failure_reason' => $reason,
             'login_at' => now(),
         ]);
+    }
+
+    private function getGeoLocation(string $ip): ?string
+    {
+        if ($ip === '127.0.0.1' || $ip === '::1') {
+            return 'Local';
+        }
+
+        try {
+            $response = Http::timeout(2)
+                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
+
+            if ($response->successful() && $response->json('status') === 'success') {
+                $parts = array_filter([
+                    $response->json('city'),
+                    $response->json('regionName'),
+                    $response->json('country'),
+                ]);
+                return implode(', ', $parts) ?: null;
+            }
+        } catch (\Exception $e) {
+            \Log::debug('Geolocation lookup failed for IP: ' . $ip);
+        }
+
+        return null;
     }
 
     private function generateTwoFactorSecret(): string
