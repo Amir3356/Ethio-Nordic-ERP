@@ -72,9 +72,6 @@ export function useUserManagement() {
       await fetchUsers();
       if (emailSent) {
         setError('');
-        alert(`User created successfully. An activation email was sent to ${email}, and the new user will be prompted to set a password and enroll in 2FA.`);
-      } else {
-        alert('User created but activation email could not be sent. Check logs for details.');
       }
       return true;
     } catch (err: unknown) {
