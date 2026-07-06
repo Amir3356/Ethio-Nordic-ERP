@@ -105,13 +105,17 @@ class UserController extends Controller
                 try {
                     $activationUrl = config('app.frontend_url') . '/activate-account?token=' . base64_encode($user->email);
                     
+                    \Log::info('Sending activation email to: ' . $user->email . ', URL: ' . $activationUrl);
+                    
                     Mail::to($user->email)->send(
                         new UserActivationMail($user, $tempPassword, $activationUrl)
                     );
                     
                     $emailSent = true;
+                    \Log::info('Activation email sent successfully to: ' . $user->email);
                 } catch (\Exception $e) {
                     \Log::error('Failed to send activation email: ' . $e->getMessage());
+                    \Log::error('Stack: ' . $e->getTraceAsString());
                     $emailSent = false;
                 }
             } else {

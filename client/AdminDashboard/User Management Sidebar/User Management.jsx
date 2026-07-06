@@ -59,16 +59,22 @@ export default function UserManagement() {
 
     try {
       setLoading(true);
-      await userAPI.create({
+      const response = await userAPI.create({
         full_name: newUser.name,
         email: newUser.email,
         department: newUser.department,
         role_ids: newUser.roles,
       });
+      const emailSent = response.data?.email_sent;
       setShowNewUserForm(false);
       setNewUser({ name: '', email: '', department: '', roles: [] });
       await fetchUsers();
-      setError('');
+      if (emailSent) {
+        setError('');
+        alert('User created successfully! Activation email sent to ' + newUser.email);
+      } else {
+        alert('User created but activation email could not be sent. Check logs for details.');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create user');
     } finally {
