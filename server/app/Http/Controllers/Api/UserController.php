@@ -178,6 +178,8 @@ class UserController extends Controller
             'department' => 'sometimes|string|max:255',
             'role_ids' => 'sometimes|array|min:1',
             'role_ids.*' => 'exists:roles,id',
+            'permission_ids' => 'sometimes|array',
+            'permission_ids.*' => 'exists:permissions,id',
         ]);
 
         DB::beginTransaction();
@@ -186,6 +188,10 @@ class UserController extends Controller
 
             if ($request->has('role_ids')) {
                 $user->roles()->sync($request->role_ids);
+            }
+
+            if ($request->has('permission_ids')) {
+                $user->directPermissions()->sync($request->permission_ids);
             }
 
             DB::commit();
