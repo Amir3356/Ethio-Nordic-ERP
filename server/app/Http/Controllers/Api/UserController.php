@@ -102,21 +102,27 @@ class UserController extends Controller
 
             // Send activation email if requested (default: true)
             if ($request->get('send_email', true)) {
-                try {
-                    $activationUrl = config('app.frontend_url') . '/activate-account?token=' . base64_encode($user->email);
-                    
-                    \Log::info('Sending activation email to: ' . $user->email . ', URL: ' . $activationUrl);
-                    
-                    Mail::to($user->email)->send(
-                        new UserActivationMail($user, $tempPassword, $activationUrl)
-                    );
-                    
-                    $emailSent = true;
-                    \Log::info('Activation email sent successfully to: ' . $user->email);
-                } catch (\Exception $e) {
-                    \Log::error('Failed to send activation email: ' . $e->getMessage());
-                    \Log::error('Stack: ' . $e->getTraceAsString());
+                $throttleKey = 'activation_email:' . strtolower($user->email);
+                if (\Cache::has($throttleKey)) {
+                    \Log::warning('Activation email throttled for: ' . $user->email);
                     $emailSent = false;
+                } else {
+                    try {
+                        $activationUrl = config('app.frontend_url') . '/activate-account?token=' . base64_encode($user->email);
+                        
+                        \Log::info('Sending activation email to: ' . $user->email . ', URL: ' . $activationUrl);
+                        
+                        Mail::to($user->email)->send(
+                            new UserActivationMail($user, $tempPassword, $activationUrl)
+                        );
+                        $emailSent = true;
+                        \Cache::put($throttleKey, true, now()->addMinutes(5));
+                        \Log::info('Activation email sent successfully to: ' . $user->email);
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send activation email: ' . $e->getMessage());
+                        \Log::error('Stack: ' . $e->getTraceAsString());
+                        $emailSent = false;
+                    }
                 }
             } else {
                 $emailSent = false;
@@ -265,6 +271,11 @@ class UserController extends Controller
             return $this->errorResponse('User email is already verified.', 422);
         }
 
+        $throttleKey = 'activation_email:' . strtolower($user->email);
+        if (\Cache::has($throttleKey)) {
+            return $this->errorResponse('Please wait before requesting another activation email.', 429);
+        }
+
         try {
             // Generate new temporary password
             $tempPassword = $user->generateTemporaryPassword();
@@ -274,6 +285,8 @@ class UserController extends Controller
             Mail::to($user->email)->send(
                 new UserActivationMail($user, $tempPassword, $activationUrl)
             );
+
+            \Cache::put($throttleKey, true, now()->addMinutes(5));
 
             return $this->successResponse([
                 'temp_password' => $tempPassword,

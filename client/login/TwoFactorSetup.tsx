@@ -5,7 +5,6 @@ import AuthCard from './components/AuthCard';
 import AuthError from './components/AuthError';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import TwoFactorInput from './components/TwoFactorInput';
-import RecoveryCodes from './components/RecoveryCodes';
 import './TwoFactorSetup.css';
 
 export default function TwoFactorSetup() {
@@ -13,13 +12,11 @@ export default function TwoFactorSetup() {
     token,
     step,
     qrCodeUrl,
-    recoveryCodes,
     verifyCode,
     setVerifyCode,
     error,
     loading,
     handleVerify,
-    handleSkip,
   } = useTwoFactorSetup();
 
   if (!token || step === 'error') {
@@ -104,12 +101,6 @@ export default function TwoFactorSetup() {
                 {!loading && <ArrowRight size={16} />}
               </button>
             </form>
-
-            <button type="button" onClick={handleSkip} className="tfa-skip-btn">
-              Skip for now
-            </button>
-
-            <RecoveryCodes codes={recoveryCodes} />
           </>
         )}
       </div>

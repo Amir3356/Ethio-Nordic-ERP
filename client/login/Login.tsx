@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Mail } from 'lucide-react';
 import { useLogin } from './hooks/useLogin';
 import AuthCard from './components/AuthCard';
 import AuthError from './components/AuthError';
@@ -32,6 +33,7 @@ export default function Login() {
             <div className="form-group">
               <label htmlFor="email">Email Address</label>
               <div className="input-wrapper">
+                <Mail size={18} className="input-icon" />
                 <input
                   id="email"
                   type="email"

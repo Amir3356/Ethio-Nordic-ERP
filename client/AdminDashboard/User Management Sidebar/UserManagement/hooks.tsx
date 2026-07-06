@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { userAPI, roleAPI } from '../../../services';
 import { User, Role, NewUser, EditUser, FormErrors, EditFormErrors } from './types';
 import { validateNewUser, validateEditUser } from './validation';
@@ -9,11 +9,13 @@ export function useUserManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editUser, setEditUser] = useState<EditUser | null>(null);
   const [newUserErrors, setNewUserErrors] = useState<FormErrors>({});
   const [editUserErrors, setEditUserErrors] = useState<EditFormErrors>({});
+  const submittingRef = useRef(false);
   const [newUser, setNewUser] = useState<NewUser>({
     name: '',
     email: '',
@@ -52,12 +54,16 @@ export function useUserManagement() {
   }, [fetchUsers, fetchRoles]);
 
   const handleCreateUser = async (): Promise<boolean> => {
+    if (submittingRef.current) return false;
+    submittingRef.current = true;
+
     const { isValid, errors } = validateNewUser(newUser);
     setNewUserErrors(errors);
-    if (!isValid) return false;
+    if (!isValid) { submittingRef.current = false; return false; }
 
     try {
       setLoading(true);
+      setSuccess('');
       const email = newUser.email;
       const response = await userAPI.create({
         full_name: newUser.name,
@@ -70,9 +76,7 @@ export function useUserManagement() {
       setNewUser({ name: '', email: '', department: '', roles: [] });
       setNewUserErrors({});
       await fetchUsers();
-      if (emailSent) {
-        setError('');
-      }
+      setSuccess('User created successfully.' + (emailSent ? ' Activation email sent.' : ''));
       return true;
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
@@ -80,6 +84,7 @@ export function useUserManagement() {
       return false;
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
@@ -115,9 +120,12 @@ export function useUserManagement() {
   };
 
   const handleUpdateUser = async (): Promise<boolean> => {
+    if (submittingRef.current) return false;
+    submittingRef.current = true;
+
     const { isValid, errors } = validateEditUser(editUser);
     setEditUserErrors(errors);
-    if (!isValid) return false;
+    if (!isValid) { submittingRef.current = false; return false; }
 
     try {
       setLoading(true);
@@ -139,6 +147,7 @@ export function useUserManagement() {
       return false;
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
@@ -171,6 +180,8 @@ export function useUserManagement() {
     loading,
     error,
     setError,
+    success,
+    setSuccess,
     showNewUserForm,
     showEditForm,
     editUser,

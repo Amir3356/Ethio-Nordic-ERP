@@ -13,6 +13,8 @@ export default function UserManagement() {
     loading,
     error,
     setError,
+    success,
+    setSuccess,
     showNewUserForm,
     showEditForm,
     editUser,
@@ -46,6 +48,13 @@ export default function UserManagement() {
         <div className="content-error">
           <p>{error}</p>
           <button onClick={() => setError('')}>Dismiss</button>
+        </div>
+      )}
+
+      {success && (
+        <div className="content-success">
+          <p>{success}</p>
+          <button onClick={() => setSuccess('')}>Dismiss</button>
         </div>
       )}
 
