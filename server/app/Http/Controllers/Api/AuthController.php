@@ -591,13 +591,8 @@ class AuthController extends Controller
 
     private function generateTwoFactorSecret(): string
     {
-        // Generate base32 secret (160 bits = 32 characters)
-        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        $secret = '';
-        for ($i = 0; $i < 32; $i++) {
-            $secret .= $chars[random_int(0, strlen($chars) - 1)];
-        }
-        return $secret;
+        $google2fa = new Google2FA();
+        return $google2fa->generateSecretKey(32);
     }
 
     private function generateRecoveryCodes(): array
@@ -612,8 +607,8 @@ class AuthController extends Controller
     private function generateQrCodeUrl(string $email, string $secret): string
     {
         $appName = config('app.name', 'Ethio Nordic ERP');
-        $label = rawurlencode($appName) . ':' . rawurlencode($email);
-        return "otpauth://totp/{$label}?secret={$secret}&issuer=" . rawurlencode($appName);
+        $google2fa = new Google2FA();
+        return $google2fa->getQRCodeUrl($appName, $email, $secret);
     }
 
     private function verifyTwoFactorCode(User $user, string $code): bool
@@ -623,53 +618,9 @@ class AuthController extends Controller
         }
 
         $secret = $user->twoFactorSecret->getDecryptedSecret();
-        $timeSlice = floor(time() / 30);
-        
-        // Check current time slice and ±1 slice for clock drift tolerance
-        for ($i = -1; $i <= 1; $i++) {
-            if ($this->generateTOTP($secret, $timeSlice + $i) === $code) {
-                return true;
-            }
-        }
+        $google2fa = new Google2FA();
 
-        return false;
-    }
-
-    private function generateTOTP(string $secret, int $timeSlice): string
-    {
-        // Simple TOTP implementation
-        $key = $this->base32Decode($secret);
-        $time = pack('N*', 0) . pack('N*', $timeSlice);
-        $hash = hash_hmac('sha1', $time, $key, true);
-        $offset = ord($hash[19]) & 0xf;
-        $code = (
-            ((ord($hash[$offset + 0]) & 0x7f) << 24) |
-            ((ord($hash[$offset + 1]) & 0xff) << 16) |
-            ((ord($hash[$offset + 2]) & 0xff) << 8) |
-            (ord($hash[$offset + 3]) & 0xff)
-        ) % 1000000;
-        return str_pad($code, 6, '0', STR_PAD_LEFT);
-    }
-
-    private function base32Decode(string $data): string
-    {
-        $map = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        $data = strtoupper($data);
-        $l = strlen($data);
-        $n = 0;
-        $j = 0;
-        $binary = '';
-
-        for ($i = 0; $i < $l; $i++) {
-            $n = $n << 5;
-            $n = $n + strpos($map, $data[$i]);
-            $j = $j + 5;
-            if ($j >= 8) {
-                $j = $j - 8;
-                $binary .= chr(($n & (0xFF << $j)) >> $j);
-            }
-        }
-        return $binary;
+        return $google2fa->verifyKey($secret, $code, 1);
     }
 
     private function parseDeviceType(?string $userAgent): string
