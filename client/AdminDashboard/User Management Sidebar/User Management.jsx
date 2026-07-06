@@ -264,53 +264,30 @@ export default function UserManagement() {
       <div className="content-table-wrapper">
         <table className="content-table">
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Department</th>
-              <th>Roles</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <tr key={user.id}>
-                  <td className="content-table-name">{user.full_name}</td>
-                  <td>{user.email}</td>
-                  <td>{user.department}</td>
-                  <td>
-                    {user.roles && user.roles.length > 0
-                      ? user.roles.map((r) => r.name).join(', ')
-                      : 'No roles'}
-                  </td>
-                  <td>
-                    <span
-                      className={`content-status ${
-                        user.is_active ? 'status-active' : 'status-inactive'
-                      }`}
-                    >
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="content-actions">
-                      <button type="button" className="content-btn-edit">Edit</button>
-                      <button
-                        type="button"
-                        className="content-btn-delete"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="content-empty">
+                <td colSpan={columns.length} className="content-empty">
                   No users found
                 </td>
               </tr>
