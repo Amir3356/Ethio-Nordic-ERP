@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
 import { api } from '../services/api';
-import './Login.css';
+import './ActivateAccount.css';
 
 export default function ActivateAccount() {
   const [searchParams] = useSearchParams();
@@ -94,7 +94,7 @@ export default function ActivateAccount() {
             <AlertTriangle className="error-icon" size={20} />
             <span>Invalid activation link. No token provided.</span>
           </div>
-          <Link to="/login" className="login-btn" style={{ textAlign: 'center', marginTop: '1rem', display: 'block', textDecoration: 'none' }}>
+          <Link to="/login" className="activate-error-link">
             Go to Login
           </Link>
         </div>
@@ -109,30 +109,28 @@ export default function ActivateAccount() {
           <div className="login-header">
             <h1 className="login-title">Ethio Nordic ERP</h1>
           </div>
-          <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-            <CheckCircle size={48} color="#22c55e" style={{ marginBottom: '1rem' }} />
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Account Activated!</h2>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+          <div className="activate-success">
+            <CheckCircle size={48} color="#22c55e" className="activate-success-icon" />
+            <h2 className="activate-success-title">Account Activated!</h2>
+            <p className="activate-success-text">
               Your permanent password has been saved. You are being redirected to set up Two-Factor Authentication now.
             </p>
             <Link
               to={`/setup-2fa?token=${token}`}
-              className="login-btn"
-              style={{ textAlign: 'center', display: 'block', textDecoration: 'none', marginBottom: '0.75rem' }}
+              className="activate-success-btn"
             >
               Continue to 2FA Setup
             </Link>
             <Link
               to="/login"
-              className="login-btn-back"
-              style={{ textAlign: 'center', display: 'block', textDecoration: 'none' }}
+              className="activate-skip-link"
             >
               Skip for now
             </Link>
             </div>
-            <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: '1.5' }}>
-              <p style={{ margin: 0, fontWeight: 600 }}>Password must contain:</p>
-              <ul style={{ margin: '0.25rem 0 0 1.25rem', padding: 0 }}>
+            <div className="password-policy">
+              <p className="password-policy-title">Password must contain:</p>
+              <ul className="password-policy-list">
                 <li>At least 8 characters</li>
                 <li>At least 1 uppercase letter</li>
                 <li>At least 1 lowercase letter</li>
@@ -150,7 +148,7 @@ export default function ActivateAccount() {
       <div className="login-card">
         <div className="login-header">
           <h1 className="login-title">Ethio Nordic ERP</h1>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Activate Your Account</p>
+          <p className="activate-subtitle">Activate Your Account</p>
         </div>
 
         <form className="login-form" onSubmit={handleActivate}>
@@ -210,8 +208,7 @@ export default function ActivateAccount() {
 
           <Link
             to="/login"
-            className="login-btn-back"
-            style={{ display: 'block', textAlign: 'center', marginTop: '0.5rem', textDecoration: 'none' }}
+            className="activate-back-link"
           >
             Back to Login
           </Link>
