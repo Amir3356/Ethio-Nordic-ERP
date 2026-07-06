@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { userAPI, roleAPI } from '../../services/api';
 import './User Management.css';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [newUser, setNewUser] = useState({
     name: '',
@@ -14,17 +17,82 @@ export default function UserManagement() {
   });
 
   useEffect(() => {
-    axios.get('/User.json')
-      .then((res) => setUsers(Array.isArray(res.data?.users) ? res.data.users : []))
-      .catch(() => {});
+    fetchUsers();
+    fetchRoles();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await userAPI.getAll({ per_page: 100 });
+      setUsers(Array.isArray(response.data?.data) ? response.data.data : []);
+      setError('');
+    } catch (err) {
+      setError('Failed to load users');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await roleAPI.getAll();
+      setRoles(Array.isArray(response.data?.data) ? response.data.data : []);
+    } catch (err) {
+      console.error('Failed to load roles:', err);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.department) {
+      setError('Name, email, and department are required');
+      return;
+    }
+
+    if (newUser.roles.length === 0) {
+      setError('Please assign at least one role');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await userAPI.create({
+        full_name: newUser.name,
+        email: newUser.email,
+        department: newUser.department,
+        role_ids: newUser.roles,
+      });
+      setShowNewUserForm(false);
+      setNewUser({ name: '', email: '', department: '', roles: [] });
+      await fetchUsers();
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+      setLoading(true);
+      await userAPI.delete(userId);
+      await fetchUsers();
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete user');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter((u) =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.department.toLowerCase().includes(search.toLowerCase())
+    u.email.toLowerCase().includes(search.toLowerCase())
   );
-
   return (
     <section className="content-section" id="users">
       <div className="content-section-header content-section-header-centered">
@@ -33,6 +101,13 @@ export default function UserManagement() {
           + New User
         </button>
       </div>
+
+      {error && (
+        <div className="content-error">
+          <p>{error}</p>
+          <button onClick={() => setError('')}>Dismiss</button>
+        </div>
+      )}
 
       {showNewUserForm && (
         <div className="content-modal-backdrop" onClick={() => setShowNewUserForm(false)}>
@@ -61,6 +136,8 @@ export default function UserManagement() {
                     placeholder="Enter email"
                   />
                 </label>
+              </div>
+              <div className="content-form-row">
                 <label className="content-form-field">
                   <span>Department</span>
                   <input
@@ -70,51 +147,27 @@ export default function UserManagement() {
                     placeholder="Enter department"
                   />
                 </label>
+              </div>
+              <div className="content-form-row">
                 <label className="content-form-field">
-                  <span>Role</span>
+                  <span>Assign Roles</span>
                   <div className="content-checkbox-group">
-                    <label className="content-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={newUser.roles.includes('Warehouse Officer')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewUser({ ...newUser, roles: [...newUser.roles, 'Warehouse Officer'] });
-                          } else {
-                            setNewUser({ ...newUser, roles: newUser.roles.filter((r) => r !== 'Warehouse Officer') });
-                          }
-                        }}
-                      />
-                      <span>Warehouse Officer</span>
-                    </label>
-                    <label className="content-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={newUser.roles.includes('Finance Manager')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewUser({ ...newUser, roles: [...newUser.roles, 'Finance Manager'] });
-                          } else {
-                            setNewUser({ ...newUser, roles: newUser.roles.filter((r) => r !== 'Finance Manager') });
-                          }
-                        }}
-                      />
-                      <span>Finance Manager</span>
-                    </label>
-                    <label className="content-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={newUser.roles.includes('Regulatory Affairs Officer')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewUser({ ...newUser, roles: [...newUser.roles, 'Regulatory Affairs Officer'] });
-                          } else {
-                            setNewUser({ ...newUser, roles: newUser.roles.filter((r) => r !== 'Regulatory Affairs Officer') });
-                          }
-                        }}
-                      />
-                      <span>Regulatory Affairs Officer</span>
-                    </label>
+                    {roles.map((role) => (
+                      <label key={role.id} className="content-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={newUser.roles.includes(role.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setNewUser({ ...newUser, roles: [...newUser.roles, role.id] });
+                            } else {
+                              setNewUser({ ...newUser, roles: newUser.roles.filter((r) => r !== role.id) });
+                            }
+                          }}
+                        />
+                        <span>{role.name}</span>
+                      </label>
+                    ))}
                   </div>
                 </label>
               </div>
@@ -122,8 +175,13 @@ export default function UserManagement() {
                 <button type="button" className="content-btn-cancel" onClick={() => setShowNewUserForm(false)}>
                   Cancel
                 </button>
-                <button type="button" className="content-btn-submit" onClick={() => { setShowNewUserForm(false); setNewUser({ name: '', email: '', department: '', roles: [] }); }}>
-                  Create User
+                <button
+                  type="button"
+                  className="content-btn-submit"
+                  onClick={handleCreateUser}
+                  disabled={loading}
+                >
+                  {loading ? 'Creating...' : 'Create User'}
                 </button>
               </div>
             </div>
@@ -141,38 +199,60 @@ export default function UserManagement() {
         />
       </div>
 
+      {loading && <p className="content-loading">Loading...</p>}
+
       <div className="content-table-wrapper">
         <table className="content-table">
           <thead>
             <tr>
               <th>Name</th>
               <th>Email</th>
-              <th>Department</th>
-              <th>Role</th>
+              <th>Roles</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
-              <tr key={user.id}>
-                <td className="content-table-name">{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.department}</td>
-                <td><span className="content-badge">{user.role}</span></td>
-                <td>
-                  <span className={`content-status ${user.status === 'Active' ? 'status-active' : 'status-inactive'}`}>
-                    {user.status}
-                  </span>
-                </td>
-                <td>
-                  <div className="content-actions">
-                    <button type="button" className="content-btn-edit">Edit</button>
-                    <button type="button" className="content-btn-delete">Delete</button>
-                  </div>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <tr key={user.id}>
+                  <td className="content-table-name">{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    {user.roles && user.roles.length > 0
+                      ? user.roles.map((r) => r.name).join(', ')
+                      : 'No roles'}
+                  </td>
+                  <td>
+                    <span
+                      className={`content-status ${
+                        user.status === 'active' ? 'status-active' : 'status-inactive'
+                      }`}
+                    >
+                      {user.status === 'active' ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="content-actions">
+                      <button type="button" className="content-btn-edit">Edit</button>
+                      <button
+                        type="button"
+                        className="content-btn-delete"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="content-empty">
+                  No users found
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

@@ -1,14 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { LogOut } from 'lucide-react';
+import { authAPI } from '../services/api';
 import './Logout.css';
-
-const api = axios.create({
-  baseURL: '/api',
-  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-  withCredentials: true,
-});
 
 function Logout() {
   const navigate = useNavigate();
@@ -16,12 +10,13 @@ function Logout() {
   useEffect(() => {
     const performLogout = async () => {
       try {
-        await api.post('/auth/logout');
+        await authAPI.logout();
       } catch (error) {
         // ignore
       }
+      localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      navigate('/login');
+      navigate('/login', { replace: true });
     };
     performLogout();
   }, [navigate]);

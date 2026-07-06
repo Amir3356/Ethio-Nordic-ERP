@@ -57,6 +57,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // ==================== USER MANAGEMENT ROUTES ====================
     Route::prefix('users')->middleware(['rbac:users.view'])->group(function () {
         Route::get('/', [UserController::class, 'index']);
+        Route::get('/access-review', [UserController::class, 'accessReviewReport'])
+            ->middleware(['rbac:access_review.view']);
         Route::get('/{id}', [UserController::class, 'show']);
         Route::get('/{id}/permissions', [UserController::class, 'getUserPermissions']);
         
@@ -84,10 +86,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('/{id}', [UserController::class, 'destroy']);
         });
     });
-
-    // Access review reports
-    Route::get('/users/access-review', [UserController::class, 'accessReviewReport'])
-        ->middleware(['rbac:access_review.view']);
 
     // ==================== ROLE MANAGEMENT ROUTES ====================
     Route::prefix('roles')->middleware(['rbac:roles.view'])->group(function () {

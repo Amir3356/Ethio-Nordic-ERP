@@ -129,7 +129,9 @@ class RolePermissionSeeder extends Seeder
         // Create default super admin user
         $this->createDefaultSuperAdmin();
 
-        $this->command->info('Roles and permissions seeded successfully!');
+        if (isset($this->command)) {
+            $this->command->info('Roles and permissions seeded successfully!');
+        }
     }
 
     /**
@@ -208,11 +210,11 @@ class RolePermissionSeeder extends Seeder
         $superAdminRole = Role::where('slug', 'super-admin')->first();
 
         $user = User::firstOrCreate(
-            ['email' => 'admin@ethionordic.com'],
+            ['email' => 'amirsiraj1995@gmail.com'],
             [
                 'full_name' => 'System Administrator',
                 'department' => 'IT',
-                'password' => Hash::make('EthioNordic@2026!'),
+                'password' => Hash::make('AEHJSS36'),
                 'is_active' => true,
                 'email_verified_at' => now(),
             ]
@@ -220,6 +222,8 @@ class RolePermissionSeeder extends Seeder
 
         $user->roles()->sync([$superAdminRole->id]);
 
-        $this->command->info('Default super admin created: admin@ethionordic.com / EthioNordic@2026!');
+        if (isset($this->command)) {
+            $this->command->info('Default super admin created: amirsiraj1995@gmail.com / AEHJSS36');
+        }
     }
 }
