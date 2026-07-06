@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, LogOut, User, Package, AlertTriangle } from 'lucide-react';
 import { authAPI } from '../services/api';
-import UserManagement from './User Management Sidebar/User Management';
-import Sessions from './User Management Sidebar/Sessions';
-import AuditTrailLogging from './User Management Sidebar/Audit Trail Logging';
-import PeriodicAccessReview from './User Management Sidebar/Periodic Access Review';
+import UserManagement from './User Management Sidebar/UserManagement/UserManagement';
+import Sessions from './User Management Sidebar/Sessions/Sessions';
+import AuditTrailLogging from './User Management Sidebar/AuditTrailLogging/AuditTrailLogging';
+import PeriodicAccessReview from './User Management Sidebar/PeriodicAccessReview/PeriodicAccessReview';
 import './AdminDashboardLayout.css';
 
 interface CurrentUser {

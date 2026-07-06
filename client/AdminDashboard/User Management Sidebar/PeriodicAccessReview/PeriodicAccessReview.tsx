@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { userAPI } from '../../services/api';
-import './Periodic Access Review.css';
+import { userAPI } from '../../../services/api';
+import './PeriodicAccessReview.css';
 
 interface AccessReview {
   id: number;

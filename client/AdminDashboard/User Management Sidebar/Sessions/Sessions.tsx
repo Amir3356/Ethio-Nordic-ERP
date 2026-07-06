@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { sessionAPI } from '../../services/api';
+import { sessionAPI } from '../../../services/api';
 import './Sessions.css';
 
 interface Session {

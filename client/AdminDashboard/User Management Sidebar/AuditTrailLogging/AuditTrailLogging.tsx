@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { auditLogAPI } from '../../services/api';
-import './Audit Trail Logging.css';
+import { auditLogAPI } from '../../../services/api';
+import './AuditTrailLogging.css';
 
 interface AuditLog {
   id: number;
