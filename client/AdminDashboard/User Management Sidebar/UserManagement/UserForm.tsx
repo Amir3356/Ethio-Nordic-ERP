@@ -141,7 +141,7 @@ export default function UserForm({
         <label className="content-form-field">
           <span>Assign Roles</span>
           <div className="content-checkbox-group">
-            {roles.map((role) => (
+            {roles.filter((role) => ['Warehouse Officer', 'Finance Manager', 'Regulatory Affairs Officer'].includes(role.name)).map((role) => (
               <label key={role.id} className="content-checkbox">
                 <input
                   type="checkbox"
