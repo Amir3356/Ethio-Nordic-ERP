@@ -190,6 +190,7 @@ export default function TwoFactorSetup() {
                     />
                   </div>
                 </div>
+              </div>
 
               <form onSubmit={handleVerify}>
                 <div className="form-group">
