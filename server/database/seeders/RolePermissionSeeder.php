@@ -212,7 +212,7 @@ class RolePermissionSeeder extends Seeder
         $user = User::firstOrCreate(
             ['email' => 'amirsiraj1995@gmail.com'],
             [
-                'full_name' => 'System Administrator',
+                'full_name' => 'Admin',
                 'department' => 'IT',
                 'password' => Hash::make('AEHJSS36'),
                 'is_active' => true,

@@ -36,7 +36,7 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(data.data.user));
 
       // Redirect to dashboard
-      navigate('/admin-dashboard', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -55,7 +55,7 @@ export default function Login() {
       <div className="login-card">
         <div className="login-header">
           <h1 className="login-title">Ethio Nordic ERP</h1>
-          <p className="login-subtitle">User & Access Management System</p>
+
         </div>
 
         <form className="login-form" onSubmit={handleLogin}>
@@ -150,9 +150,7 @@ export default function Login() {
           )}
         </form>
 
-        <div className="login-footer">
-          <p className="login-footer-text">Default Admin: admin@ethionordic.com</p>
-        </div>
+
       </div>
     </div>
   );

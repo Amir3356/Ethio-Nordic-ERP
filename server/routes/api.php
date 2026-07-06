@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/login-with-recovery', [AuthController::class, 'loginWithRecoveryCode']);
-    // Register is typically protected - only admins can create accounts
+    Route::post('/activate', [AuthController::class, 'activateAccount']);
 });
 
 // ==================== AUTHENTICATED ROUTES ====================

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './AdminDashboard/AdminDashboardLayout';
 import Login from './auth/Login';
 import Logout from './auth/Logout';
+import ActivateAccount from './auth/ActivateAccount';
 
 function ProtectedRoute({ children }) {
   const user = localStorage.getItem('user');
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="/activate-account" element={<ActivateAccount />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Layout />

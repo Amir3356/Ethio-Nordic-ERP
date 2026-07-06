@@ -90,8 +90,8 @@ export default function UserManagement() {
   };
 
   const filteredUsers = users.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+    (u.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (u.email || '').toLowerCase().includes(search.toLowerCase())
   );
   return (
     <section className="content-section" id="users">
@@ -216,7 +216,7 @@ export default function UserManagement() {
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
                 <tr key={user.id}>
-                  <td className="content-table-name">{user.name}</td>
+                  <td className="content-table-name">{user.full_name}</td>
                   <td>{user.email}</td>
                   <td>
                     {user.roles && user.roles.length > 0
@@ -226,10 +226,10 @@ export default function UserManagement() {
                   <td>
                     <span
                       className={`content-status ${
-                        user.status === 'active' ? 'status-active' : 'status-inactive'
+                        user.is_active ? 'status-active' : 'status-inactive'
                       }`}
                     >
-                      {user.status === 'active' ? 'Active' : 'Inactive'}
+                      {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td>

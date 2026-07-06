@@ -18,6 +18,49 @@ use Illuminate\Validation\Rules\Password;
 class AuthController extends Controller
 {
     /**
+     * Activate user account via email link
+     * User sets their permanent password and account becomes active
+     */
+    public function activateAccount(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'password' => ['required', 'confirmed', Password::min(8)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()],
+        ]);
+
+        // Decode the token (base64 encoded email)
+        $email = base64_decode($request->token, true);
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->errorResponse('Invalid activation token.', 422);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return $this->errorResponse('User not found.', 404);
+        }
+
+        if ($user->is_active) {
+            return $this->errorResponse('Account is already activated.', 422);
+        }
+
+        // Activate user and set permanent password
+        $user->update([
+            'password' => Hash::make($request->password),
+            'is_active' => true,
+            'temp_password_expires_at' => null,
+            'email_verified_at' => now(),
+        ]);
+
+        return $this->successResponse(null, 'Account activated successfully. You can now log in.');
+    }
+
+    /**
      * Login with email and password, handle 2FA if enabled
      */
     public function login(Request $request): JsonResponse
