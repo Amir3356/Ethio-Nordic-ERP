@@ -219,6 +219,7 @@ export default function UserManagement() {
                 <tr key={user.id}>
                   <td className="content-table-name">{user.full_name}</td>
                   <td>{user.email}</td>
+                  <td>{user.department}</td>
                   <td>
                     {user.roles && user.roles.length > 0
                       ? user.roles.map((r) => r.name).join(', ')
@@ -249,7 +250,7 @@ export default function UserManagement() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="content-empty">
+                <td colSpan="6" className="content-empty">
                   No users found
                 </td>
               </tr>
