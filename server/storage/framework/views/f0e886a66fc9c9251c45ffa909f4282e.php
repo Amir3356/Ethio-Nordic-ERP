@@ -19,12 +19,6 @@
         </a>
     </p>
 
-    <p>If the button does not work, use this link:</p>
-
-    <p>
-        <a href="<?php echo e($activationUrl); ?>"><?php echo e($activationUrl); ?></a>
-    </p>
-
     <hr>
 
     <p style="font-size:12px;color:#777;">
