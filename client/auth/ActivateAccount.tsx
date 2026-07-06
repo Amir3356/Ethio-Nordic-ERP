@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
 import { api } from '../services/api';
@@ -28,7 +28,7 @@ export default function ActivateAccount() {
     return () => window.clearTimeout(redirectTimer);
   }, [success, token, navigate]);
 
-  const handleActivate = async (e) => {
+  const handleActivate = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -42,6 +42,26 @@ export default function ActivateAccount() {
       return;
     }
 
+    if (!/[A-Z]/.test(password)) {
+      setError('Password must contain at least 1 uppercase letter.');
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setError('Password must contain at least 1 lowercase letter.');
+      return;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      setError('Password must contain at least 1 number.');
+      return;
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      setError('Password must contain at least 1 special character.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -51,10 +71,11 @@ export default function ActivateAccount() {
         password_confirmation: passwordConfirmation,
       });
       setSuccess(true);
-    } catch (err) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string; error?: string } } };
       const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
+        axiosErr.response?.data?.message ||
+        axiosErr.response?.data?.error ||
         'Activation failed. The link may have expired or is invalid.';
       setError(msg);
     } finally {
@@ -108,8 +129,18 @@ export default function ActivateAccount() {
             >
               Skip for now
             </Link>
+            </div>
+            <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#6b7280', lineHeight: '1.5' }}>
+              <p style={{ margin: 0, fontWeight: 600 }}>Password must contain:</p>
+              <ul style={{ margin: '0.25rem 0 0 1.25rem', padding: 0 }}>
+                <li>At least 8 characters</li>
+                <li>At least 1 uppercase letter</li>
+                <li>At least 1 lowercase letter</li>
+                <li>At least 1 number</li>
+                <li>At least 1 special character (!@#$%^&amp;*...)</li>
+              </ul>
+            </div>
           </div>
-        </div>
       </div>
     );
   }
@@ -152,9 +183,6 @@ export default function ActivateAccount() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            <p className="form-hint" style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-              Min 8 characters, mixed case, numbers, and symbols
-            </p>
           </div>
 
           <div className="form-group">

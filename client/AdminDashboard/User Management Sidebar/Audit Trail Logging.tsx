@@ -2,8 +2,19 @@ import { useEffect, useState } from 'react';
 import { auditLogAPI } from '../../services/api';
 import './Audit Trail Logging.css';
 
+interface AuditLog {
+  id: number;
+  user_email: string;
+  action: string;
+  model_type: string;
+  model_id: number;
+  old_values: Record<string, unknown>;
+  new_values: Record<string, unknown>;
+  created_at: string;
+}
+
 export default function AuditTrailLogging() {
-  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('');
@@ -94,7 +105,7 @@ export default function AuditTrailLogging() {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="content-empty">
+                <td colSpan={6} className="content-empty">
                   No audit logs found
                 </td>
               </tr>

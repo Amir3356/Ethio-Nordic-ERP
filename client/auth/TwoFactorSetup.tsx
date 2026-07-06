@@ -1,18 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, Shield, Copy, ArrowRight } from 'lucide-react';
 import { authAPI } from '../services/api';
 import './Login.css';
+
+type SetupStep = 'loading' | 'error' | 'already_setup' | 'scan' | 'success';
 
 export default function TwoFactorSetup() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
 
-  const [step, setStep] = useState('loading');
+  const [step, setStep] = useState<SetupStep>('loading');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [secret, setSecret] = useState('');
-  const [recoveryCodes, setRecoveryCodes] = useState([]);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [verifyCode, setVerifyCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ export default function TwoFactorSetup() {
 
   const fetchSetup = async () => {
     try {
-      const response = await authAPI.setupTwoFactorOnboarding(token);
+      const response = await authAPI.setupTwoFactorOnboarding(token!);
       const data = response.data;
 
       if (data.data?.already_setup) {
@@ -40,13 +42,14 @@ export default function TwoFactorSetup() {
       setSecret(data.data?.secret || '');
       setRecoveryCodes(data.data?.recovery_codes || []);
       setStep('scan');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load 2FA setup.');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setError(axiosErr.response?.data?.message || 'Failed to load 2FA setup.');
       setStep('error');
     }
   };
 
-  const handleVerify = async (e) => {
+  const handleVerify = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -57,10 +60,11 @@ export default function TwoFactorSetup() {
 
     setLoading(true);
     try {
-      await authAPI.verifyTwoFactorOnboarding(token, verifyCode);
+      await authAPI.verifyTwoFactorOnboarding(token!, verifyCode);
       setStep('success');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Invalid code. Please try again.');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setError(axiosErr.response?.data?.message || 'Invalid code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -68,7 +72,7 @@ export default function TwoFactorSetup() {
 
   const handleSkip = async () => {
     try {
-      await authAPI.skipTwoFactorOnboarding(token);
+      await authAPI.skipTwoFactorOnboarding(token!);
       navigate('/login', { replace: true });
     } catch {
       navigate('/login', { replace: true });
@@ -81,7 +85,7 @@ export default function TwoFactorSetup() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const getQrCodeDataUrl = (url) => {
+  const getQrCodeDataUrl = (url: string) => {
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
   };
 

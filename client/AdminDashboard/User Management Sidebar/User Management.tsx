@@ -2,16 +2,45 @@ import { useEffect, useState } from 'react';
 import { userAPI, roleAPI } from '../../services/api';
 import './User Management.css';
 
+interface Role {
+  id: number;
+  name: string;
+}
+
+interface User {
+  id: number;
+  full_name: string;
+  email: string;
+  department: string;
+  is_active: boolean;
+  roles: Role[];
+}
+
+interface NewUser {
+  name: string;
+  email: string;
+  department: string;
+  roles: number[];
+}
+
+interface EditUser {
+  id: number;
+  full_name: string;
+  email: string;
+  department: string;
+  roles: number[];
+}
+
 export default function UserManagement() {
-  const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [editUser, setEditUser] = useState(null);
-  const [newUser, setNewUser] = useState({
+  const [editUser, setEditUser] = useState<EditUser | null>(null);
+  const [newUser, setNewUser] = useState<NewUser>({
     name: '',
     email: '',
     department: '',
@@ -78,14 +107,15 @@ export default function UserManagement() {
       } else {
         alert('User created but activation email could not be sent. Check logs for details.');
       }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create user');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setError(axiosErr.response?.data?.message || 'Failed to create user');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleDeleteUser = async (userId: number) => {
     if (!window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
 
     try {
@@ -94,8 +124,9 @@ export default function UserManagement() {
       await fetchUsers();
       setError('');
       alert(response.data?.message || 'User deleted successfully.');
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to delete user';
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
+      const msg = axiosErr.response?.data?.message || axiosErr.message || 'Failed to delete user';
       setError(msg);
       alert(msg);
     } finally {
@@ -103,7 +134,7 @@ export default function UserManagement() {
     }
   };
 
-  const handleEditUser = (user) => {
+  const handleEditUser = (user: User) => {
     setEditUser({
       id: user.id,
       full_name: user.full_name || '',
@@ -115,7 +146,7 @@ export default function UserManagement() {
   };
 
   const handleUpdateUser = async () => {
-    if (!editUser.full_name || !editUser.email || !editUser.department) {
+    if (!editUser?.full_name || !editUser?.email || !editUser?.department) {
       setError('Name, email, and department are required');
       return;
     }
@@ -137,8 +168,9 @@ export default function UserManagement() {
       setEditUser(null);
       await fetchUsers();
       setError('');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update user');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setError(axiosErr.response?.data?.message || 'Failed to update user');
     } finally {
       setLoading(false);
     }

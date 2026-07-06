@@ -11,7 +11,7 @@ function Logout() {
     const performLogout = async () => {
       try {
         await authAPI.logout();
-      } catch (error) {
+      } catch {
         // ignore
       }
       localStorage.removeItem('authToken');

@@ -1,7 +1,6 @@
-import axios from 'axios';
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 
-// Create API instance with base configuration
-export const api = axios.create({
+export const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
@@ -10,9 +9,8 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor to add token
 api.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -22,12 +20,10 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => response,
+  (response: AxiosResponse) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -36,150 +32,162 @@ api.interceptors.response.use(
   }
 );
 
-// Auth API calls
+export interface LoginParams {
+  email: string;
+  password: string;
+  two_factor_code?: string | null;
+}
+
+export interface UserData {
+  full_name: string;
+  email: string;
+  department: string;
+  role_ids: number[];
+}
+
+export interface PaginationParams {
+  per_page?: number;
+  sort?: string;
+  page?: number;
+}
+
 export const authAPI = {
-  login: (email, password, twoFactorCode = null) =>
+  login: (email: string, password: string, twoFactorCode: string | null = null) =>
     api.post('/auth/login', { email, password, two_factor_code: twoFactorCode }),
-  
+
   logout: () =>
     api.post('/auth/logout'),
-  
+
   getCurrentUser: () =>
     api.get('/auth/me'),
-  
-  changePassword: (currentPassword, password) =>
+
+  changePassword: (currentPassword: string, password: string) =>
     api.post('/auth/change-password', { current_password: currentPassword, password, password_confirmation: password }),
-  
+
   setupTwoFactor: () =>
     api.post('/auth/setup-2fa'),
-  
-  verifyTwoFactor: (code) =>
+
+  verifyTwoFactor: (code: string) =>
     api.post('/auth/verify-2fa', { two_factor_code: code }),
-  
-  disableTwoFactor: (password, code) =>
+
+  disableTwoFactor: (password: string, code: string) =>
     api.post('/auth/disable-2fa', { password, two_factor_code: code }),
-  
-  setupTwoFactorOnboarding: (token) =>
+
+  setupTwoFactorOnboarding: (token: string) =>
     api.post('/auth/setup-2fa-onboarding', { token }),
-  
-  verifyTwoFactorOnboarding: (token, code) =>
+
+  verifyTwoFactorOnboarding: (token: string, code: string) =>
     api.post('/auth/verify-2fa-onboarding', { token, two_factor_code: code }),
-  
-  skipTwoFactorOnboarding: (token) =>
+
+  skipTwoFactorOnboarding: (token: string) =>
     api.post('/auth/skip-2fa-onboarding', { token }),
-  
+
   getActiveSessions: () =>
     api.get('/auth/sessions'),
-  
-  revokeSession: (tokenId) =>
+
+  revokeSession: (tokenId: string) =>
     api.delete(`/auth/sessions/${tokenId}`),
-  
+
   revokeAllOtherSessions: () =>
     api.post('/auth/revoke-all-sessions'),
 };
 
-// User API calls
 export const userAPI = {
-  getAll: (params) =>
+  getAll: (params?: PaginationParams) =>
     api.get('/users', { params }),
-  
-  getById: (id) =>
+
+  getById: (id: number) =>
     api.get(`/users/${id}`),
-  
-  create: (userData) =>
+
+  create: (userData: UserData) =>
     api.post('/users', userData),
-  
-  update: (id, userData) =>
+
+  update: (id: number, userData: UserData) =>
     api.put(`/users/${id}`, userData),
-  
-  delete: (id) =>
+
+  delete: (id: number) =>
     api.delete(`/users/${id}`),
-  
-  activate: (id) =>
+
+  activate: (id: number) =>
     api.post(`/users/${id}/activate`),
-  
-  deactivate: (id) =>
+
+  deactivate: (id: number) =>
     api.post(`/users/${id}/deactivate`),
-  
-  resendActivation: (id) =>
+
+  resendActivation: (id: number) =>
     api.post(`/users/${id}/resend-activation`),
-  
-  resetPassword: (id) =>
+
+  resetPassword: (id: number) =>
     api.post(`/users/${id}/reset-password`),
-  
-  bulkAction: (userIds, action) =>
+
+  bulkAction: (userIds: number[], action: string) =>
     api.post('/users/bulk-action', { user_ids: userIds, action }),
-  
-  getUserPermissions: (id) =>
+
+  getUserPermissions: (id: number) =>
     api.get(`/users/${id}/permissions`),
-  
-  getAccessReview: (inactiveDays = 90) =>
+
+  getAccessReview: (inactiveDays: number = 90) =>
     api.get('/users/access-review', { params: { inactive_days: inactiveDays } }),
 };
 
-// Permission API calls
 export const permissionAPI = {
-  getAll: (params) =>
+  getAll: (params?: PaginationParams) =>
     api.get('/permissions', { params }),
-  
+
   getModules: () =>
     api.get('/permissions/modules/list'),
-  
+
   getActions: () =>
     api.get('/permissions/actions/list'),
-  
+
   getGroupedByModule: () =>
     api.get('/permissions/grouped/by-module'),
-  
+
   getRoleMatrix: () =>
     api.get('/permissions/matrix/roles'),
 };
 
-// Role API calls
 export const roleAPI = {
-  getAll: (params) =>
+  getAll: (params?: PaginationParams) =>
     api.get('/roles', { params }),
-  
-  getById: (id) =>
+
+  getById: (id: number) =>
     api.get(`/roles/${id}`),
 };
 
-// Login Activity API calls
 export const loginActivityAPI = {
-  getAll: (params) =>
+  getAll: (params?: PaginationParams) =>
     api.get('/login-activity', { params }),
-  
-  getUserActivity: (userId, params) =>
+
+  getUserActivity: (userId: number, params?: PaginationParams) =>
     api.get(`/login-activity/user/${userId}`, { params }),
-  
-  getFailedLogins: (params) =>
+
+  getFailedLogins: (params?: PaginationParams) =>
     api.get('/security/failed-logins', { params }),
 };
 
-// Audit Log API calls
 export const auditLogAPI = {
-  getAll: (params) =>
+  getAll: (params?: PaginationParams) =>
     api.get('/audit-logs', { params }),
-  
-  getById: (id) =>
+
+  getById: (id: number) =>
     api.get(`/audit-logs/${id}`),
 };
 
-// Session API calls
 export const sessionAPI = {
-  getAll: (params) =>
+  getAll: (params?: PaginationParams) =>
     api.get('/sessions', { params }),
-  
+
   getActive: () =>
     api.get('/sessions/active'),
-  
-  getUserSessions: (userId) =>
+
+  getUserSessions: (userId: number) =>
     api.get(`/sessions/user/${userId}`),
-  
-  terminate: (tokenId) =>
+
+  terminate: (tokenId: string) =>
     api.delete(`/sessions/${tokenId}`),
-  
-  terminateAllUserSessions: (userId) =>
+
+  terminateAllUserSessions: (userId: number) =>
     api.post(`/sessions/user/${userId}/terminate-all`),
 };
 

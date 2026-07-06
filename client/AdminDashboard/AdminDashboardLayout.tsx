@@ -8,10 +8,16 @@ import AuditTrailLogging from './User Management Sidebar/Audit Trail Logging';
 import PeriodicAccessReview from './User Management Sidebar/Periodic Access Review';
 import './AdminDashboardLayout.css';
 
+interface CurrentUser {
+  name?: string;
+  full_name?: string;
+  email?: string;
+}
+
 export default function Layout() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('users');
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -38,7 +44,7 @@ export default function Layout() {
       <aside className="layout-sidebar">
         <div className="sidebar-brand">
           <h1 className="sidebar-title">Admin Dashboard</h1>
-          {currentUser && <p className="sidebar-user">Welcome, {currentUser.name}</p>}
+          {currentUser && <p className="sidebar-user">Welcome, {currentUser.name || currentUser.full_name}</p>}
         </div>
 
         <section className="sidebar-section">

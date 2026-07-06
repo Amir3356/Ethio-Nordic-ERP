@@ -2,8 +2,17 @@ import { useEffect, useState } from 'react';
 import { userAPI } from '../../services/api';
 import './Periodic Access Review.css';
 
+interface AccessReview {
+  id: number;
+  full_name: string;
+  email: string;
+  roles: string[];
+  last_login: string | null;
+  days_since_login: number;
+}
+
 export default function PeriodicAccessReview() {
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState<AccessReview[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [inactiveDays, setInactiveDays] = useState(90);
@@ -129,7 +138,7 @@ export default function PeriodicAccessReview() {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="content-empty">
+                <td colSpan={6} className="content-empty">
                   No users found
                 </td>
               </tr>

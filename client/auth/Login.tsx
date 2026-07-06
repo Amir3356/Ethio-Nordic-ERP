@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { authAPI } from '../services/api';
@@ -15,7 +15,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -24,23 +24,21 @@ export default function Login() {
       const response = await authAPI.login(email, password, requiresTwoFactor ? twoFactorCode : null);
       const data = response.data;
 
-      // Check if 2FA is required
       if (data.requires_2fa) {
         setRequiresTwoFactor(true);
         setLoading(false);
         return;
       }
 
-      // Store auth token and user data
       localStorage.setItem('authToken', data.data.token);
       localStorage.setItem('user', JSON.stringify(data.data.user));
 
-      // Redirect to dashboard
       navigate('/dashboard', { replace: true });
-    } catch (err) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string; error?: string } } };
       const msg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
+        axiosErr.response?.data?.message ||
+        axiosErr.response?.data?.error ||
         'Invalid email or password. Please try again.';
       setError(msg);
       setRequiresTwoFactor(false);
@@ -118,7 +116,7 @@ export default function Login() {
                   placeholder="Enter 6-digit code"
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value.slice(0, 6))}
-                  maxLength="6"
+                  maxLength={6}
                   required
                   autoFocus
                 />
@@ -155,4 +153,3 @@ export default function Login() {
     </div>
   );
 }
-

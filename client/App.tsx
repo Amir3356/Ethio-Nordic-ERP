@@ -4,8 +4,9 @@ import Login from './auth/Login';
 import Logout from './auth/Logout';
 import ActivateAccount from './auth/ActivateAccount';
 import TwoFactorSetup from './auth/TwoFactorSetup';
+import type { ReactNode } from 'react';
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const user = localStorage.getItem('user');
   if (!user) {
     return <Navigate to="/login" replace />;

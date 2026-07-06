@@ -1,0 +1,200 @@
+@import './Login.css';
+
+/* ── No Token Error Link ── */
+.tfa-error-link {
+  text-align: center;
+  margin-top: 1rem;
+  display: block;
+  text-decoration: none;
+}
+
+/* ── Loading State ── */
+.tfa-loading-card {
+  text-align: center;
+  padding: 3rem;
+}
+
+.tfa-loading-text {
+  color: #6b7280;
+}
+
+/* ── Already Setup State ── */
+.tfa-already-setup {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.tfa-already-setup-icon {
+  margin-bottom: 1rem;
+}
+
+.tfa-already-setup-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tfa-already-setup-text {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.tfa-already-setup-btn {
+  text-align: center;
+  display: block;
+  text-decoration: none;
+}
+
+/* ── Success State ── */
+.tfa-success {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.tfa-success-icon {
+  margin-bottom: 1rem;
+}
+
+.tfa-success-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tfa-success-text {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.tfa-success-btn {
+  text-align: center;
+  display: block;
+  text-decoration: none;
+}
+
+/* ── Header Subtitle ── */
+.tfa-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* ── Scan Step ── */
+.tfa-scan-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.tfa-scan-icon {
+  margin-bottom: 0.5rem;
+}
+
+.tfa-scan-instructions {
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* ── QR Code ── */
+.tfa-qr-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.tfa-qr-box {
+  padding: 12px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.tfa-qr-image {
+  display: block;
+}
+
+/* ── Manual Secret ── */
+.tfa-manual-label {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.tfa-secret-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: 2px;
+}
+
+.tfa-copied-text {
+  font-size: 12px;
+  color: #22c55e;
+}
+
+/* ── Verify Code Input ── */
+.tfa-code-input {
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 8px;
+  font-weight: 600;
+}
+
+/* ── Verify Button ── */
+.tfa-verify-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ── Skip Button ── */
+.tfa-skip-btn {
+  display: block;
+  text-align: center;
+  margin-top: 0.75rem;
+  width: 100%;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* ── Recovery Codes ── */
+.tfa-recovery-codes {
+  margin-top: 1.25rem;
+  padding: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+}
+
+.tfa-recovery-codes-title {
+  margin: 0;
+  font-size: 12px;
+  color: #92400e;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.tfa-recovery-codes-list {
+  font-family: monospace;
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.8;
+}
+
+.tfa-recovery-code {
+  margin-right: 12px;
+}

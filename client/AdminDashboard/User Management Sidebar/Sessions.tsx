@@ -2,8 +2,15 @@ import { useEffect, useState } from 'react';
 import { sessionAPI } from '../../services/api';
 import './Sessions.css';
 
+interface Session {
+  id: string;
+  user?: { name?: string };
+  last_used_at: string | null;
+  created_at: string;
+}
+
 export default function Sessions() {
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,13 +32,13 @@ export default function Sessions() {
     }
   };
 
-  const handleTerminateSession = async (tokenId) => {
+  const handleTerminateSession = async (tokenId: string) => {
     if (!window.confirm('Are you sure you want to terminate this session?')) return;
 
     try {
       await sessionAPI.terminate(tokenId);
       await fetchSessions();
-    } catch (err) {
+    } catch {
       setError('Failed to terminate session');
     }
   };
@@ -87,7 +94,7 @@ export default function Sessions() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="content-empty">
+                <td colSpan={5} className="content-empty">
                   No active sessions found
                 </td>
               </tr>
