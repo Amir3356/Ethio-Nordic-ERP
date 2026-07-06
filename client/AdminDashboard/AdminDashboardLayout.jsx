@@ -8,7 +8,7 @@ import AuditTrailLogging from './User Management Sidebar/Audit Trail Logging';
 import PeriodicAccessReview from './User Management Sidebar/Periodic Access Review';
 import './AdminDashboardLayout.css';
 
-export default function Layout({ children }) {
+export default function Layout() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('users');
   const [currentUser, setCurrentUser] = useState(null);

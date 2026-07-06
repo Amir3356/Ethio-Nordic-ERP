@@ -73,15 +73,5 @@ class LoginActivity extends Model
     {
         return $query->whereBetween('login_at', [$startDate, $endDate]);
     }
-
-    /**
-     * Get login duration in minutes
-     */
-    public function getDurationInMinutes(): ?int
-    {
-        if (!$this->logout_at) {
-            return null;
-        }
-        return $this->login_at->diffInMinutes($this->logout_at);
-    }
 }
+

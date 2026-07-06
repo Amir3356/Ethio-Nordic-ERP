@@ -85,51 +85,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has any of the given roles
-     */
-    public function hasAnyRole(array $roles): bool
-    {
-        return $this->roles()->whereIn('slug', $roles)->exists();
-    }
-
-    /**
-     * Check if user has all of the given roles
-     */
-    public function hasAllRoles(array $roles): bool
-    {
-        return $this->roles()->whereIn('slug', $roles)->count() === count($roles);
-    }
-
-    /**
      * Check if user is an admin
      */
     public function isAdmin(): bool
     {
         return $this->hasRole('admin') || $this->hasRole('super-admin');
-    }
-
-    /**
-     * Assign a role to the user
-     */
-    public function assignRole(Role $role)
-    {
-        return $this->roles()->syncWithoutDetaching([$role->id]);
-    }
-
-    /**
-     * Remove a role from the user
-     */
-    public function removeRole(Role $role)
-    {
-        return $this->roles()->detach($role->id);
-    }
-
-    /**
-     * Sync user's roles
-     */
-    public function syncRoles(array $roleIds)
-    {
-        return $this->roles()->sync($roleIds);
     }
 
     // ==================== PERMISSION METHODS ====================
@@ -168,17 +128,6 @@ class User extends Authenticatable
         return $this->permissions()->whereIn('slug', $permissions)->count() === count($permissions);
     }
 
-    /**
-     * Check permission by module and action (e.g., 'users', 'view')
-     */
-    public function canPerform(string $module, string $action): bool
-    {
-        return $this->permissions()
-            ->where('module', $module)
-            ->where('action', $action)
-            ->exists();
-    }
-
     // ==================== TWO-FACTOR AUTHENTICATION ====================
 
     /**
@@ -208,16 +157,6 @@ class User extends Authenticatable
     public function hasExpiredTemporaryPassword(): bool
     {
         return $this->temp_password_expires_at && $this->temp_password_expires_at->isPast();
-    }
-
-    /**
-     * Mark email as verified
-     */
-    public function markEmailAsVerified()
-    {
-        $this->forceFill([
-            'email_verified_at' => now(),
-        ])->save();
     }
 
     // ==================== ACCOUNT STATUS ====================
@@ -290,10 +229,6 @@ class User extends Authenticatable
     {
         return $query->whereNull('email_verified_at');
     }
-
-    public function getAuthIdentifierName()
-    {
-        return 'id';
-    }
 }
+
 

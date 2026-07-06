@@ -100,7 +100,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 6px;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -114,12 +114,14 @@
 }
 
 .sidebar-logout {
-  color: #f87171;
+  border: none;
+  background: none;
+  cursor: pointer;
 }
 
 .sidebar-logout:hover {
-  background: rgba(239, 68, 68, 0.18);
-  color: #f87171;
+  background: rgba(96, 165, 250, 0.18);
+  color: #ffffff;
 }
 
 .layout-main {

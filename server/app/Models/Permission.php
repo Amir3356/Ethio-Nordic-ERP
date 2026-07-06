@@ -24,20 +24,5 @@ class Permission extends Model
     {
         return $this->belongsToMany(Role::class, 'role_permissions');
     }
-
-    /**
-     * Check if permission belongs to a specific module
-     */
-    public function scopeForModule($query, string $module)
-    {
-        return $query->where('module', $module);
-    }
-
-    /**
-     * Check if permission is for a specific action
-     */
-    public function scopeForAction($query, string $action)
-    {
-        return $query->where('action', $action);
-    }
 }
+

@@ -207,6 +207,7 @@ export default function UserManagement() {
             <tr>
               <th>Name</th>
               <th>Email</th>
+              <th>Department</th>
               <th>Roles</th>
               <th>Status</th>
               <th>Action</th>

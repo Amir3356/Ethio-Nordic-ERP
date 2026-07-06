@@ -136,19 +136,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
     });
 
-    // ==================== LOGIN ACTIVITY & AUDIT ROUTES ====================
+    // ==================== LOGIN ACTIVITY ROUTES ====================
     Route::prefix('login-activity')->middleware(['rbac:login_activity.view'])->group(function () {
         Route::get('/', [LoginActivityController::class, 'index']);
         Route::get('/{id}', [LoginActivityController::class, 'show']);
         Route::get('/user/{userId}', [LoginActivityController::class, 'getUserActivity']);
-        
-        Route::middleware(['rbac:login_activity.export'])->group(function () {
-            Route::get('/export/csv', [LoginActivityController::class, 'exportCsv']);
-            Route::get('/export/pdf', [LoginActivityController::class, 'exportPdf']);
-        });
     });
 
-    // Audit logs routes
+    // ==================== AUDIT LOGS ROUTES ====================
     Route::prefix('audit-logs')->middleware(['rbac:audit_logs.view'])->group(function () {
         Route::get('/', [LoginActivityController::class, 'auditLogs']);
         Route::get('/{id}', [LoginActivityController::class, 'showAuditLog']);
@@ -161,13 +156,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // ==================== SESSION MANAGEMENT ROUTES ====================
     Route::prefix('sessions')->middleware(['rbac:sessions.view'])->group(function () {
         Route::get('/', [SessionController::class, 'index']);
-        Route::get('/active', [SessionController::class, 'activeSessions']);
-        Route::get('/user/{userId}', [SessionController::class, 'getUserSessions']);
         
         Route::middleware(['rbac:sessions.terminate'])->group(function () {
-            Route::delete('/{tokenId}', [SessionController::class, 'terminateSession']);
-            Route::post('/user/{userId}/terminate-all', [SessionController::class, 'terminateAllUserSessions']);
-            Route::post('/bulk-terminate', [SessionController::class, 'bulkTerminate']);
+            Route::delete('/{tokenId}', [SessionController::class, 'destroy']);
         });
     });
 
@@ -177,49 +168,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // User registration (admin only)
         Route::post('/auth/register', [AuthController::class, 'register']);
         
-        // System administration
-        Route::prefix('system')->middleware(['rbac:system.configure'])->group(function () {
-            Route::get('/info', [DashboardController::class, 'systemInfo']);
-            Route::get('/health', [DashboardController::class, 'healthCheck']);
-        });
-        
         // Security management
         Route::prefix('security')->group(function () {
-            Route::middleware(['rbac:security.manage_2fa'])->group(function () {
-                Route::post('/users/{userId}/force-2fa', [UserController::class, 'force2FA']);
-                Route::post('/users/{userId}/disable-2fa', [UserController::class, 'disable2FA']);
-            });
-            
-            Route::middleware(['rbac:security.force_password_reset'])->group(function () {
-                Route::post('/users/{userId}/force-password-reset', [UserController::class, 'forcePasswordReset']);
-            });
-            
             Route::middleware(['rbac:security.view_events'])->group(function () {
-                Route::get('/events', [DashboardController::class, 'securityEvents']);
                 Route::get('/failed-logins', [LoginActivityController::class, 'failedLogins']);
                 Route::get('/suspicious-activity', [LoginActivityController::class, 'suspiciousActivity']);
             });
-        });
-    });
-});
-
-// ==================== SUPER ADMIN ONLY ROUTES ====================
-Route::middleware(['auth:sanctum', 'rbac:role:super-admin'])->group(function () {
-    
-    Route::prefix('system')->group(function () {
-        Route::middleware(['rbac:system.database'])->group(function () {
-            Route::post('/migrate', [DashboardController::class, 'runMigrations']);
-            Route::post('/seed', [DashboardController::class, 'runSeeders']);
-        });
-        
-        Route::middleware(['rbac:system.backup'])->group(function () {
-            Route::post('/backup', [DashboardController::class, 'createBackup']);
-            Route::get('/backups', [DashboardController::class, 'listBackups']);
-        });
-        
-        Route::middleware(['rbac:system.monitor'])->group(function () {
-            Route::get('/logs', [DashboardController::class, 'systemLogs']);
-            Route::get('/performance', [DashboardController::class, 'performanceMetrics']);
         });
     });
 });

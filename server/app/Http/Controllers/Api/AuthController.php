@@ -83,6 +83,11 @@ class AuthController extends Controller
             return $this->errorResponse('Your account has been deactivated. Please contact administrator.', 403);
         }
 
+        if (!$user->isAdmin()) {
+            $this->logLoginAttempt($request, $user, 'failed', 'Not an admin');
+            return $this->errorResponse('Access denied. Only administrators can log in.', 403);
+        }
+
         // Check if temporary password has expired
         if ($user->hasExpiredTemporaryPassword()) {
             $this->logLoginAttempt($request, $user, 'failed', 'Temporary password expired');
@@ -358,6 +363,11 @@ class AuthController extends Controller
         if (!$user->is_active) {
             $this->logLoginAttempt($request, $user, 'failed', 'Account is deactivated');
             return $this->errorResponse('Your account has been deactivated.', 403);
+        }
+
+        if (!$user->isAdmin()) {
+            $this->logLoginAttempt($request, $user, 'failed', 'Not an admin');
+            return $this->errorResponse('Access denied. Only administrators can log in.', 403);
         }
 
         if (!$user->hasTwoFactorEnabled()) {
