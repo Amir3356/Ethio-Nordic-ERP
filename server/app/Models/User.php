@@ -95,13 +95,25 @@ class User extends Authenticatable
     // ==================== PERMISSION METHODS ====================
 
     /**
-     * Get all permissions for this user through their roles
+     * Get permissions assigned directly to this user (custom overrides)
+     */
+    public function directPermissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions');
+    }
+
+    /**
+     * Get all permissions for this user (roles + direct overrides combined)
      */
     public function permissions()
     {
-        return Permission::whereHas('roles', function ($query) {
+        $rolePermissionIds = Permission::whereHas('roles', function ($query) {
             $query->whereIn('roles.id', $this->roles->pluck('id'));
-        });
+        })->pluck('id');
+
+        $directPermissionIds = $this->directPermissions()->pluck('permissions.id');
+
+        return Permission::whereIn('id', $rolePermissionIds->concat($directPermissionIds)->unique());
     }
 
     /**

@@ -80,6 +80,8 @@ class UserController extends Controller
             'department' => 'required|string|max:255',
             'role_ids' => 'required|array|min:1',
             'role_ids.*' => 'exists:roles,id',
+            'permission_ids' => 'sometimes|array',
+            'permission_ids.*' => 'exists:permissions,id',
             'send_email' => 'sometimes|boolean',
         ]);
 
@@ -99,6 +101,11 @@ class UserController extends Controller
 
             // Assign roles
             $user->roles()->sync($request->role_ids);
+
+            // Assign custom permission overrides
+            if ($request->has('permission_ids')) {
+                $user->directPermissions()->sync($request->permission_ids);
+            }
 
             // Send activation email if requested (default: true)
             if ($request->get('send_email', true)) {
