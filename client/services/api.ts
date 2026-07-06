@@ -32,12 +32,6 @@ api.interceptors.response.use(
   }
 );
 
-export interface LoginParams {
-  email: string;
-  password: string;
-  two_factor_code?: string | null;
-}
-
 export interface UserData {
   full_name: string;
   email: string;
@@ -130,40 +124,12 @@ export const userAPI = {
     api.get('/users/access-review', { params: { inactive_days: inactiveDays } }),
 };
 
-export const permissionAPI = {
-  getAll: (params?: PaginationParams) =>
-    api.get('/permissions', { params }),
-
-  getModules: () =>
-    api.get('/permissions/modules/list'),
-
-  getActions: () =>
-    api.get('/permissions/actions/list'),
-
-  getGroupedByModule: () =>
-    api.get('/permissions/grouped/by-module'),
-
-  getRoleMatrix: () =>
-    api.get('/permissions/matrix/roles'),
-};
-
 export const roleAPI = {
   getAll: (params?: PaginationParams) =>
     api.get('/roles', { params }),
 
   getById: (id: number) =>
     api.get(`/roles/${id}`),
-};
-
-export const loginActivityAPI = {
-  getAll: (params?: PaginationParams) =>
-    api.get('/login-activity', { params }),
-
-  getUserActivity: (userId: number, params?: PaginationParams) =>
-    api.get(`/login-activity/user/${userId}`, { params }),
-
-  getFailedLogins: (params?: PaginationParams) =>
-    api.get('/security/failed-logins', { params }),
 };
 
 export const auditLogAPI = {

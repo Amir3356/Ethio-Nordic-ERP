@@ -112,31 +112,6 @@
   opacity: 1;
 }
 
-/* ── Options ── */
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #6b7280;
-  cursor: pointer;
-  user-select: none;
-}
-
-.checkbox-label input[type='checkbox'] {
-  width: 16px;
-  height: 16px;
-  accent-color: #4f46e5;
-  cursor: pointer;
-}
-
 /* ── Error ── */
 .login-error {
   display: flex;
@@ -217,8 +192,7 @@
   }
 
   .login-header,
-  .login-form,
-  .login-footer {
+  .login-form {
     padding-left: 24px;
     padding-right: 24px;
   }

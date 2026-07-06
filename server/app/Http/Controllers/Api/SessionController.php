@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,45 +60,5 @@ class SessionController extends Controller
         return $this->successResponse([
             'revoked_count' => $deletedCount,
         ], "{$deletedCount} sessions revoked successfully.");
-    }
-
-    public function forceLogout(Request $request, $userId): JsonResponse
-    {
-        $user = User::findOrFail($userId);
-
-        $deletedCount = DB::table('sessions')->where('user_id', $userId)->delete();
-
-        return $this->successResponse([
-            'user' => $user->only(['id', 'full_name', 'email']),
-            'revoked_count' => $deletedCount,
-        ], "User {$user->full_name} has been logged out from all sessions.");
-    }
-
-    public function sessionStats(): JsonResponse
-    {
-        $totalSessions = DB::table('sessions')->count();
-
-        $sessionsByUser = DB::table('sessions')
-            ->join('users', 'sessions.user_id', '=', 'users.id')
-            ->select('users.id', 'users.full_name', 'users.email')
-            ->selectRaw('count(*) as session_count')
-            ->groupBy('users.id', 'users.full_name', 'users.email')
-            ->orderByDesc('session_count')
-            ->get();
-
-        $activeToday = DB::table('sessions')
-            ->where('last_activity', '>=', now()->startOfDay()->timestamp)
-            ->count();
-
-        $activeThisWeek = DB::table('sessions')
-            ->where('last_activity', '>=', now()->startOfWeek()->timestamp)
-            ->count();
-
-        return $this->successResponse([
-            'total_sessions' => $totalSessions,
-            'active_today' => $activeToday,
-            'active_this_week' => $activeThisWeek,
-            'by_user' => $sessionsByUser,
-        ]);
     }
 }
