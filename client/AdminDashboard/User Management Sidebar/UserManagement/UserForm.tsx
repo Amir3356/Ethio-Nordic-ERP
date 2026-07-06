@@ -178,7 +178,9 @@ export default function UserForm({
         <label className="content-form-field">
           <span>Custom Permission Overrides</span>
           <div className="content-permissions-group">
-            {Object.entries(allPermissions).map(([module, permissions]) => (
+            {Object.entries(allPermissions)
+              .filter(([module]) => module !== 'Security' && module !== 'System Administration')
+              .map(([module, permissions]) => (
               <div key={module} className="content-permission-module">
                 <h4 className="content-permission-module-title">{module}</h4>
                 <div className="content-checkbox-group">
