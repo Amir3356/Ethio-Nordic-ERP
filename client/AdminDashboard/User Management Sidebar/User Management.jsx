@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { userAPI, roleAPI } from '../../services/api';
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import './User Management.css';
 
 export default function UserManagement() {
@@ -93,6 +94,65 @@ export default function UserManagement() {
     (u.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
     (u.email || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const columns = [
+    {
+      accessorKey: 'full_name',
+      header: 'Name',
+      cell: (info) => <span className="content-table-name">{info.getValue()}</span>,
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'department',
+      header: 'Department',
+    },
+    {
+      accessorKey: 'roles',
+      header: 'Roles',
+      cell: (info) => {
+        const roles = info.getValue();
+        return roles && roles.length > 0 ? roles.map((r) => r.name).join(', ') : 'No roles';
+      },
+    },
+    {
+      accessorKey: 'is_active',
+      header: 'Status',
+      cell: (info) => {
+        const isActive = info.getValue();
+        return (
+          <span className={`content-status ${isActive ? 'status-active' : 'status-inactive'}`}>
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: 'Action',
+      cell: (info) => (
+        <div className="content-actions">
+          <button type="button" className="content-btn-edit">Edit</button>
+          <button
+            type="button"
+            className="content-btn-delete"
+            onClick={() => handleDeleteUser(info.row.original.id)}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const table = useReactTable({
+    data: filteredUsers,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   return (
     <section className="content-section" id="users">
       <div className="content-section-header content-section-header-centered">
