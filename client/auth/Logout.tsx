@@ -1,10 +1,10 @@
+import { LogOut } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
 import { authAPI } from '../services/api';
 import './Logout.css';
 
-function Logout() {
+export default function Logout() {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,5 +33,3 @@ function Logout() {
     </div>
   );
 }
-
-export default Logout;
