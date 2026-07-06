@@ -1,0 +1,70 @@
+services:
+  web:
+    build:
+      context: ./client
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+
+  app:
+    build:
+      context: ./server
+    environment: &app-env
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: "base64:s/7sV8/rFJwPV2/mrUwGC2a1j8QLUwWDx2M3lYLVFis="
+      APP_URL: http://localhost
+      ASSET_URL: http://localhost
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: debug
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ethio_nordic_erp
+      DB_USERNAME: ethio_nordic
+      DB_PASSWORD: ethio_nordic
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PREFIX: ethio_nordic_erp_
+      SANCTUM_STATEFUL_DOMAINS: localhost,127.0.0.1
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  queue:
+    build:
+      context: ./server
+    environment: *app-env
+    command: php artisan queue:work --tries=1 --timeout=0
+    depends_on:
+      - app
+      - db
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  db:
+    image: mysql:8.4
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: ethio_nordic_erp
+      MYSQL_USER: ethio_nordic
+      MYSQL_PASSWORD: ethio_nordic
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
