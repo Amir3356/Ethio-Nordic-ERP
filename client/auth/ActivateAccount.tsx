@@ -121,16 +121,6 @@ export default function ActivateAccount() {
               Skip for now
             </Link>
             </div>
-            <div className="password-policy">
-              <p className="password-policy-title">Password must contain:</p>
-              <ul className="password-policy-list">
-                <li>At least 8 characters</li>
-                <li>At least 1 uppercase letter</li>
-                <li>At least 1 lowercase letter</li>
-                <li>At least 1 number</li>
-                <li>At least 1 special character (!@#$%^&amp;*...)</li>
-              </ul>
-            </div>
           </div>
       </div>
     );
@@ -191,6 +181,17 @@ export default function ActivateAccount() {
             Back to Login
           </Link>
         </form>
+
+        <div className="password-policy">
+          <p className="password-policy-title">Password must contain:</p>
+          <ul className="password-policy-list">
+            <li>At least 8 characters</li>
+            <li>At least 1 uppercase letter</li>
+            <li>At least 1 lowercase letter</li>
+            <li>At least 1 number</li>
+            <li>At least 1 special character (!@#$%^&amp;*...)</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
