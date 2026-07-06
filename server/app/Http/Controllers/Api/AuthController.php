@@ -610,9 +610,9 @@ class AuthController extends Controller
 
     private function generateQrCodeUrl(string $email, string $secret): string
     {
-        $appName = urlencode(config('app.name', 'ERP System'));
-        $email = urlencode($email);
-        return "otpauth://totp/{$appName}:{$email}?secret={$secret}&issuer={$appName}";
+        $appName = config('app.name', 'Ethio Nordic ERP');
+        $label = rawurlencode($appName) . ':' . rawurlencode($email);
+        return "otpauth://totp/{$label}?secret={$secret}&issuer=" . rawurlencode($appName);
     }
 
     private function verifyTwoFactorCode(User $user, string $code): bool

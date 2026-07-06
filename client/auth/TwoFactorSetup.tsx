@@ -198,19 +198,6 @@ export default function TwoFactorSetup() {
                   </div>
                 </div>
 
-                <p className="tfa-manual-label">
-                  Or enter this code manually:
-                </p>
-                <div
-                  onClick={copySecret}
-                  className="tfa-secret-box"
-                >
-                  {secret}
-                  <Copy size={14} color="#6b7280" />
-                  {copied && <span className="tfa-copied-text">Copied!</span>}
-                </div>
-              </div>
-
               <form onSubmit={handleVerify}>
                 <div className="form-group">
                   <label htmlFor="verify-code">Enter 6-digit code from your app</label>
