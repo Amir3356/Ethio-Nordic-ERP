@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { userAPI, roleAPI } from '../../services/api';
-import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import './User Management.css';
 
 export default function UserManagement() {
@@ -94,64 +93,6 @@ export default function UserManagement() {
     (u.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
     (u.email || '').toLowerCase().includes(search.toLowerCase())
   );
-
-  const columns = [
-    {
-      accessorKey: 'full_name',
-      header: 'Name',
-      cell: (info) => <span className="content-table-name">{info.getValue()}</span>,
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email',
-    },
-    {
-      accessorKey: 'department',
-      header: 'Department',
-    },
-    {
-      accessorKey: 'roles',
-      header: 'Roles',
-      cell: (info) => {
-        const roles = info.getValue();
-        return roles && roles.length > 0 ? roles.map((r) => r.name).join(', ') : 'No roles';
-      },
-    },
-    {
-      accessorKey: 'is_active',
-      header: 'Status',
-      cell: (info) => {
-        const isActive = info.getValue();
-        return (
-          <span className={`content-status ${isActive ? 'status-active' : 'status-inactive'}`}>
-            {isActive ? 'Active' : 'Inactive'}
-          </span>
-        );
-      },
-    },
-    {
-      id: 'actions',
-      header: 'Action',
-      cell: (info) => (
-        <div className="content-actions">
-          <button type="button" className="content-btn-edit">Edit</button>
-          <button
-            type="button"
-            className="content-btn-delete"
-            onClick={() => handleDeleteUser(info.row.original.id)}
-          >
-            Delete
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  const table = useReactTable({
-    data: filteredUsers,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
 
   return (
     <section className="content-section" id="users">
@@ -264,30 +205,45 @@ export default function UserManagement() {
       <div className="content-table-wrapper">
         <table className="content-table">
           <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Department</th>
+              <th>Roles</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
           </thead>
           <tbody>
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <tr key={user.id}>
+                  <td><span className="content-table-name">{user.full_name}</span></td>
+                  <td>{user.email}</td>
+                  <td>{user.department}</td>
+                  <td>{user.roles && user.roles.length > 0 ? user.roles.map((r) => r.name).join(', ') : 'No roles'}</td>
+                  <td>
+                    <span className={`content-status ${user.is_active ? 'status-active' : 'status-inactive'}`}>
+                      {user.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="content-actions">
+                      <button type="button" className="content-btn-edit">Edit</button>
+                      <button
+                        type="button"
+                        className="content-btn-delete"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="content-empty">
+                <td colSpan={6} className="content-empty">
                   No users found
                 </td>
               </tr>

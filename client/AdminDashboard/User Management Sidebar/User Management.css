@@ -1,4 +1,4 @@
-.content-section-header {
+#users .content-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -6,18 +6,15 @@
   margin-bottom: 20px;
 }
 
-.content-section-header-centered {
+#users .content-section-header-centered {
   position: relative;
 }
 
-.content-section-header-center {
-  justify-content: center;
-}
-
-.content-section-title-centered {
+#users .content-section-title-centered {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .content-section-header h2 {
@@ -27,7 +24,7 @@
   color: #111827;
 }
 
-.content-btn-new {
+#users .content-btn-new {
   margin-left: auto;
   padding: 8px 16px;
   border-radius: 8px;
@@ -38,9 +35,11 @@
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease;
+  position: relative;
+  z-index: 1;
 }
 
-.content-btn-new:hover {
+#users .content-btn-new:hover {
   background: #4338ca;
 }
 
