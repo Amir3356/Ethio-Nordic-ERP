@@ -61,6 +61,7 @@ export default function UserManagement() {
 
     try {
       setLoading(true);
+      const email = newUser.email;
       const response = await userAPI.create({
         full_name: newUser.name,
         email: newUser.email,
@@ -73,7 +74,7 @@ export default function UserManagement() {
       await fetchUsers();
       if (emailSent) {
         setError('');
-        alert('User created successfully! Activation email sent to ' + newUser.email);
+        alert(`User created successfully. An activation email was sent to ${email}, and the new user will be prompted to set a password and enroll in 2FA.`);
       } else {
         alert('User created but activation email could not be sent. Check logs for details.');
       }
@@ -85,15 +86,59 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    if (!window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
 
     try {
       setLoading(true);
-      await userAPI.delete(userId);
+      const response = await userAPI.delete(userId);
+      await fetchUsers();
+      setError('');
+      alert(response.data?.message || 'User deleted successfully.');
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to delete user';
+      setError(msg);
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditUser({
+      id: user.id,
+      full_name: user.full_name || '',
+      email: user.email || '',
+      department: user.department || '',
+      roles: user.roles ? user.roles.map((r) => r.id) : [],
+    });
+    setShowEditForm(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editUser.full_name || !editUser.email || !editUser.department) {
+      setError('Name, email, and department are required');
+      return;
+    }
+
+    if (editUser.roles.length === 0) {
+      setError('Please assign at least one role');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await userAPI.update(editUser.id, {
+        full_name: editUser.full_name,
+        email: editUser.email,
+        department: editUser.department,
+        role_ids: editUser.roles,
+      });
+      setShowEditForm(false);
+      setEditUser(null);
       await fetchUsers();
       setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete user');
+      setError(err.response?.data?.message || 'Failed to update user');
     } finally {
       setLoading(false);
     }
@@ -200,6 +245,86 @@ export default function UserManagement() {
         </div>
       )}
 
+      {showEditForm && editUser && (
+        <div className="content-modal-backdrop" onClick={() => { setShowEditForm(false); setEditUser(null); }}>
+          <div className="content-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="content-modal-header">
+              <h3>Edit User</h3>
+              <button type="button" className="content-modal-close" onClick={() => { setShowEditForm(false); setEditUser(null); }}>×</button>
+            </div>
+            <div className="content-form">
+              <div className="content-form-row">
+                <label className="content-form-field">
+                  <span>Full Name</span>
+                  <input
+                    type="text"
+                    value={editUser.full_name}
+                    onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })}
+                    placeholder="Enter full name"
+                  />
+                </label>
+                <label className="content-form-field">
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={editUser.email}
+                    onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                    placeholder="Enter email"
+                  />
+                </label>
+              </div>
+              <div className="content-form-row">
+                <label className="content-form-field">
+                  <span>Department</span>
+                  <input
+                    type="text"
+                    value={editUser.department}
+                    onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}
+                    placeholder="Enter department"
+                  />
+                </label>
+              </div>
+              <div className="content-form-row">
+                <label className="content-form-field">
+                  <span>Assign Roles</span>
+                  <div className="content-checkbox-group">
+                    {roles.map((role) => (
+                      <label key={role.id} className="content-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={editUser.roles.includes(role.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setEditUser({ ...editUser, roles: [...editUser.roles, role.id] });
+                            } else {
+                              setEditUser({ ...editUser, roles: editUser.roles.filter((r) => r !== role.id) });
+                            }
+                          }}
+                        />
+                        <span>{role.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </label>
+              </div>
+              <div className="content-form-actions">
+                <button type="button" className="content-btn-cancel" onClick={() => { setShowEditForm(false); setEditUser(null); }}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="content-btn-submit"
+                  onClick={handleUpdateUser}
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="content-search">
         <input
           type="text"
@@ -239,7 +364,7 @@ export default function UserManagement() {
                   </td>
                   <td>
                     <div className="content-actions">
-                      <button type="button" className="content-btn-edit">Edit</button>
+                      <button type="button" className="content-btn-edit" onClick={() => handleEditUser(user)}>Edit</button>
                       <button
                         type="button"
                         className="content-btn-delete"

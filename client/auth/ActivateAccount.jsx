@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
 import { api } from '../services/api';
@@ -15,6 +15,18 @@ export default function ActivateAccount() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!success || !token) {
+      return undefined;
+    }
+
+    const redirectTimer = window.setTimeout(() => {
+      navigate(`/setup-2fa?token=${token}`, { replace: true });
+    }, 1200);
+
+    return () => window.clearTimeout(redirectTimer);
+  }, [success, token, navigate]);
 
   const handleActivate = async (e) => {
     e.preventDefault();
@@ -80,14 +92,14 @@ export default function ActivateAccount() {
             <CheckCircle size={48} color="#22c55e" style={{ marginBottom: '1rem' }} />
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Account Activated!</h2>
             <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-              Your account has been activated successfully. Now let's set up Two-Factor Authentication for your security.
+              Your permanent password has been saved. You are being redirected to set up Two-Factor Authentication now.
             </p>
             <Link
               to={`/setup-2fa?token=${token}`}
               className="login-btn"
               style={{ textAlign: 'center', display: 'block', textDecoration: 'none', marginBottom: '0.75rem' }}
             >
-              Set Up 2FA
+              Continue to 2FA Setup
             </Link>
             <Link
               to="/login"

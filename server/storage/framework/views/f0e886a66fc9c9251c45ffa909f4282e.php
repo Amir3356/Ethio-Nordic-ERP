@@ -69,16 +69,12 @@
         <p>Your account has been created successfully! We're excited to have you on board.</p>
         
         <div class="credentials-box">
-            <h3>Your Login Credentials:</h3>
+            <h3>Activation Link</h3>
             <p><strong>Email:</strong> <?php echo e($user->email); ?></p>
-            <p><strong>Temporary Password:</strong> <code style="background: #e5e7eb; padding: 5px 10px; border-radius: 3px;"><?php echo e($temporaryPassword); ?></code></p>
+            <p style="margin-bottom: 0;">Click the link below to activate your account, choose a permanent password that meets the password policy, and continue directly into Two-Factor Authentication setup.</p>
         </div>
-        
-        <div class="warning">
-            <strong>⚠️ Important:</strong> This temporary password will expire in 7 days. You must activate your account and set a new password before then.
-        </div>
-        
-        <p>To activate your account and set up your permanent password, please click the button below:</p>
+
+        <p>To activate your account, please click the button below:</p>
         
         <center>
             <a href="<?php echo e($activationUrl); ?>" class="button">Activate Your Account</a>
@@ -92,9 +88,8 @@
         <h3>Next Steps:</h3>
         <ol>
             <li>Click the activation link above</li>
-            <li>Set your permanent password</li>
-            <li>Enable Two-Factor Authentication (2FA) for enhanced security</li>
-            <li>Complete your profile information</li>
+            <li>Set your permanent password using the password policy shown on the page</li>
+            <li>Enroll in Two-Factor Authentication with an authenticator app such as Google Authenticator</li>
         </ol>
         
         <p>If you did not request this account or have any questions, please contact your system administrator immediately.</p>

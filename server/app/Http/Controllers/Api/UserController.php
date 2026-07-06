@@ -208,11 +208,11 @@ class UserController extends Controller
             return $this->errorResponse('You cannot delete your own account.', 422);
         }
 
-        // Soft delete and revoke all tokens
+        // Revoke all tokens and permanently delete user
         $user->tokens()->delete();
-        $user->delete();
+        $user->forceDelete();
 
-        return $this->successResponse(null, 'User deleted successfully.');
+        return $this->successResponse(null, 'User deleted permanently.');
     }
 
     /**

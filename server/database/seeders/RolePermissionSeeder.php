@@ -152,7 +152,7 @@ class RolePermissionSeeder extends Seeder
         // HR Manager gets user management permissions
         $hrManager = Role::where('slug', 'hr-manager')->first();
         $hrPermissions = Permission::whereIn('slug', [
-            'users.view', 'users.create', 'users.edit', 'users.activate',
+            'users.view', 'users.create', 'users.edit', 'users.delete', 'users.activate',
             'users.reset_password', 'users.manage_roles', 'users.view_permissions',
             'roles.view', 'permissions.view',
             'login_activity.view', 'login_activity.export',
