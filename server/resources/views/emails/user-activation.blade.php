@@ -1,106 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Activation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: #2563eb;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 5px 5px 0 0;
-        }
-        .content {
-            background-color: #f9fafb;
-            padding: 30px;
-            border: 1px solid #e5e7eb;
-        }
-        .credentials-box {
-            background-color: #fff;
-            border: 2px solid #2563eb;
-            border-radius: 5px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .credentials-box strong {
-            color: #2563eb;
-        }
-        .button {
-            display: inline-block;
-            background-color: #2563eb;
-            color: white;
-            padding: 12px 30px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #6b7280;
-        }
-        .warning {
-            background-color: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            margin: 20px 0;
-        }
-    </style>
 </head>
-<body>
-    <div class="header">
-        <h1>Welcome to Ethio Nordic ERP</h1>
-    </div>
-    
-    <div class="content">
-        <h2>Hello {{ $user->full_name }},</h2>
-        
-        <p>Your account has been created successfully! We're excited to have you on board.</p>
-        
-        <div class="credentials-box">
-            <h3>Activation Link</h3>
-            <p><strong>Email:</strong> {{ $user->email }}</p>
-            <p style="margin-bottom: 0;">Click the link below to activate your account, choose a permanent password that meets the password policy, and continue directly into Two-Factor Authentication setup.</p>
-        </div>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width:600px; margin:auto; padding:20px;">
 
-        <p>To activate your account, please click the button below:</p>
-        
-        <center>
-            <a href="{{ $activationUrl }}" class="button">Activate Your Account</a>
-        </center>
-        
-        <p style="font-size: 12px; color: #6b7280;">If the button doesn't work, copy and paste this link into your browser:<br>
-        <a href="{{ $activationUrl }}">{{ $activationUrl }}</a></p>
-        
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-        
-        <h3>Next Steps:</h3>
-        <ol>
-            <li>Click the activation link above</li>
-            <li>Set your permanent password using the password policy shown on the page</li>
-            <li>Enroll in Two-Factor Authentication with an authenticator app such as Google Authenticator</li>
-        </ol>
-        
-        <p>If you did not request this account or have any questions, please contact your system administrator immediately.</p>
-        
-        <p>Best regards,<br>
-        <strong>Ethio Nordic ERP Team</strong></p>
-    </div>
-    
-    <div class="footer">
-        <p>This is an automated message. Please do not reply to this email.</p>
-        <p>&copy; {{ date('Y') }} Ethio Nordic ERP. All rights reserved.</p>
-    </div>
+    <h2>Ethio Nordic ERP Account Activation</h2>
+
+    <p>Hello {{ $user->full_name }},</p>
+
+    <p>Your account has been created. Please activate it by clicking the link below:</p>
+
+    <p>
+        <a href="{{ $activationUrl }}"
+           style="display:inline-block;padding:12px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:5px;">
+           Activate Account
+        </a>
+    </p>
+
+    <hr>
+
+    <p style="font-size:12px;color:#777;">
+        If you did not request this account, please ignore this email.
+    </p>
+
+    <p>Regards,<br>Ethio Nordic ERP Team</p>
+
 </body>
 </html>

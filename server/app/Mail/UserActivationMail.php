@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class UserActivationMail extends Mailable
@@ -34,6 +35,7 @@ class UserActivationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: [new Address($this->user->email, $this->user->full_name)],
             subject: 'Welcome to Ethio Nordic ERP - Activate Your Account',
         );
     }
