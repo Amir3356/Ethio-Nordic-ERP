@@ -25,7 +25,8 @@ export default function UserManagement() {
     try {
       setLoading(true);
       const response = await userAPI.getAll({ per_page: 100 });
-      setUsers(Array.isArray(response.data?.data) ? response.data.data : []);
+      const payload = response.data?.data;
+      setUsers(Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []);
       setError('');
     } catch (err) {
       setError('Failed to load users');
@@ -38,7 +39,8 @@ export default function UserManagement() {
   const fetchRoles = async () => {
     try {
       const response = await roleAPI.getAll();
-      setRoles(Array.isArray(response.data?.data) ? response.data.data : []);
+      const payload = response.data?.data;
+      setRoles(Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []);
     } catch (err) {
       console.error('Failed to load roles:', err);
     }
