@@ -13,6 +13,7 @@ interface UserFormProps {
   onNewUserErrorsChange: (errors: FormErrors) => void;
   onEditUserErrorsChange: (errors: EditFormErrors) => void;
   onSubmit: () => void;
+  onCancel: () => void;
 }
 
 export default function UserForm({
@@ -28,6 +29,7 @@ export default function UserForm({
   onNewUserErrorsChange,
   onEditUserErrorsChange,
   onSubmit,
+  onCancel,
 }: UserFormProps) {
   const user = mode === 'edit' ? editUser : newUser;
   const errors = mode === 'edit' ? editUserErrors : newUserErrors;
@@ -142,7 +144,7 @@ export default function UserForm({
         </label>
       </div>
       <div className="content-form-actions">
-        <button type="button" className="content-btn-cancel" onClick={onSubmit}>
+        <button type="button" className="content-btn-cancel" onClick={onCancel}>
           Cancel
         </button>
         <button

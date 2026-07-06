@@ -67,6 +67,7 @@ export default function UserManagement() {
               const success = await handleCreateUser();
               if (success) closeNewUserForm();
             }}
+            onCancel={closeNewUserForm}
           />
         </UserModal>
       )}
@@ -89,6 +90,7 @@ export default function UserManagement() {
               const success = await handleUpdateUser();
               if (success) closeEditForm();
             }}
+            onCancel={closeEditForm}
           />
         </UserModal>
       )}
