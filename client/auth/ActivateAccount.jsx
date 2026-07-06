@@ -80,14 +80,21 @@ export default function ActivateAccount() {
             <CheckCircle size={48} color="#22c55e" style={{ marginBottom: '1rem' }} />
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Account Activated!</h2>
             <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-              Your account has been activated successfully. You can now log in with your new password.
+              Your account has been activated successfully. Now let's set up Two-Factor Authentication for your security.
             </p>
             <Link
-              to="/login"
+              to={`/setup-2fa?token=${token}`}
               className="login-btn"
+              style={{ textAlign: 'center', display: 'block', textDecoration: 'none', marginBottom: '0.75rem' }}
+            >
+              Set Up 2FA
+            </Link>
+            <Link
+              to="/login"
+              className="login-btn-back"
               style={{ textAlign: 'center', display: 'block', textDecoration: 'none' }}
             >
-              Go to Login
+              Skip for now
             </Link>
           </div>
         </div>

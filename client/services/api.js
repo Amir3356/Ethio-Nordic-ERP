@@ -59,6 +59,15 @@ export const authAPI = {
   disableTwoFactor: (password, code) =>
     api.post('/auth/disable-2fa', { password, two_factor_code: code }),
   
+  setupTwoFactorOnboarding: (token) =>
+    api.post('/auth/setup-2fa-onboarding', { token }),
+  
+  verifyTwoFactorOnboarding: (token, code) =>
+    api.post('/auth/verify-2fa-onboarding', { token, two_factor_code: code }),
+  
+  skipTwoFactorOnboarding: (token) =>
+    api.post('/auth/skip-2fa-onboarding', { token }),
+  
   getActiveSessions: () =>
     api.get('/auth/sessions'),
   

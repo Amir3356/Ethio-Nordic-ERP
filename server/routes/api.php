@@ -27,6 +27,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/login-with-recovery', [AuthController::class, 'loginWithRecoveryCode']);
     Route::post('/activate', [AuthController::class, 'activateAccount']);
+    Route::post('/setup-2fa-onboarding', [AuthController::class, 'setupTwoFactorOnboarding']);
+    Route::post('/verify-2fa-onboarding', [AuthController::class, 'verifyTwoFactorOnboarding']);
+    Route::post('/skip-2fa-onboarding', [AuthController::class, 'skipTwoFactorOnboarding']);
 });
 
 // ==================== AUTHENTICATED ROUTES ====================

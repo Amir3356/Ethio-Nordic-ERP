@@ -1,0 +1,1 @@
+<?php /**PATH C:\Users\hp\Desktop\Ethio-Nordic-ERP\server\resources\views\welcome.blade.php ENDPATH**/ ?>

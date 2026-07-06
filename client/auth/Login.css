@@ -192,6 +192,24 @@
   cursor: not-allowed;
 }
 
+.login-btn-back {
+  width: 100%;
+  padding: 11px 20px;
+  background: transparent;
+  color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.login-btn-back:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .login-card {

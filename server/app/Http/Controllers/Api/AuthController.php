@@ -343,6 +343,116 @@ class AuthController extends Controller
     }
 
     /**
+     * Setup 2FA during onboarding (post-activation, not yet logged in)
+     */
+    public function setupTwoFactorOnboarding(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $email = base64_decode($request->token, true);
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->errorResponse('Invalid token.', 422);
+        }
+
+        $user = User::where('email', $email)->where('is_active', true)->first();
+        if (!$user) {
+            return $this->errorResponse('User not found or account not activated.', 404);
+        }
+
+        if ($user->hasTwoFactorEnabled()) {
+            return $this->successResponse([
+                'already_setup' => true,
+                'message' => 'Two-factor authentication is already enabled.',
+            ], '2FA already enabled.');
+        }
+
+        // Delete any existing unverified 2FA secret
+        TwoFactorSecret::where('user_id', $user->id)->where('is_enabled', false)->delete();
+
+        $secret = $this->generateTwoFactorSecret();
+        $recoveryCodes = $this->generateRecoveryCodes();
+
+        TwoFactorSecret::create([
+            'user_id' => $user->id,
+            'secret' => $secret,
+            'recovery_codes' => $recoveryCodes,
+            'is_enabled' => false,
+        ]);
+
+        $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
+
+        return $this->successResponse([
+            'secret' => $secret,
+            'qr_code_url' => $qrCodeUrl,
+            'recovery_codes' => $recoveryCodes,
+        ], 'Scan the QR code with your authenticator app, then enter the 6-digit code to verify.');
+    }
+
+    /**
+     * Verify and enable 2FA during onboarding
+     */
+    public function verifyTwoFactorOnboarding(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'two_factor_code' => 'required|string|size:6',
+        ]);
+
+        $email = base64_decode($request->token, true);
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->errorResponse('Invalid token.', 422);
+        }
+
+        $user = User::where('email', $email)->where('is_active', true)->first();
+        if (!$user) {
+            return $this->errorResponse('User not found or account not activated.', 404);
+        }
+
+        $twoFactorSecret = $user->twoFactorSecret;
+        if (!$twoFactorSecret || $twoFactorSecret->is_enabled) {
+            return $this->errorResponse('2FA setup not found or already enabled.', 422);
+        }
+
+        if (!$this->verifyTwoFactorCode($user, $request->two_factor_code)) {
+            return $this->errorResponse('Invalid code. Please check your authenticator app and try again.', 422);
+        }
+
+        $twoFactorSecret->update([
+            'is_enabled' => true,
+            'enabled_at' => now(),
+        ]);
+
+        return $this->successResponse(null, 'Two-factor authentication enabled successfully. You can now log in.');
+    }
+
+    /**
+     * Skip 2FA setup during onboarding
+     */
+    public function skipTwoFactorOnboarding(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $email = base64_decode($request->token, true);
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->errorResponse('Invalid token.', 422);
+        }
+
+        $user = User::where('email', $email)->where('is_active', true)->first();
+        if (!$user) {
+            return $this->errorResponse('User not found or account not activated.', 404);
+        }
+
+        // Clean up any pending 2FA setup
+        TwoFactorSecret::where('user_id', $user->id)->where('is_enabled', false)->delete();
+
+        return $this->successResponse(null, '2FA setup skipped. You can enable it later from your profile.');
+    }
+
+    /**
      * Login using recovery code
      */
     public function loginWithRecoveryCode(Request $request): JsonResponse
