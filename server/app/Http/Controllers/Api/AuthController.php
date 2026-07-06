@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+usePragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
