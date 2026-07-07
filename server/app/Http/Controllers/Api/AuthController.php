@@ -263,12 +263,14 @@ class AuthController extends Controller
         $recoveryCodes = $this->generateRecoveryCodes();
 
         // Store encrypted secret
-        TwoFactorSecret::create([
-            'user_id' => $user->id,
-            'secret' => $secret,
-            'recovery_codes' => $recoveryCodes,
-            'is_enabled' => false,
-        ]);
+        TwoFactorSecret::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'secret' => $secret,
+                'recovery_codes' => $recoveryCodes,
+                'is_enabled' => false,
+            ]
+        );
 
         // Generate QR code data
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
@@ -402,17 +404,25 @@ class AuthController extends Controller
             ], '2FA already enabled.');
         }
 
-        $secret = $this->generateTwoFactorSecret();
-        $recoveryCodes = $this->generateRecoveryCodes();
+        // Reuse existing secret if 2FA is pending (not yet verified)
+        $existing = TwoFactorSecret::where('user_id', $user->id)->first();
 
-        TwoFactorSecret::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'secret' => $secret,
-                'recovery_codes' => $recoveryCodes,
-                'is_enabled' => false,
-            ]
-        );
+        if ($existing && !$existing->is_enabled) {
+            $secret = $existing->getDecryptedSecret();
+            $recoveryCodes = $existing->getDecryptedRecoveryCodes();
+        } else {
+            $secret = $this->generateTwoFactorSecret();
+            $recoveryCodes = $this->generateRecoveryCodes();
+
+            TwoFactorSecret::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'secret' => $secret,
+                    'recovery_codes' => $recoveryCodes,
+                    'is_enabled' => false,
+                ]
+            );
+        }
 
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
 
@@ -728,13 +738,28 @@ class AuthController extends Controller
     private function verifyTwoFactorCode(User $user, string $code): bool
     {
         if (!$user->twoFactorSecret) {
+            \Log::error('2FA verify: no twoFactorSecret for user ' . $user->id);
             return false;
         }
 
         $secret = $user->twoFactorSecret->getDecryptedSecret();
         $google2fa = new Google2FA();
 
-        return $google2fa->verifyKey($secret, $code, 1);
+        // Debug: generate current code to compare
+        $currentCode = $google2fa->getCurrentOtp($secret);
+        $serverTime = now()->timestamp;
+        $result = $google2fa->verifyKey($secret, $code, 1);
+
+        \Log::info('2FA verify', [
+            'user_id' => $user->id,
+            'input_code' => $code,
+            'current_code' => $currentCode,
+            'server_time' => $serverTime,
+            'secret_first_4' => substr($secret, 0, 4),
+            'result' => $result,
+        ]);
+
+        return $result;
     }
 
     private function parseDeviceType(?string $userAgent): string

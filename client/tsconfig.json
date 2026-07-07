@@ -19,5 +19,5 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": [".", "vite-env.d.ts", "auth", "AdminDashboard", "services", "vite.config.ts"]
+  "include": [".", "vite-env.d.ts", "auth", "AdminDashboard", "services", "vite.config.ts", "login", "utils"]
 }

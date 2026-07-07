@@ -310,6 +310,11 @@ class TokenStateService
             return 'Local';
         }
 
+        // Handle private/internal IPs (Docker, LAN, etc.)
+        if (preg_match('/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/', $ip)) {
+            return 'Local Network';
+        }
+
         try {
             $response = Http::timeout(2)
                 ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);

@@ -90,7 +90,7 @@ export default function TwoFactorSetup() {
                 className="tfa-verify-btn"
                 disabled={loading || verifyCode.length !== 6}
               >
-                {loading ? 'Verifying...' : 'Verify & Enable'}
+                {loading ? 'Verifying...' : 'Submit'}
               </button>
             </form>
 
