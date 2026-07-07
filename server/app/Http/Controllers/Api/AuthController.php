@@ -379,20 +379,20 @@ class AuthController extends Controller
             ], '2FA already enabled.');
         }
 
-        // Delete any existing 2FA secret for this user (within transaction to prevent race conditions)
-        DB::transaction(function () use ($user) {
-            TwoFactorSecret::where('user_id', $user->id)->lockForUpdate()->delete();
-        });
-
         $secret = $this->generateTwoFactorSecret();
         $recoveryCodes = $this->generateRecoveryCodes();
 
-        TwoFactorSecret::create([
-            'user_id' => $user->id,
-            'secret' => $secret,
-            'recovery_codes' => $recoveryCodes,
-            'is_enabled' => false,
-        ]);
+        // Delete any existing 2FA secret and create new one within a single transaction
+        DB::transaction(function () use ($user, $secret, $recoveryCodes) {
+            TwoFactorSecret::where('user_id', $user->id)->lockForUpdate()->delete();
+
+            TwoFactorSecret::create([
+                'user_id' => $user->id,
+                'secret' => $secret,
+                'recovery_codes' => $recoveryCodes,
+                'is_enabled' => false,
+            ]);
+        });
 
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
 
