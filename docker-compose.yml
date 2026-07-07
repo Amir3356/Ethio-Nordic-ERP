@@ -45,7 +45,8 @@ services:
       - "80:80"
 
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/api-gateway.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/429.html:/usr/share/nginx/html/429.html
       - ./server:/var/www
 
     depends_on:
