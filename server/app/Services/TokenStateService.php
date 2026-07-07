@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -21,6 +22,8 @@ class TokenStateService
     public function storeTokenMetadata(User $user, PersonalAccessToken $token, Request $request): void
     {
         $metaKey = $this->metaKey($token->getKey());
+        $ip = $request->ip();
+        $location = $this->getGeoLocation($ip);
 
         $this->redis()->hmset($metaKey, [
             'user_id' => $user->id,
@@ -28,14 +31,16 @@ class TokenStateService
             'user_email' => $user->email,
             'token_name' => $token->name,
             'abilities' => json_encode($token->abilities ?? ['*']),
-            'ip_address' => $request->ip(),
+            'ip_address' => $ip,
             'user_agent' => $request->userAgent(),
             'device_type' => $this->parseDeviceType($request->userAgent()),
             'browser' => $this->parseBrowser($request->userAgent()),
             'platform' => $this->parseOs($request->userAgent()),
+            'location' => $location,
             'created_at' => $token->created_at?->toIso8601String() ?? now()->toIso8601String(),
             'expires_at' => $token->expires_at?->toIso8601String(),
             'last_used_at' => now()->toIso8601String(),
+            'last_activity_at' => now()->toIso8601String(),
         ]);
 
         $ttl = $token->expires_at ? $token->expires_at->diffInSeconds(now()) : 86400;
@@ -99,6 +104,10 @@ class TokenStateService
         return $sessions;
     }
 
+    /**
+     * Get all active sessions system-wide for admin view.
+     * Returns enriched data with fullname, email, device, and location metadata.
+     */
     public function getAllSessions(?string $search = null, ?int $userId = null): array
     {
         if ($userId) {
@@ -120,6 +129,15 @@ class TokenStateService
                 if (!empty($meta)) {
                     preg_match('/token:(\d+):metadata/', $key, $matches);
                     $meta['id'] = $matches[1] ?? null;
+
+                    // Enrich with location if missing
+                    if (empty($meta['location']) && !empty($meta['ip_address'])) {
+                        $meta['location'] = $this->getGeoLocation($meta['ip_address']);
+                        if ($meta['location']) {
+                            $this->redis()->hset($key, 'location', $meta['location']);
+                        }
+                    }
+
                     if ($search) {
                         $searchLower = strtolower($search);
                         $match = str_contains(strtolower($meta['user_name'] ?? ''), $searchLower)
@@ -183,6 +201,9 @@ class TokenStateService
         }
     }
 
+    /**
+     * Get session summary statistics for admins.
+     */
     public function getSessionStats(): array
     {
         $allSessions = $this->getAllSessions();
@@ -191,6 +212,7 @@ class TokenStateService
         $byDevice = ['Desktop' => 0, 'Mobile' => 0, 'Tablet' => 0, 'Unknown' => 0];
         $byBrowser = [];
         $byPlatform = [];
+        $byLocation = [];
 
         foreach ($allSessions as $session) {
             $device = $session['device_type'] ?? 'Unknown';
@@ -201,6 +223,9 @@ class TokenStateService
 
             $platform = $session['platform'] ?? 'Unknown';
             $byPlatform[$platform] = ($byPlatform[$platform] ?? 0) + 1;
+
+            $location = $session['location'] ?? 'Unknown';
+            $byLocation[$location] = ($byLocation[$location] ?? 0) + 1;
         }
 
         return [
@@ -208,7 +233,86 @@ class TokenStateService
             'by_device' => $byDevice,
             'by_browser' => $byBrowser,
             'by_platform' => $byPlatform,
+            'by_location' => $byLocation,
         ];
+    }
+
+    /**
+     * Revoke a specific session by token ID (admin force terminate).
+     * Blacklists the token, removes metadata, and revokes associated refresh token.
+     */
+    public function forceTerminateSession(int|string $tokenId): bool
+    {
+        $token = PersonalAccessToken::find($tokenId);
+        if (!$token) {
+            return false;
+        }
+
+        // Blacklist the access token
+        $this->blacklistToken($tokenId);
+
+        // Remove Redis metadata
+        $this->removeTokenMetadata($tokenId);
+
+        // Revoke associated refresh token
+        \App\Models\RefreshToken::where('access_token_id', $tokenId)
+            ->update(['is_revoked' => true]);
+
+        // Delete the access token
+        $token->delete();
+
+        return true;
+    }
+
+    /**
+     * Force terminate ALL sessions for a user (admin action for compromised/terminated employees).
+     */
+    public function forceTerminateAllUserSessions(int $userId): int
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            return 0;
+        }
+
+        $removed = $this->removeAllUserTokens($user);
+
+        // Revoke all refresh tokens
+        \App\Models\RefreshToken::where('user_id', $userId)
+            ->where('is_revoked', false)
+            ->update(['is_revoked' => true]);
+
+        // Delete all access tokens
+        $user->tokens()->delete();
+
+        return $removed;
+    }
+
+    /**
+     * Get geolocation from IP address using ip-api.com
+     */
+    private function getGeoLocation(string $ip): ?string
+    {
+        if ($ip === '127.0.0.1' || $ip === '::1' || $ip === 'localhost') {
+            return 'Local';
+        }
+
+        try {
+            $response = Http::timeout(2)
+                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
+
+            if ($response->successful() && $response->json('status') === 'success') {
+                $parts = array_filter([
+                    $response->json('city'),
+                    $response->json('regionName'),
+                    $response->json('country'),
+                ]);
+                return implode(', ', $parts) ?: null;
+            }
+        } catch (\Exception $e) {
+            \Log::debug('Geolocation lookup failed for IP: ' . $ip);
+        }
+
+        return null;
     }
 
     private function metaKey(int|string $tokenId): string
@@ -244,6 +348,11 @@ class TokenStateService
                 'user_name' => $user->full_name,
                 'user_email' => $user->email,
                 'token_name' => $token->name,
+                'ip_address' => null,
+                'device_type' => 'Unknown',
+                'browser' => 'Unknown',
+                'platform' => 'Unknown',
+                'location' => null,
                 'created_at' => $token->created_at?->toIso8601String(),
                 'expires_at' => $token->expires_at?->toIso8601String(),
                 'last_used_at' => $token->last_used_at?->toIso8601String(),
@@ -276,6 +385,11 @@ class TokenStateService
                 'user_name' => $token->tokenable?->full_name,
                 'user_email' => $token->tokenable?->email,
                 'token_name' => $token->name,
+                'ip_address' => null,
+                'device_type' => 'Unknown',
+                'browser' => 'Unknown',
+                'platform' => 'Unknown',
+                'location' => null,
                 'created_at' => $token->created_at?->toIso8601String(),
                 'expires_at' => $token->expires_at?->toIso8601String(),
                 'last_used_at' => $token->last_used_at?->toIso8601String(),

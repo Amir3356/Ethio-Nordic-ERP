@@ -17,7 +17,8 @@ export const filterLogs = (logs: AuditLog[], filter: string): AuditLog[] => {
   
   const lowerFilter = filter.toLowerCase();
   return logs.filter((log) =>
-    log.user_email?.toLowerCase().includes(lowerFilter) ||
+    log.full_name?.toLowerCase().includes(lowerFilter) ||
+    log.email?.toLowerCase().includes(lowerFilter) ||
     log.action?.toLowerCase().includes(lowerFilter) ||
     log.model_type?.toLowerCase().includes(lowerFilter)
   );

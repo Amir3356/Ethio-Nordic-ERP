@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'rbac' => \App\Http\Middleware\RbacMiddleware::class,
             'idle.session' => \App\Http\Middleware\CheckIdleSession::class,
+            'audit.immutable' => \App\Http\Middleware\PreventAuditLogModification::class,
         ]);
 
         $middleware->api();

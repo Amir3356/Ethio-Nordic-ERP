@@ -153,7 +153,9 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout user and invalidate token
+     * Logout user and invalidate current session tokens only.
+     * Only the current session's access token and refresh token are revoked.
+     * Other sessions remain active (use revoke-all-sessions to terminate all).
      */
     public function logout(Request $request): JsonResponse
     {
@@ -170,7 +172,11 @@ class AuthController extends Controller
             if ($token) {
                 $this->tokenState->blacklistToken($token->id);
                 $this->tokenState->removeTokenMetadata($token->id);
-                $this->refreshService->revokeAllUserRefreshTokens($user->id);
+
+                // Revoke only the refresh token associated with this access token
+                \App\Models\RefreshToken::where('access_token_id', $token->id)
+                    ->update(['is_revoked' => true]);
+
                 $token->delete();
             }
         }

@@ -1,12 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { sessionAPI } from '../../../services';
 import { Session, SessionStats } from './types';
+
+const POLL_INTERVAL_MS = 30000; // 30 seconds for real-time updates
 
 export function useSessions() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [stats, setStats] = useState<SessionStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -32,9 +35,24 @@ export function useSessions() {
     }
   }, []);
 
+  // Initial fetch
   useEffect(() => {
     fetchSessions();
     fetchStats();
+  }, [fetchSessions, fetchStats]);
+
+  // Real-time polling: refresh sessions every 30 seconds
+  useEffect(() => {
+    pollRef.current = setInterval(() => {
+      fetchSessions();
+      fetchStats();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+      }
+    };
   }, [fetchSessions, fetchStats]);
 
   const handleTerminateSession = async (tokenId: string) => {
@@ -49,6 +67,18 @@ export function useSessions() {
     }
   };
 
+  const handleTerminateAllForUser = async (userId: number) => {
+    if (!window.confirm('Are you sure you want to terminate ALL sessions for this user? This will force them to log in again on all devices.')) return;
+
+    try {
+      await sessionAPI.terminateAllUserSessions(userId);
+      await fetchSessions();
+      await fetchStats();
+    } catch {
+      setError('Failed to terminate user sessions');
+    }
+  };
+
   return {
     sessions,
     stats,
@@ -57,5 +87,6 @@ export function useSessions() {
     fetchSessions,
     fetchStats,
     handleTerminateSession,
+    handleTerminateAllForUser,
   };
 }

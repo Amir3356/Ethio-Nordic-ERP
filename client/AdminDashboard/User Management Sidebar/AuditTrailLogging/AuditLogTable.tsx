@@ -1,5 +1,5 @@
 import { AuditLog } from './types';
-import { getActionClass, formatDateTime, formatDetails } from './utils';
+import { getActionClass, formatDateTime } from './utils';
 
 interface AuditLogTableProps {
   logs: AuditLog[];
@@ -11,41 +11,35 @@ export default function AuditLogTable({ logs }: AuditLogTableProps) {
       <table className="content-table">
         <thead>
           <tr>
-            <th>User Email</th>
+            <th>Full Name</th>
+            <th>Email</th>
             <th>Action</th>
             <th>Module</th>
-            <th>Record ID</th>
-            <th>Timestamp</th>
-            <th>Details</th>
+            <th>Before Data</th>
+            <th>After Data</th>
+            <th>Time</th>
           </tr>
         </thead>
         <tbody>
           {logs.length > 0 ? (
             logs.map((log) => (
               <tr key={log.id}>
-                <td className="content-table-name">{log.user_email || 'System'}</td>
+                <td>{log.full_name || 'N/A'}</td>
+                <td className="content-table-name">{log.email || 'System'}</td>
                 <td>
                   <span className={getActionClass(log.action)}>
                     {log.action || 'N/A'}
                   </span>
                 </td>
                 <td>{log.model_type || 'N/A'}</td>
-                <td>{log.model_id || 'N/A'}</td>
+                <td className="content-json-cell">{JSON.stringify(log.before_data || {}, null, 2)}</td>
+                <td className="content-json-cell">{JSON.stringify(log.after_data || {}, null, 2)}</td>
                 <td>{formatDateTime(log.created_at)}</td>
-                <td>
-                  <button
-                    type="button"
-                    className="content-btn-view"
-                    title={formatDetails(log)}
-                  >
-                    View
-                  </button>
-                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={6} className="content-empty">
+              <td colSpan={7} className="content-empty">
                 No audit logs found
               </td>
             </tr>

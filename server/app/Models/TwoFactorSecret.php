@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
 class TwoFactorSecret extends Model
 {
+    use Auditable;
     protected $fillable = [
         'user_id',
         'secret',

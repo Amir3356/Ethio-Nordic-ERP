@@ -15,6 +15,7 @@ export default function Logout() {
         // ignore
       }
       localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       navigate('/login', { replace: true });
     };

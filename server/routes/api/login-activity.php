@@ -11,8 +11,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/user/{userId}', [LoginActivityController::class, 'getUserActivity']);
     });
 
-    // Audit Logs
-    Route::prefix('audit-logs')->middleware(['rbac:audit_logs.view'])->group(function () {
+    // Audit Logs — immutable: only GET allowed, PUT/PATCH/DELETE blocked
+    Route::prefix('audit-logs')->middleware(['rbac:audit_logs.view', 'audit.immutable'])->group(function () {
         Route::get('/', [LoginActivityController::class, 'auditLogs']);
         Route::get('/{id}', [LoginActivityController::class, 'showAuditLog']);
 

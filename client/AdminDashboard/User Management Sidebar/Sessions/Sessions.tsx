@@ -32,7 +32,8 @@ export default function Sessions() {
   return (
     <section className="content-section" id="sessions">
       <div className="content-section-header content-section-header-center">
-        <h2>Active Sessions</h2>
+        <h2> Sessions</h2>
+        <span className="session-refresh-indicator">Auto-refreshing every 30s</span>
       </div>
 
       {error && (
@@ -44,7 +45,7 @@ export default function Sessions() {
 
       {stats && <SessionStatsCard stats={deviceStats} />}
 
-      {loading && <p className="content-loading">Loading sessions...</p>}
+      {loading && sessions.length === 0 && <p className="content-loading">Loading sessions...</p>}
 
       <SessionTable
         sessions={sessions}

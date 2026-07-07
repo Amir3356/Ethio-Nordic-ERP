@@ -1,5 +1,6 @@
 export interface Session {
   id: string;
+  user_id?: number;
   user_name?: string;
   user_email?: string;
   ip_address?: string;
@@ -20,4 +21,5 @@ export interface SessionStats {
   by_device: Record<string, number>;
   by_browser: Record<string, number>;
   by_platform: Record<string, number>;
+  by_location?: Record<string, number>;
 }

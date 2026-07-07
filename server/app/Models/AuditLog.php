@@ -9,19 +9,13 @@ class AuditLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'user_email',
-        'full_name',
-        'action',
-        'module',
-        'model_type',
-        'model_id',
-        'old_values',
-        'new_values',
-        'ip_address',
-        'user_agent',
-    ];
+    /**
+     * Audit records are immutable — block all mass assignment.
+     * Only created via AuditObserver::create() which bypasses this.
+     */
+    protected $guarded = ['*'];
+
+    protected $fillable = [];
 
     protected $casts = [
         'old_values' => 'array',
@@ -29,10 +23,23 @@ class AuditLog extends Model
     ];
 
     /**
+     * Audit records are immutable — block fill (mass assignment).
+     */
+    public function fill(array $attributes): static
+    {
+        if ($this->exists) {
+            \Log::warning('Attempted to fill an existing audit log record.', ['id' => $this->getKey()]);
+            return $this;
+        }
+        return parent::fill($attributes);
+    }
+
+    /**
      * Audit records are immutable — prevent any updates.
      */
     public function update(array $attributes = []): bool
     {
+        \Log::warning('Attempted to update an audit log record.', ['id' => $this->getKey()]);
         return false;
     }
 
@@ -41,6 +48,7 @@ class AuditLog extends Model
      */
     public function delete(): bool
     {
+        \Log::warning('Attempted to delete an audit log record.', ['id' => $this->getKey()]);
         return false;
     }
 
@@ -49,23 +57,63 @@ class AuditLog extends Model
      */
     public function forceDelete(): bool
     {
+        \Log::warning('Attempted to force delete an audit log record.', ['id' => $this->getKey()]);
         return false;
     }
 
     /**
-     * Audit records are immutable — prevent query-builder bulk deletions.
+     * Audit records are immutable — prevent save (both insert and update paths).
+     */
+    public function save(array $options = []): bool
+    {
+        if ($this->exists) {
+            \Log::warning('Attempted to save (update) an existing audit log record.', ['id' => $this->getKey()]);
+            return false;
+        }
+        return parent::save($options);
+    }
+
+    /**
+     * Audit records are immutable — prevent query-builder bulk deletions and updates.
      */
     public function newQuery()
     {
         $query = parent::newQuery();
 
-        // Wrap the query builder to block delete operations
+        // Block bulk delete
         $query->macro('delete', function () {
+            \Log::warning('Attempted bulk delete on audit_logs table.');
             return 0;
+        });
+
+        // Block bulk update
+        $query->macro('update', function () {
+            \Log::warning('Attempted bulk update on audit_logs table.');
+            return 0;
+        });
+
+        // Block truncate
+        $query->macro('truncate', function () {
+            \Log::warning('Attempted truncate on audit_logs table.');
+            return false;
         });
 
         return $query;
     }
+
+    /**
+     * Audit records are immutable — prevent force fill on existing records.
+     */
+    public function forceFill(array $attributes): static
+    {
+        if ($this->exists) {
+            \Log::warning('Attempted to forceFill an existing audit log record.', ['id' => $this->getKey()]);
+            return $this;
+        }
+        return parent::forceFill($attributes);
+    }
+
+    // ==================== READ-ONLY RELATIONSHIPS ====================
 
     /**
      * Get the user who performed the action
@@ -82,6 +130,8 @@ class AuditLog extends Model
     {
         return $this->morphTo('model');
     }
+
+    // ==================== READ-ONLY SCOPES ====================
 
     /**
      * Scope to filter by module
@@ -114,6 +164,8 @@ class AuditLog extends Model
     {
         return $query->whereBetween('created_at', [$startDate, $endDate]);
     }
+
+    // ==================== HELPER METHODS ====================
 
     /**
      * Get a human-readable description of the change

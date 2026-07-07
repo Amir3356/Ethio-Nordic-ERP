@@ -44,13 +44,13 @@ export default function SessionTable({ sessions, onTerminate }: SessionTableProp
       <table className="content-table">
         <thead>
           <tr>
-            <th>User</th>
+            <th>Full name</th>
             <th>Device</th>
             <th>Browser</th>
             <th>Platform</th>
             <th>IP Address</th>
-            <th>Last Active</th>
-            <th>Status</th>
+            <th>Location</th>
+
             <th>Action</th>
           </tr>
         </thead>
@@ -78,6 +78,9 @@ export default function SessionTable({ sessions, onTerminate }: SessionTableProp
                 </td>
                 <td>{session.platform || 'Unknown'}</td>
                 <td className="session-ip">{session.ip_address || 'N/A'}</td>
+                <td className="session-location">
+                  {session.location || 'Unknown'}
+                </td>
                 <td title={session.last_used_at || ''}>
                   {formatTimeAgo(session.last_used_at)}
                 </td>
@@ -101,7 +104,7 @@ export default function SessionTable({ sessions, onTerminate }: SessionTableProp
             ))
           ) : (
             <tr>
-              <td colSpan={8} className="content-empty">
+              <td colSpan={9} className="content-empty">
                 No active sessions found
               </td>
             </tr>

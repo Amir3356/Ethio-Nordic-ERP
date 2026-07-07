@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\TokenRefreshService;
 use App\Services\TokenStateService;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,7 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckIdleSession
 {
     public function __construct(
-        private readonly TokenStateService $tokenState
+        private readonly TokenStateService $tokenState,
+        private readonly TokenRefreshService $refreshService
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -25,7 +27,8 @@ class CheckIdleSession
 
         if ($currentToken) {
             $tokenId = $currentToken->getKey();
-            $idleTimeout = config('session.idle_timeout', 30) * 60;
+            // Read from cache (runtime-configurable) with fallback to config
+            $idleTimeout = (\Cache::get('session_idle_timeout_minutes') ?? config('session.idle_timeout', 30)) * 60;
 
             $lastActivity = $this->tokenState->getLastActivity($tokenId);
 
@@ -33,8 +36,14 @@ class CheckIdleSession
                 $idleSeconds = now()->timestamp - strtotime($lastActivity);
 
                 if ($idleSeconds > $idleTimeout) {
+                    // Blacklist the access token
                     $this->tokenState->blacklistToken($tokenId);
+                    // Remove Redis metadata
                     $this->tokenState->removeTokenMetadata($tokenId);
+                    // Revoke associated refresh token to prevent token replay
+                    \App\Models\RefreshToken::where('access_token_id', $tokenId)
+                        ->update(['is_revoked' => true]);
+                    // Delete the access token from DB
                     $currentToken->delete();
 
                     return response()->json([
