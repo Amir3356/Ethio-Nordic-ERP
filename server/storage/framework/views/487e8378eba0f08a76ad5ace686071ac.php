@@ -6,7 +6,7 @@
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width:600px; margin:auto; padding:20px;">
 
-    <h2>Ethio Nordic ERP Account Activation</h2>
+    <h2>Ethio Nordic Trading PLC Account Activation</h2>
 
     <p>Hello <?php echo e($user->full_name); ?>,</p>
 
@@ -25,7 +25,7 @@
         If you did not request this account, please ignore this email.
     </p>
 
-    <p>Regards,<br>Ethio Nordic ERP Team</p>
+    <p>Regards,<br>Ethio Nordic Trading PLC Team</p>
 
 </body>
 </html><?php /**PATH /var/www/resources/views/emails/user-activation.blade.php ENDPATH**/ ?>

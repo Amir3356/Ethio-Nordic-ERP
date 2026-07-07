@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Shield, ArrowRight } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Shield } from 'lucide-react';
 import { useTwoFactorSetup } from './hooks/useTwoFactorSetup';
 import AuthCard from './components/AuthCard';
 import AuthError from './components/AuthError';
@@ -20,7 +20,7 @@ export default function TwoFactorSetup() {
 
   if (!token || step === 'error') {
     return (
-      <AuthCard title="Ethio Nordic ERP">
+      <AuthCard title="Ethio Nordic Trading PLC">
         <AuthError message={error || 'Invalid setup link. Please activate your account first.'} />
       </AuthCard>
     );
@@ -38,7 +38,7 @@ export default function TwoFactorSetup() {
 
   if (step === 'already_setup') {
     return (
-      <AuthCard title="Ethio Nordic ERP">
+      <AuthCard title="Ethio Nordic Trading PLC">
         <div className="tfa-already-setup">
           <CheckCircle size={48} color="#22c55e" className="tfa-already-setup-icon" />
           <h2 className="tfa-already-setup-title">2FA Already Enabled</h2>
@@ -52,20 +52,17 @@ export default function TwoFactorSetup() {
 
   if (step === 'success') {
     return (
-      <AuthCard title="Ethio Nordic ERP">
+      <AuthCard title="Ethio Nordic Trading PLC">
         <div className="tfa-success">
           <CheckCircle size={48} color="#22c55e" className="tfa-success-icon" />
-          <h2 className="tfa-success-title">2FA Enabled!</h2>
-          <p className="tfa-success-text">
-            Two-factor authentication has been set up successfully. You can now log in.
-          </p>
+          <h2 className="tfa-success-title">Your two-factor authentication has been enabled successfully</h2>
         </div>
       </AuthCard>
     );
   }
 
   return (
-    <AuthCard title="Ethio Nordic ERP" subtitle="Set Up Two-Factor Authentication">
+    <AuthCard title="Ethio Nordic Trading PLC" subtitle="Set Up Two-Factor Authentication">
       <div className="login-form">
         {error && <AuthError message={error} />}
 
@@ -88,7 +85,6 @@ export default function TwoFactorSetup() {
                 disabled={loading || verifyCode.length !== 6}
               >
                 {loading ? 'Verifying...' : 'Submit'}
-                {!loading && <ArrowRight size={16} />}
               </button>
             </form>
           </>

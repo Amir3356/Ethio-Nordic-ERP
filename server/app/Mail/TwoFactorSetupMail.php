@@ -36,7 +36,7 @@ class TwoFactorSetupMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Two-Factor Authentication Setup - Ethio Nordic ERP',
+            subject: 'Two-Factor Authentication Setup - Ethio Nordic Trading PLC',
         );
     }
 

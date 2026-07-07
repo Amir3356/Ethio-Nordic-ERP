@@ -21,7 +21,7 @@ export default function ActivateAccount() {
 
   if (!token) {
     return (
-      <AuthCard title="Ethio Nordic ERP">
+      <AuthCard title="Ethio Nordic Trading PLC">
         <AuthError message="Invalid activation link. No token provided." />
       </AuthCard>
     );
@@ -29,7 +29,7 @@ export default function ActivateAccount() {
 
   if (success) {
     return (
-      <AuthCard title="Ethio Nordic ERP">
+      <AuthCard title="Ethio Nordic Trading PLC">
         <div className="activate-success">
           <CheckCircle size={48} color="#22c55e" className="activate-success-icon" />
           <h2 className="activate-success-title">Account Activated!</h2>
@@ -48,7 +48,7 @@ export default function ActivateAccount() {
   }
 
   return (
-    <AuthCard title="Ethio Nordic ERP" subtitle="Activate Your Account">
+    <AuthCard title="Ethio Nordic Trading PLC" subtitle="Activate Your Account">
       <form className="login-form" onSubmit={handleActivate}>
         {error && <AuthError message={error} />}
 

@@ -36,7 +36,7 @@ class UserActivationMail extends Mailable
     {
         return new Envelope(
             to: [new Address($this->user->email, $this->user->full_name)],
-            subject: 'Welcome to Ethio Nordic ERP - Activate Your Account',
+            subject: 'Welcome to Ethio Nordic Trading PLC - Activate Your Account',
         );
     }
 

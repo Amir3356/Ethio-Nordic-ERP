@@ -24,7 +24,7 @@ export default function Login() {
   } = useLogin();
 
   return (
-    <AuthCard title="Ethio Nordic ERP">
+    <AuthCard title="Ethio Nordic Trading PLC">
       <form className="login-form" onSubmit={handleLogin}>
         {error && <AuthError message={error} />}
 

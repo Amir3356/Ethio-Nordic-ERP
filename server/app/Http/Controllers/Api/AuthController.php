@@ -382,17 +382,14 @@ class AuthController extends Controller
         $secret = $this->generateTwoFactorSecret();
         $recoveryCodes = $this->generateRecoveryCodes();
 
-        // Delete any existing 2FA secret and create new one within a single transaction
-        DB::transaction(function () use ($user, $secret, $recoveryCodes) {
-            TwoFactorSecret::where('user_id', $user->id)->lockForUpdate()->delete();
+        TwoFactorSecret::where('user_id', $user->id)->forceDelete();
 
-            TwoFactorSecret::create([
-                'user_id' => $user->id,
-                'secret' => $secret,
-                'recovery_codes' => $recoveryCodes,
-                'is_enabled' => false,
-            ]);
-        });
+        TwoFactorSecret::create([
+            'user_id' => $user->id,
+            'secret' => $secret,
+            'recovery_codes' => $recoveryCodes,
+            'is_enabled' => false,
+        ]);
 
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
 
@@ -437,7 +434,7 @@ class AuthController extends Controller
             'enabled_at' => now(),
         ]);
 
-        return $this->successResponse(null, 'Two-factor authentication enabled successfully. You can now log in.');
+        return $this->successResponse(null, 'Your two-factor authentication has been enabled successfully');
     }
 
     /**
@@ -661,7 +658,7 @@ class AuthController extends Controller
 
     private function generateQrCodeUrl(string $email, string $secret): string
     {
-        $appName = config('app.name', 'Ethio Nordic ERP');
+        $appName = config('app.name', 'Ethio Nordic Trading PLC');
         $google2fa = new Google2FA();
         return $google2fa->getQRCodeUrl($appName, $email, $secret);
     }

@@ -69,7 +69,7 @@
     <div class="content">
         <h2>Hello {{ $user->full_name }},</h2>
         
-        <p>We received a request to reset the password for your Ethio Nordic ERP account.</p>
+        <p>We received a request to reset the password for your Ethio Nordic Trading PLC account.</p>
         
         @if($temporaryPassword)
         <div class="credentials-box">
@@ -118,12 +118,12 @@
         <p>If you have any questions or concerns, please contact your system administrator.</p>
         
         <p>Best regards,<br>
-        <strong>Ethio Nordic ERP Team</strong></p>
+        <strong>Ethio Nordic Trading PLC</strong></p>
     </div>
     
     <div class="footer">
         <p>This is an automated message. Please do not reply to this email.</p>
-        <p>&copy; {{ date('Y') }} Ethio Nordic ERP. All rights reserved.</p>
+        <p>&copy; {{ date('Y') }} Ethio Nordic Trading PLC. All rights reserved.</p>
     </div>
 </body>
 </html>

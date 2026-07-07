@@ -59,6 +59,9 @@ export function useTwoFactorSetup() {
     try {
       await authAPI.verifyTwoFactorOnboarding(token!, verifyCode);
       setStep('success');
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 2000);
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
     } finally {

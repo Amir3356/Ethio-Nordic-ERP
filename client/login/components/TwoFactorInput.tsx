@@ -8,7 +8,7 @@ interface TwoFactorInputProps {
 export default function TwoFactorInput({ value, onChange }: TwoFactorInputProps) {
   return (
     <div className="form-group">
-      <label htmlFor="verify-code">Enter 6-digit code from your app</label>
+      <label htmlFor="verify-code" style={{ textAlign: 'center', display: 'block', width: '100%' }}>Enter 6-digit code from your app</label>
       <div className="input-wrapper">
         <Shield size={18} className="input-icon" />
         <input

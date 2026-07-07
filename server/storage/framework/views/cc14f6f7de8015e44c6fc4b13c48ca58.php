@@ -1,1 +1,0 @@
-<?php /**PATH /home/amir/Ethio-Nordic-ERP/server/resources/views/welcome.blade.php ENDPATH**/ ?>

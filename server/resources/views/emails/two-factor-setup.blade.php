@@ -157,12 +157,12 @@
         <p>If you did not request 2FA setup or have any questions, please contact your system administrator immediately.</p>
         
         <p>Best regards,<br>
-        <strong>Ethio Nordic ERP Team</strong></p>
+        <strong>Ethio Nordic Trading PLC Team</strong></p>
     </div>
     
     <div class="footer">
         <p>This is an automated message. Please do not reply to this email.</p>
-        <p>&copy; {{ date('Y') }} Ethio Nordic ERP. All rights reserved.</p>
+        <p>&copy; {{ date('Y') }} Ethio Nordic Trading PLC. All rights reserved.</p>
     </div>
 </body>
 </html>

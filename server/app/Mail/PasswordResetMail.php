@@ -34,7 +34,7 @@ class PasswordResetMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Password Reset Request - Ethio Nordic ERP',
+            subject: 'Password Reset Request - Ethio Nordic Trading PLC',
         );
     }
 
