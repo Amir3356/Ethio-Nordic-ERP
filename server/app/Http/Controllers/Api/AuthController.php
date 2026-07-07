@@ -378,8 +378,8 @@ class AuthController extends Controller
             ], '2FA already enabled.');
         }
 
-        // Delete any existing unverified 2FA secret
-        TwoFactorSecret::where('user_id', $user->id)->where('is_enabled', false)->delete();
+        // Delete any existing 2FA secret for this user
+        TwoFactorSecret::where('user_id', $user->id)->delete();
 
         $secret = $this->generateTwoFactorSecret();
         $recoveryCodes = $this->generateRecoveryCodes();

@@ -23,9 +23,6 @@ export default function ActivateAccount() {
     return (
       <AuthCard title="Ethio Nordic ERP">
         <AuthError message="Invalid activation link. No token provided." />
-        <Link to="/login" className="activate-error-link">
-          Go to Login
-        </Link>
       </AuthCard>
     );
   }
@@ -72,21 +69,8 @@ export default function ActivateAccount() {
           {loading ? 'Activating...' : 'Activate Account'}
         </button>
 
-        <Link to="/login" className="activate-back-link">
-          Back to Login
-        </Link>
+       
       </form>
-
-      <div className="password-policy">
-        <p className="password-policy-title">Password must contain:</p>
-        <ul className="password-policy-list">
-          <li>At least 8 characters</li>
-          <li>At least 1 uppercase letter</li>
-          <li>At least 1 lowercase letter</li>
-          <li>At least 1 number</li>
-          <li>At least 1 special character (!@#$%^&amp;*...)</li>
-        </ul>
-      </div>
     </AuthCard>
   );
 }

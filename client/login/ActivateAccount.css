@@ -1,13 +1,5 @@
 @import './Login.css';
 
-/* ── No Token Error Link ── */
-.activate-error-link {
-  text-align: center;
-  margin-top: 1rem;
-  display: block;
-  text-decoration: none;
-}
-
 /* ── Success State ── */
 .activate-success {
   text-align: center;
@@ -42,34 +34,10 @@
   text-decoration: none;
 }
 
-/* ── Password Policy ── */
-.password-policy {
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-.password-policy-title {
-  margin: 0;
-  font-weight: 600;
-}
-
-.password-policy-list {
-  margin: 0.25rem 0 0 1.25rem;
-  padding: 0;
-}
-
 /* ── Header Subtitle ── */
 .activate-subtitle {
   color: #6b7280;
   font-size: 0.875rem;
 }
 
-/* ── Back to Login Link ── */
-.activate-back-link {
-  display: block;
-  text-align: center;
-  margin-top: 0.5rem;
-  text-decoration: none;
-}
+

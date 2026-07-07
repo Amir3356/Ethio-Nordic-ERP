@@ -1,13 +1,5 @@
 @import './Login.css';
 
-/* ── No Token Error Link ── */
-.tfa-error-link {
-  text-align: center;
-  margin-top: 1rem;
-  display: block;
-  text-decoration: none;
-}
-
 /* ── Loading State ── */
 .tfa-loading-card {
   text-align: center;
@@ -39,12 +31,6 @@
   margin-bottom: 1.5rem;
 }
 
-.tfa-already-setup-btn {
-  text-align: center;
-  display: block;
-  text-decoration: none;
-}
-
 /* ── Success State ── */
 .tfa-success {
   text-align: center;
@@ -64,12 +50,6 @@
 .tfa-success-text {
   color: #6b7280;
   margin-bottom: 1.5rem;
-}
-
-.tfa-success-btn {
-  text-align: center;
-  display: block;
-  text-decoration: none;
 }
 
 /* ── Header Subtitle ── */

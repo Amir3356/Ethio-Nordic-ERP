@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle, Shield, ArrowRight } from 'lucide-react';
 import { useTwoFactorSetup } from './hooks/useTwoFactorSetup';
 import AuthCard from './components/AuthCard';
@@ -23,9 +22,6 @@ export default function TwoFactorSetup() {
     return (
       <AuthCard title="Ethio Nordic ERP">
         <AuthError message={error || 'Invalid setup link. Please activate your account first.'} />
-        <Link to="/login" className="tfa-error-link">
-          Go to Login
-        </Link>
       </AuthCard>
     );
   }
@@ -49,9 +45,6 @@ export default function TwoFactorSetup() {
           <p className="tfa-already-setup-text">
             Two-factor authentication is already set up for this account.
           </p>
-          <Link to="/login" className="tfa-already-setup-btn">
-            Go to Login
-          </Link>
         </div>
       </AuthCard>
     );
@@ -66,9 +59,6 @@ export default function TwoFactorSetup() {
           <p className="tfa-success-text">
             Two-factor authentication has been set up successfully. You can now log in.
           </p>
-          <Link to="/login" className="tfa-success-btn">
-            Go to Login
-          </Link>
         </div>
       </AuthCard>
     );
