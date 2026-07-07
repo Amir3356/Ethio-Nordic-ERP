@@ -13,11 +13,16 @@ class TokenStateService
     private const USER_TOKENS_KEY = 'user:%s:tokens';
     private const BLACKLIST_KEY = 'token:blacklist';
 
+    private function redis(): \Illuminate\Redis\Connections\Connection
+    {
+        return Redis::connection('token_state');
+    }
+
     public function storeTokenMetadata(User $user, PersonalAccessToken $token, Request $request): void
     {
         $metaKey = $this->metaKey($token->getKey());
 
-        Redis::hmset($metaKey, [
+        $this->redis()->hmset($metaKey, [
             'user_id' => $user->id,
             'user_name' => $user->full_name,
             'user_email' => $user->email,
@@ -35,37 +40,37 @@ class TokenStateService
 
         $ttl = $token->expires_at ? $token->expires_at->diffInSeconds(now()) : 86400;
         if ($ttl > 0) {
-            Redis::expire($metaKey, (int) $ttl);
+            $this->redis()->expire($metaKey, (int) $ttl);
         }
 
-        Redis::sadd($this->userTokensKey($user->id), $token->getKey());
-        Redis::expire($this->userTokensKey($user->id), (int) max($ttl, 86400));
+        $this->redis()->sadd($this->userTokensKey($user->id), $token->getKey());
+        $this->redis()->expire($this->userTokensKey($user->id), (int) max($ttl, 86400));
     }
 
     public function removeTokenMetadata(int|string $tokenId): void
     {
         $token = PersonalAccessToken::find($tokenId);
         if ($token) {
-            Redis::srem($this->userTokensKey($token->tokenable_id), $tokenId);
+            $this->redis()->srem($this->userTokensKey($token->tokenable_id), $tokenId);
         }
-        Redis::del($this->metaKey($tokenId));
+        $this->redis()->del($this->metaKey($tokenId));
     }
 
     public function removeAllUserTokens(User $user, ?int $exceptTokenId = null): int
     {
-        $tokenIds = Redis::smembers($this->userTokensKey($user->id));
+        $tokenIds = $this->redis()->smembers($this->userTokensKey($user->id));
         $removed = 0;
 
         foreach ($tokenIds as $tokenId) {
             if ($exceptTokenId !== null && (int) $tokenId === $exceptTokenId) {
                 continue;
             }
-            Redis::del($this->metaKey($tokenId));
-            Redis::sadd(self::BLACKLIST_KEY, $tokenId);
+            $this->redis()->del($this->metaKey($tokenId));
+            $this->redis()->sadd(self::BLACKLIST_KEY, $tokenId);
             $removed++;
         }
 
-        Redis::del($this->userTokensKey($user->id));
+        $this->redis()->del($this->userTokensKey($user->id));
 
         if ($exceptTokenId !== null) {
             $this->storeCurrentTokenInSet($user, $exceptTokenId);
@@ -76,11 +81,11 @@ class TokenStateService
 
     public function getActiveSessions(User $user): array
     {
-        $tokenIds = Redis::smembers($this->userTokensKey($user->id));
+        $tokenIds = $this->redis()->smembers($this->userTokensKey($user->id));
         $sessions = [];
 
         foreach ($tokenIds as $tokenId) {
-            $meta = Redis::hgetall($this->metaKey($tokenId));
+            $meta = $this->redis()->hgetall($this->metaKey($tokenId));
             if (!empty($meta)) {
                 $meta['id'] = $tokenId;
                 $sessions[] = $meta;
@@ -105,13 +110,13 @@ class TokenStateService
         $sessions = [];
 
         do {
-            $result = Redis::scan($iterator, ['match' => $pattern, 'count' => 100]);
+            $result = $this->redis()->scan($iterator, ['match' => $pattern, 'count' => 100]);
             if ($result === false) {
                 break;
             }
             [$iterator, $keys] = $result;
             foreach ($keys as $key) {
-                $meta = Redis::hgetall($key);
+                $meta = $this->redis()->hgetall($key);
                 if (!empty($meta)) {
                     preg_match('/token:(\d+):metadata/', $key, $matches);
                     $meta['id'] = $matches[1] ?? null;
@@ -137,22 +142,22 @@ class TokenStateService
 
     public function isBlacklisted(int|string $tokenId): bool
     {
-        return (bool) Redis::sismember(self::BLACKLIST_KEY, $tokenId);
+        return (bool) $this->redis()->sismember(self::BLACKLIST_KEY, $tokenId);
     }
 
     public function blacklistToken(int|string $tokenId, ?int $ttl = 86400): void
     {
-        Redis::sadd(self::BLACKLIST_KEY, $tokenId);
+        $this->redis()->sadd(self::BLACKLIST_KEY, $tokenId);
         if ($ttl) {
-            Redis::expire(self::BLACKLIST_KEY, $ttl);
+            $this->redis()->expire(self::BLACKLIST_KEY, $ttl);
         }
     }
 
     public function updateLastUsed(int|string $tokenId): void
     {
         $key = $this->metaKey($tokenId);
-        if (Redis::exists($key)) {
-            Redis::hset($key, 'last_used_at', now()->toIso8601String());
+        if ($this->redis()->exists($key)) {
+            $this->redis()->hset($key, 'last_used_at', now()->toIso8601String());
         }
     }
 
@@ -168,11 +173,11 @@ class TokenStateService
 
     private function storeCurrentTokenInSet(User $user, int $tokenId): void
     {
-        Redis::sadd($this->userTokensKey($user->id), $tokenId);
-        $meta = Redis::hgetall($this->metaKey($tokenId));
+        $this->redis()->sadd($this->userTokensKey($user->id), $tokenId);
+        $meta = $this->redis()->hgetall($this->metaKey($tokenId));
         if (!empty($meta) && isset($meta['expires_at'])) {
             $ttl = max((strtotime($meta['expires_at']) - time()), 3600);
-            Redis::expire($this->userTokensKey($user->id), $ttl);
+            $this->redis()->expire($this->userTokensKey($user->id), $ttl);
         }
     }
 
