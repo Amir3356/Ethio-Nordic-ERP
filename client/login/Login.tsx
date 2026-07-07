@@ -87,6 +87,9 @@ export default function Login() {
         </button>
 
         {requiresTwoFactor && (
+          <button type="button" className="login-btn-back" onClick={resetTwoFactor}>
+            Back to Login
+          </button>
         )}
       </form>
     </AuthCard>

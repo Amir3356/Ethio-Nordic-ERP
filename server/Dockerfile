@@ -30,6 +30,8 @@ RUN composer install
 
 RUN chmod -R 775 storage bootstrap/cache
 
+RUN echo "opcache.enable=0" > /usr/local/etc/php/conf.d/opcache-off.ini
+
 
 EXPOSE 9000
 

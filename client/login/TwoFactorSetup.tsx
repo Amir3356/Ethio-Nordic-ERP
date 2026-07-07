@@ -87,7 +87,7 @@ export default function TwoFactorSetup() {
                 className="tfa-verify-btn"
                 disabled={loading || verifyCode.length !== 6}
               >
-                {loading ? 'Verifying...' : 'Verify & Enable 2FA'}
+                {loading ? 'Verifying...' : 'Submit'}
                 {!loading && <ArrowRight size={16} />}
               </button>
             </form>

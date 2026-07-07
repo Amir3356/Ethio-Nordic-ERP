@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\TokenStateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -378,8 +379,10 @@ class AuthController extends Controller
             ], '2FA already enabled.');
         }
 
-        // Delete any existing 2FA secret for this user
-        TwoFactorSecret::where('user_id', $user->id)->delete();
+        // Delete any existing 2FA secret for this user (within transaction to prevent race conditions)
+        DB::transaction(function () use ($user) {
+            TwoFactorSecret::where('user_id', $user->id)->lockForUpdate()->delete();
+        });
 
         $secret = $this->generateTwoFactorSecret();
         $recoveryCodes = $this->generateRecoveryCodes();
