@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, Auditable;
 
     protected $fillable = [
         'full_name',
@@ -72,6 +73,14 @@ class User extends Authenticatable
     public function auditLogs()
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    /**
+     * Get refresh tokens for this user
+     */
+    public function refreshTokens()
+    {
+        return $this->hasMany(RefreshToken::class);
     }
 
     // ==================== ROLE METHODS ====================
@@ -188,8 +197,8 @@ class User extends Authenticatable
     {
         $this->update(['is_active' => false]);
         
-        // Revoke all tokens
         $this->tokens()->delete();
+        $this->refreshTokens()->update(['is_revoked' => true]);
     }
 
     /**

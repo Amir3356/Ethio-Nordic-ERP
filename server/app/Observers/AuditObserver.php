@@ -46,7 +46,7 @@ class AuditObserver
         if ($this->shouldAudit($model)) {
             $original = $this->getAuditableAttributes($model->getOriginal());
             $changes = $this->getAuditableAttributes($model->getChanges());
-            
+
             // Only log if there are actual changes
             if (!empty($changes)) {
                 $this->logAudit($model, 'update', $original, $changes);
@@ -85,12 +85,25 @@ class AuditObserver
     }
 
     /**
+     * Log an approve action (called manually from controllers/services).
+     */
+    public static function logApprove(Model $model, ?array $oldValues = null, ?array $newValues = null): void
+    {
+        $observer = new self();
+        if (!$observer->shouldAudit($model)) {
+            return;
+        }
+
+        $observer->logAudit($model, 'approve', $oldValues, $newValues);
+    }
+
+    /**
      * Determine if the model should be audited
      */
     protected function shouldAudit(Model $model): bool
     {
         $modelClass = get_class($model);
-        
+
         // Don't audit excluded models
         if (in_array($modelClass, $this->excludedModels)) {
             return false;
@@ -116,6 +129,7 @@ class AuditObserver
             AuditLog::create([
                 'user_id' => $user?->id,
                 'user_email' => $user?->email ?? 'system',
+                'full_name' => $user?->full_name ?? 'System',
                 'action' => $action,
                 'module' => $this->getModuleName($model),
                 'model_type' => get_class($model),
@@ -147,7 +161,7 @@ class AuditObserver
 
         // Extract module name from model class name
         $className = class_basename($model);
-        
+
         // Map common model names to modules
         $moduleMap = [
             'User' => 'User Management',
@@ -173,9 +187,6 @@ class AuditObserver
         foreach ($this->hiddenAttributes as $hidden) {
             unset($data[$hidden]);
         }
-
-        // Remove timestamps if not needed (optional)
-        // unset($data['created_at'], $data['updated_at']);
 
         return $data;
     }

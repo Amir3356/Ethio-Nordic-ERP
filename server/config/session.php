@@ -38,6 +38,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Idle Session Timeout
+    |--------------------------------------------------------------------------
+    |
+    | This value controls the number of minutes a session can remain idle
+    | (no activity) before it is automatically expired. This is separate
+    | from the session lifetime and applies to API token sessions.
+    |
+    */
+
+    'idle_timeout' => (int) env('SESSION_IDLE_TIMEOUT', 30),
+
+    /*
+    |--------------------------------------------------------------------------
     | Session Encryption
     |--------------------------------------------------------------------------
     |

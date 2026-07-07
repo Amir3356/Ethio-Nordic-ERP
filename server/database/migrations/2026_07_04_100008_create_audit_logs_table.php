@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->string('user_email')->nullable(); // Preserve even if user deleted
+            $table->string('full_name')->nullable(); // Actor's full name
             $table->string('action'); // create, update, delete, approve, etc.
             $table->string('module'); // Which ERP module
             $table->string('model_type'); // e.g., "App\Models\User"

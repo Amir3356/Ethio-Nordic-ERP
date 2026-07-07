@@ -12,6 +12,7 @@ class AuditLog extends Model
     protected $fillable = [
         'user_id',
         'user_email',
+        'full_name',
         'action',
         'module',
         'model_type',
@@ -26,6 +27,45 @@ class AuditLog extends Model
         'old_values' => 'array',
         'new_values' => 'array',
     ];
+
+    /**
+     * Audit records are immutable — prevent any updates.
+     */
+    public function update(array $attributes = []): bool
+    {
+        return false;
+    }
+
+    /**
+     * Audit records are immutable — prevent deletion.
+     */
+    public function delete(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Audit records are immutable — prevent force deletion.
+     */
+    public function forceDelete(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Audit records are immutable — prevent query-builder bulk deletions.
+     */
+    public function newQuery()
+    {
+        $query = parent::newQuery();
+
+        // Wrap the query builder to block delete operations
+        $query->macro('delete', function () {
+            return 0;
+        });
+
+        return $query;
+    }
 
     /**
      * Get the user who performed the action

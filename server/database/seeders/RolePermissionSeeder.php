@@ -45,6 +45,7 @@ class RolePermissionSeeder extends Seeder
             
             ['name' => 'View Sessions', 'slug' => 'sessions.view', 'action' => 'view', 'description' => 'View active user sessions'],
             ['name' => 'Terminate Sessions', 'slug' => 'sessions.terminate', 'action' => 'terminate', 'description' => 'Terminate user sessions'],
+            ['name' => 'View Session Statistics', 'slug' => 'sessions.stats', 'action' => 'stats', 'description' => 'View session statistics and device breakdown'],
             
             ['name' => 'Access Review Reports', 'slug' => 'access_review.view', 'action' => 'view', 'description' => 'View periodic access review reports'],
         ];
@@ -156,7 +157,7 @@ class RolePermissionSeeder extends Seeder
             'users.reset_password', 'users.manage_roles', 'users.view_permissions',
             'roles.view', 'permissions.view',
             'login_activity.view', 'login_activity.export',
-            'sessions.view', 'sessions.terminate',
+            'sessions.view', 'sessions.terminate', 'sessions.stats',
             'access_review.view',
         ])->get();
         $hrManager->permissions()->sync($hrPermissions->pluck('id'));
@@ -166,7 +167,7 @@ class RolePermissionSeeder extends Seeder
         $deptPermissions = Permission::whereIn('slug', [
             'users.view', 'users.view_permissions',
             'login_activity.view',
-            'sessions.view',
+            'sessions.view', 'sessions.stats',
         ])->get();
         $deptManager->permissions()->sync($deptPermissions->pluck('id'));
 

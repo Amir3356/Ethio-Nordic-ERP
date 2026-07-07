@@ -161,6 +161,56 @@ class TokenStateService
         }
     }
 
+    public function updateLastActivity(int|string $tokenId): void
+    {
+        $key = $this->metaKey($tokenId);
+        if ($this->redis()->exists($key)) {
+            $this->redis()->hset($key, 'last_activity_at', now()->toIso8601String());
+        }
+    }
+
+    public function getLastActivity(int|string $tokenId): ?string
+    {
+        $key = $this->metaKey($tokenId);
+        return $this->redis()->hget($key, 'last_activity_at') ?: null;
+    }
+
+    public function updateSessionLocation(int|string $tokenId, ?string $location): void
+    {
+        $key = $this->metaKey($tokenId);
+        if ($this->redis()->exists($key) && $location) {
+            $this->redis()->hset($key, 'location', $location);
+        }
+    }
+
+    public function getSessionStats(): array
+    {
+        $allSessions = $this->getAllSessions();
+        $total = count($allSessions);
+
+        $byDevice = ['Desktop' => 0, 'Mobile' => 0, 'Tablet' => 0, 'Unknown' => 0];
+        $byBrowser = [];
+        $byPlatform = [];
+
+        foreach ($allSessions as $session) {
+            $device = $session['device_type'] ?? 'Unknown';
+            $byDevice[$device] = ($byDevice[$device] ?? 0) + 1;
+
+            $browser = $session['browser'] ?? 'Unknown';
+            $byBrowser[$browser] = ($byBrowser[$browser] ?? 0) + 1;
+
+            $platform = $session['platform'] ?? 'Unknown';
+            $byPlatform[$platform] = ($byPlatform[$platform] ?? 0) + 1;
+        }
+
+        return [
+            'total_sessions' => $total,
+            'by_device' => $byDevice,
+            'by_browser' => $byBrowser,
+            'by_platform' => $byPlatform,
+        ];
+    }
+
     private function metaKey(int|string $tokenId): string
     {
         return sprintf(self::TOKEN_META_KEY, $tokenId);

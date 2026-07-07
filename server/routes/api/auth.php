@@ -11,10 +11,11 @@ Route::prefix('auth')->group(function () {
     Route::post('/setup-2fa-onboarding', [AuthController::class, 'setupTwoFactorOnboarding']);
     Route::post('/verify-2fa-onboarding', [AuthController::class, 'verifyTwoFactorOnboarding']);
     Route::post('/skip-2fa-onboarding', [AuthController::class, 'skipTwoFactorOnboarding']);
+    Route::post('/refresh', [AuthController::class, 'refreshToken']);
 });
 
 // ==================== AUTHENTICATED AUTH ROUTES ====================
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);

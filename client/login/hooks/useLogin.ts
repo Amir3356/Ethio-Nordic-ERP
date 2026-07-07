@@ -29,6 +29,7 @@ export function useLogin() {
       }
 
       localStorage.setItem('authToken', data.data.token);
+      localStorage.setItem('refreshToken', data.data.refresh_token);
       localStorage.setItem('user', JSON.stringify(data.data.user));
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {

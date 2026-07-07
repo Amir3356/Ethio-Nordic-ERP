@@ -21,7 +21,8 @@ use PragmaRX\Google2FA\Google2FA;
 class AuthController extends Controller
 {
     public function __construct(
-        private readonly TokenStateService $tokenState
+        private readonly TokenStateService $tokenState,
+        private readonly \App\Services\TokenRefreshService $refreshService
     ) {}
 
     /**
@@ -159,7 +160,6 @@ class AuthController extends Controller
         $user = $request->user();
 
         if ($user) {
-            // Update login activity
             LoginActivity::where('user_id', $user->id)
                 ->whereNull('logout_at')
                 ->latest()
@@ -170,6 +170,7 @@ class AuthController extends Controller
             if ($token) {
                 $this->tokenState->blacklistToken($token->id);
                 $this->tokenState->removeTokenMetadata($token->id);
+                $this->refreshService->revokeAllUserRefreshTokens($user->id);
                 $token->delete();
             }
         }
@@ -216,7 +217,7 @@ class AuthController extends Controller
             'temp_password_expires_at' => null,
         ]);
 
-        // Revoke all other tokens for security
+        $this->refreshService->revokeAllUserRefreshTokens($user->id);
         $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()->id)->delete();
 
         return $this->successResponse(null, 'Password changed successfully. Please log in again on other devices.');
@@ -548,6 +549,7 @@ class AuthController extends Controller
 
         $this->tokenState->blacklistToken($token->id);
         $this->tokenState->removeTokenMetadata($token->id);
+        \App\Models\RefreshToken::where('access_token_id', $token->id)->update(['is_revoked' => true]);
         $token->delete();
 
         return $this->successResponse(null, 'Session revoked successfully.');
@@ -561,10 +563,9 @@ class AuthController extends Controller
         $user = $request->user();
         $currentTokenId = (int) $request->user()->currentAccessToken()->id;
         
-        // Revoke from Redis
         $this->tokenState->removeAllUserTokens($user, $currentTokenId);
+        $this->refreshService->revokeAllUserRefreshTokens($user->id);
 
-        // Revoke from database
         $revokedCount = $user->tokens()->where('id', '!=', $currentTokenId)->count();
         $user->tokens()->where('id', '!=', $currentTokenId)->delete();
 
@@ -573,26 +574,65 @@ class AuthController extends Controller
         ], "Revoked {$revokedCount} sessions successfully.");
     }
 
+    /**
+     * Refresh access token using refresh token
+     * Refresh token is rotated on each renewal to reduce token replay risk
+     */
+    public function refreshToken(Request $request): JsonResponse
+    {
+        $request->validate([
+            'refresh_token' => 'required|string',
+        ]);
+
+        $result = $this->refreshService->refresh($request->refresh_token, $request);
+
+        if (!$result) {
+            return $this->errorResponse('Invalid or expired refresh token. Please log in again.', 401);
+        }
+
+        $accessToken = \Laravel\Sanctum\PersonalAccessToken::find($result['access_token_id']);
+        if ($accessToken) {
+            $this->tokenState->storeTokenMetadata($result['user'], $accessToken, $request);
+        }
+
+        return $this->successResponse([
+            'access_token' => $result['access_token'],
+            'refresh_token' => $result['refresh_token'],
+            'expires_at' => $result['expires_at'],
+            'user' => $result['user'],
+        ], 'Token refreshed successfully.');
+    }
+
+    /**
+     * Get session summary statistics for admins
+     */
+    public function sessionStats(): JsonResponse
+    {
+        return $this->successResponse(
+            $this->tokenState->getSessionStats()
+        );
+    }
+
     // ==================== PRIVATE HELPER METHODS ====================
 
     private function loginUser(Request $request, User $user): JsonResponse
     {
-        // Create access token
         $token = $user->createToken('auth-token', ['*'], now()->addHours(12));
 
-        // Store token metadata in Redis for session tracking
         $this->tokenState->storeTokenMetadata($user, $token->accessToken, $request);
 
-        // Log successful login
+        $refreshToken = $this->refreshService->createRefreshToken($user, $token->accessToken, $request);
+
         $this->logLoginAttempt($request, $user, 'success', null);
 
-        // Update last login
         $user->recordLogin();
 
         return $this->successResponse([
             'user' => $user->load('roles'),
             'token' => $token->plainTextToken,
+            'refresh_token' => $refreshToken->token,
             'expires_at' => $token->accessToken->expires_at,
+            'refresh_expires_at' => $refreshToken->expires_at,
         ], 'Login successful.');
     }
 

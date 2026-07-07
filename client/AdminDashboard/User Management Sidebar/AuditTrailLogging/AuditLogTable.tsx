@@ -11,7 +11,7 @@ export default function AuditLogTable({ logs }: AuditLogTableProps) {
       <table className="content-table">
         <thead>
           <tr>
-            <th>User</th>
+            <th>User Email</th>
             <th>Action</th>
             <th>Module</th>
             <th>Record ID</th>

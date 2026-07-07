@@ -31,6 +31,9 @@ export const authAPI = {
   skipTwoFactorOnboarding: (token: string) =>
     api.post('/auth/skip-2fa-onboarding', { token }),
 
+  refreshToken: (refreshToken: string) =>
+    api.post('/auth/refresh', { refresh_token: refreshToken }),
+
   getActiveSessions: () =>
     api.get('/auth/sessions'),
 

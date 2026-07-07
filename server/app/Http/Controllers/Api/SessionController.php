@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\TokenRefreshService;
 use App\Services\TokenStateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,7 +11,8 @@ use Illuminate\Http\Request;
 class SessionController extends Controller
 {
     public function __construct(
-        private readonly TokenStateService $tokenState
+        private readonly TokenStateService $tokenState,
+        private readonly TokenRefreshService $refreshService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -44,15 +46,30 @@ class SessionController extends Controller
 
         $this->tokenState->blacklistToken($token->id);
         $this->tokenState->removeTokenMetadata($token->id);
+        \App\Models\RefreshToken::where('access_token_id', $token->id)->update(['is_revoked' => true]);
         $token->delete();
 
-        return $this->successResponse(null, 'Session revoked successfully.');
+        return $this->successResponse(null, 'Session terminated successfully.');
     }
 
     public function active(): JsonResponse
     {
+        $sessions = $this->tokenState->getAllSessions();
+
         return $this->successResponse(
-            $this->tokenState->getAllSessions()
+            array_map(fn($s) => [
+                'id' => $s['id'] ?? null,
+                'user_name' => $s['user_name'] ?? null,
+                'user_email' => $s['user_email'] ?? null,
+                'ip_address' => $s['ip_address'] ?? null,
+                'device_type' => $s['device_type'] ?? null,
+                'browser' => $s['browser'] ?? null,
+                'platform' => $s['platform'] ?? null,
+                'location' => $s['location'] ?? null,
+                'last_used_at' => $s['last_used_at'] ?? null,
+                'created_at' => $s['created_at'] ?? null,
+                'expires_at' => $s['expires_at'] ?? null,
+            ], $sessions)
         );
     }
 
@@ -64,10 +81,11 @@ class SessionController extends Controller
         }
 
         $count = $this->tokenState->removeAllUserTokens($user);
+        $this->refreshService->revokeAllUserRefreshTokens($user->id);
         $user->tokens()->delete();
 
         return $this->successResponse([
             'revoked_count' => $count,
-        ], "{$count} sessions revoked successfully.");
+        ], "{$count} sessions terminated successfully.");
     }
 }

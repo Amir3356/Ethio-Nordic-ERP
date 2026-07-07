@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'rbac' => \App\Http\Middleware\RbacMiddleware::class,
+            'idle.session' => \App\Http\Middleware\CheckIdleSession::class,
         ]);
 
         $middleware->api();

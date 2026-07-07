@@ -8,6 +8,9 @@ export const sessionAPI = {
   getActive: () =>
     api.get('/sessions/active'),
 
+  getStats: () =>
+    api.get('/sessions/stats'),
+
   getUserSessions: (userId: number) =>
     api.get(`/sessions/user/${userId}`),
 
