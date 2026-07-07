@@ -6,14 +6,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://nginx:80',
         changeOrigin: true,
-        cookieDomainRewrite: {
-          'localhost:8000': 'localhost:5173',
-        },
       },
     },
   },

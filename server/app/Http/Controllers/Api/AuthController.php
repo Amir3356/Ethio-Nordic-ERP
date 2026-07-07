@@ -7,6 +7,7 @@ use App\Mail\TwoFactorSetupMail;
 use App\Models\LoginActivity;
 use App\Models\TwoFactorSecret;
 use App\Models\User;
+use App\Services\TokenStateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +19,10 @@ use PragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly TokenStateService $tokenState
+    ) {}
+
     /**
      * Activate user account via email link
      * User sets their permanent password and account becomes active
@@ -160,8 +165,12 @@ class AuthController extends Controller
                 ->first()
                 ?->update(['logout_at' => now()]);
 
-            // Revoke current token
-            $request->user()->currentAccessToken()?->delete();
+            $token = $request->user()->currentAccessToken();
+            if ($token) {
+                $this->tokenState->blacklistToken($token->id);
+                $this->tokenState->removeTokenMetadata($token->id);
+                $token->delete();
+            }
         }
 
         return $this->successResponse(null, 'Logged out successfully.');
@@ -506,18 +515,23 @@ class AuthController extends Controller
     public function activeSessions(Request $request): JsonResponse
     {
         $user = $request->user();
-        
-        $sessions = $user->tokens()->where('expires_at', '>', now())->get()->map(function($token) {
-            return [
-                'id' => $token->id,
-                'name' => $token->name,
-                'last_used_at' => $token->last_used_at,
-                'created_at' => $token->created_at,
-                'is_current' => $token->id === request()->user()->currentAccessToken()->id,
-            ];
-        });
+        $currentTokenId = (string) $request->user()->currentAccessToken()->id;
 
-        return $this->successResponse($sessions);
+        $redisSessions = $this->tokenState->getActiveSessions($user);
+        $sessions = array_map(fn($s) => [
+            'id' => $s['id'],
+            'name' => $s['token_name'] ?? 'auth-token',
+            'device_type' => $s['device_type'] ?? null,
+            'browser' => $s['browser'] ?? null,
+            'platform' => $s['platform'] ?? null,
+            'ip_address' => $s['ip_address'] ?? null,
+            'last_used_at' => $s['last_used_at'] ?? null,
+            'created_at' => $s['created_at'] ?? null,
+            'expires_at' => $s['expires_at'] ?? null,
+            'is_current' => (string) $s['id'] === $currentTokenId,
+        ], $redisSessions);
+
+        return $this->successResponse(array_values($sessions));
     }
 
     /**
@@ -528,10 +542,12 @@ class AuthController extends Controller
         $user = $request->user();
         $token = $user->tokens()->findOrFail($tokenId);
         
-        if ($token->id === $request->user()->currentAccessToken()->id) {
+        if ((int) $token->id === (int) $request->user()->currentAccessToken()->id) {
             return $this->errorResponse('Cannot revoke current session.', 422);
         }
 
+        $this->tokenState->blacklistToken($token->id);
+        $this->tokenState->removeTokenMetadata($token->id);
         $token->delete();
 
         return $this->successResponse(null, 'Session revoked successfully.');
@@ -543,8 +559,12 @@ class AuthController extends Controller
     public function revokeAllOtherSessions(Request $request): JsonResponse
     {
         $user = $request->user();
-        $currentTokenId = $request->user()->currentAccessToken()->id;
+        $currentTokenId = (int) $request->user()->currentAccessToken()->id;
         
+        // Revoke from Redis
+        $this->tokenState->removeAllUserTokens($user, $currentTokenId);
+
+        // Revoke from database
         $revokedCount = $user->tokens()->where('id', '!=', $currentTokenId)->count();
         $user->tokens()->where('id', '!=', $currentTokenId)->delete();
 
@@ -559,6 +579,9 @@ class AuthController extends Controller
     {
         // Create access token
         $token = $user->createToken('auth-token', ['*'], now()->addHours(12));
+
+        // Store token metadata in Redis for session tracking
+        $this->tokenState->storeTokenMetadata($user, $token->accessToken, $request);
 
         // Log successful login
         $this->logLoginAttempt($request, $user, 'success', null);

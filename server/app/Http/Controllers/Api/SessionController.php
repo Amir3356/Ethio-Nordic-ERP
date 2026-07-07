@@ -3,62 +3,71 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\TokenStateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class SessionController extends Controller
 {
+    public function __construct(
+        private readonly TokenStateService $tokenState
+    ) {}
+
     public function index(Request $request): JsonResponse
     {
-        $query = DB::table('sessions')
-            ->join('users', 'sessions.user_id', '=', 'users.id')
-            ->select(
-                'sessions.id',
-                'sessions.user_agent',
-                'sessions.last_activity',
-                'sessions.payload',
-                'users.id as user_id',
-                'users.full_name as user_name',
-                'users.email as user_email'
-            );
+        $sessions = $this->tokenState->getAllSessions(
+            search: $request->search,
+            userId: $request->user_id
+        );
 
-        if ($request->filled('user_id')) {
-            $query->where('sessions.user_id', $request->user_id);
-        }
+        $perPage = (int) $request->get('per_page', 15);
+        $page = (int) $request->get('page', 1);
+        $total = count($sessions);
+        $offset = ($page - 1) * $perPage;
+        $items = array_slice($sessions, $offset, $perPage);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('users.full_name', 'like', "%{$search}%")
-                  ->orWhere('users.email', 'like', "%{$search}%");
-            });
-        }
-
-        $perPage = $request->get('per_page', 15);
-        $sessions = $query->orderBy('sessions.last_activity', 'desc')
-            ->paginate($perPage);
-
-        return $this->successResponse($sessions);
+        return $this->successResponse([
+            'data' => array_values($items),
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+            'last_page' => (int) ceil($total / $perPage),
+        ]);
     }
 
-    public function destroy($sessionId): JsonResponse
+    public function destroy($tokenId): JsonResponse
     {
-        $deleted = DB::table('sessions')->where('id', $sessionId)->delete();
-
-        if (!$deleted) {
+        $token = \Laravel\Sanctum\PersonalAccessToken::find($tokenId);
+        if (!$token) {
             return $this->errorResponse('Session not found.', 404);
         }
+
+        $this->tokenState->blacklistToken($token->id);
+        $this->tokenState->removeTokenMetadata($token->id);
+        $token->delete();
 
         return $this->successResponse(null, 'Session revoked successfully.');
     }
 
+    public function active(): JsonResponse
+    {
+        return $this->successResponse(
+            $this->tokenState->getAllSessions()
+        );
+    }
+
     public function destroyAllForUser($userId): JsonResponse
     {
-        $deletedCount = DB::table('sessions')->where('user_id', $userId)->delete();
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
+            return $this->errorResponse('User not found.', 404);
+        }
+
+        $count = $this->tokenState->removeAllUserTokens($user);
+        $user->tokens()->delete();
 
         return $this->successResponse([
-            'revoked_count' => $deletedCount,
-        ], "{$deletedCount} sessions revoked successfully.");
+            'revoked_count' => $count,
+        ], "{$count} sessions revoked successfully.");
     }
 }

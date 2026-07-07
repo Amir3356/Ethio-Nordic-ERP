@@ -1,19 +1,10 @@
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 
 RUN apk add --no-cache \
-    bash \
-    curl \
-    git \
-    icu-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    libzip-dev \
-    oniguruma-dev \
+    postgresql-dev \
     unzip \
     $PHPIZE_DEPS \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install bcmath gd intl mbstring pdo_mysql pcntl zip \
+    && docker-php-ext-install pdo_pgsql \
     && pecl install redis \
     && docker-php-ext-enable redis
 
