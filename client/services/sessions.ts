@@ -5,15 +5,6 @@ export const sessionAPI = {
   getAll: (params?: PaginationParams) =>
     api.get('/sessions', { params }),
 
-  getActive: () =>
-    api.get('/sessions/active'),
-
-  getStats: () =>
-    api.get('/sessions/stats'),
-
-  getUserSessions: (userId: number) =>
-    api.get(`/sessions/user/${userId}`),
-
   terminate: (tokenId: string) =>
     api.delete(`/sessions/${tokenId}`),
 
