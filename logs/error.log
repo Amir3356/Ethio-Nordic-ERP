@@ -1,2 +1,0 @@
-2026/07/07 12:07:12 [emerg] 10872#8576: "limit_req_zone" directive is not allowed here in C:\Users\hp\Desktop\Ethio-Nordic-ERP/conf/nginx.conf:10
-2026/07/07 12:07:56 [emerg] 19516#17104: invalid event type "epoll" in C:\Users\hp\Desktop\Ethio-Nordic-ERP\conf\nginx.conf:13
