@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { sessionAPI } from '../../../services';
-import { Session, SessionStats } from './types';
+import { Session } from './types';
 
 const POLL_INTERVAL_MS = 30000; // 30 seconds for real-time updates
 
 export function useSessions() {
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [stats, setStats] = useState<SessionStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -26,26 +25,15 @@ export function useSessions() {
     }
   }, []);
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const response = await sessionAPI.getStats();
-      setStats(response.data?.data ?? null);
-    } catch (err) {
-      console.error('Failed to load session stats', err);
-    }
-  }, []);
-
   // Initial fetch
   useEffect(() => {
     fetchSessions();
-    fetchStats();
-  }, [fetchSessions, fetchStats]);
+  }, [fetchSessions]);
 
   // Real-time polling: refresh sessions every 30 seconds
   useEffect(() => {
     pollRef.current = setInterval(() => {
       fetchSessions();
-      fetchStats();
     }, POLL_INTERVAL_MS);
 
     return () => {
@@ -53,7 +41,7 @@ export function useSessions() {
         clearInterval(pollRef.current);
       }
     };
-  }, [fetchSessions, fetchStats]);
+  }, [fetchSessions]);
 
   const handleTerminateSession = async (tokenId: string) => {
     if (!window.confirm('Are you sure you want to terminate this session?')) return;
@@ -61,7 +49,6 @@ export function useSessions() {
     try {
       await sessionAPI.terminate(tokenId);
       await fetchSessions();
-      await fetchStats();
     } catch {
       setError('Failed to terminate session');
     }
@@ -73,7 +60,6 @@ export function useSessions() {
     try {
       await sessionAPI.terminateAllUserSessions(userId);
       await fetchSessions();
-      await fetchStats();
     } catch {
       setError('Failed to terminate user sessions');
     }
@@ -81,11 +67,9 @@ export function useSessions() {
 
   return {
     sessions,
-    stats,
     loading,
     error,
     fetchSessions,
-    fetchStats,
     handleTerminateSession,
     handleTerminateAllForUser,
   };

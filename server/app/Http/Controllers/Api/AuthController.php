@@ -38,7 +38,13 @@ class AuthController extends Controller
                 ->mixedCase()
                 ->numbers()
                 ->symbols()],
+            'confirm_password' => 'required|string',
         ]);
+
+        // Validate passwords match
+        if ($request->password !== $request->confirm_password) {
+            return $this->errorResponse('Passwords do not match.', 422);
+        }
 
         // Decode the token (base64 encoded email)
         $email = base64_decode($request->token, true);
@@ -60,12 +66,13 @@ class AuthController extends Controller
         // Activate user and set permanent password
         $user->update([
             'password' => Hash::make($request->password),
+            'confirm_password' => Hash::make($request->confirm_password),
             'is_active' => true,
             'temp_password_expires_at' => null,
             'email_verified_at' => now(),
         ]);
 
-        return $this->successResponse(null, 'Account activated successfully. You can now log in.');
+        return $this->successResponse(null, 'Account activated successfully. You can now set up Two-Factor Authentication.');
     }
 
     /**
@@ -147,6 +154,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'department' => $request->department,
             'password' => Hash::make($tempPassword),
+            'confirm_password' => Hash::make($tempPassword),
             'is_active' => true,
             'temp_password_expires_at' => now()->addDays(7),
         ]);
@@ -227,6 +235,7 @@ class AuthController extends Controller
 
         $user->update([
             'password' => Hash::make($request->password),
+            'confirm_password' => Hash::make($request->password),
             'temp_password_expires_at' => null,
         ]);
 

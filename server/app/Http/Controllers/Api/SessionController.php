@@ -32,21 +32,13 @@ class SessionController extends Controller
         $offset = ($page - 1) * $perPage;
         $items = array_slice($sessions, $offset, $perPage);
 
-        // Enrich each session with full metadata
         $enriched = array_map(fn($s) => [
             'id' => $s['id'] ?? null,
             'user_id' => $s['user_id'] ?? null,
             'user_name' => $s['user_name'] ?? null,
             'user_email' => $s['user_email'] ?? null,
-            'ip_address' => $s['ip_address'] ?? null,
             'device_type' => $s['device_type'] ?? null,
-            'browser' => $s['browser'] ?? null,
-            'platform' => $s['platform'] ?? null,
             'location' => $s['location'] ?? null,
-            'last_used_at' => $s['last_used_at'] ?? null,
-            'last_activity_at' => $s['last_activity_at'] ?? null,
-            'created_at' => $s['created_at'] ?? null,
-            'expires_at' => $s['expires_at'] ?? null,
         ], $items);
 
         return $this->successResponse([
@@ -86,15 +78,8 @@ class SessionController extends Controller
                 'user_id' => $s['user_id'] ?? null,
                 'user_name' => $s['user_name'] ?? null,
                 'user_email' => $s['user_email'] ?? null,
-                'ip_address' => $s['ip_address'] ?? null,
                 'device_type' => $s['device_type'] ?? null,
-                'browser' => $s['browser'] ?? null,
-                'platform' => $s['platform'] ?? null,
                 'location' => $s['location'] ?? null,
-                'last_used_at' => $s['last_used_at'] ?? null,
-                'last_activity_at' => $s['last_activity_at'] ?? null,
-                'created_at' => $s['created_at'] ?? null,
-                'expires_at' => $s['expires_at'] ?? null,
             ], $sessions)
         );
     }

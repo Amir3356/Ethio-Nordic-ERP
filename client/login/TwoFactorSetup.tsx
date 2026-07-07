@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Shield } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Shield, Copy, KeyRound } from 'lucide-react';
 import { useTwoFactorSetup } from './hooks/useTwoFactorSetup';
 import AuthCard from './components/AuthCard';
 import AuthError from './components/AuthError';
@@ -11,11 +11,14 @@ export default function TwoFactorSetup() {
     token,
     step,
     qrCodeUrl,
+    secret,
+    recoveryCodes,
     verifyCode,
     setVerifyCode,
     error,
     loading,
     handleVerify,
+    handleSkip,
   } = useTwoFactorSetup();
 
   if (!token || step === 'error') {
@@ -52,10 +55,16 @@ export default function TwoFactorSetup() {
 
   if (step === 'success') {
     return (
-      <AuthCard title="Ethio Nordic Trading PLC">
+      <AuthCard title="Ethio Nordic Trading PLC" subtitle="2FA Enabled">
         <div className="tfa-success">
           <CheckCircle size={48} color="#22c55e" className="tfa-success-icon" />
-          <h2 className="tfa-success-title">Your two-factor authentication has been enabled successfully</h2>
+          <h2 className="tfa-success-title">Two-Factor Authentication Enabled!</h2>
+          <p className="tfa-success-text">
+            Your account is now secured. Redirecting to login...
+          </p>
+          <div className="tfa-loading-bar">
+            <div className="tfa-loading-bar-fill" />
+          </div>
         </div>
       </AuthCard>
     );
@@ -76,6 +85,15 @@ export default function TwoFactorSetup() {
               <QRCodeDisplay url={qrCodeUrl} />
             </div>
 
+            {secret && (
+              <div className="tfa-manual-entry">
+                <p className="tfa-manual-entry-label">
+                  <KeyRound size={14} /> Or enter this key manually:
+                </p>
+                <code className="tfa-secret-key">{secret}</code>
+              </div>
+            )}
+
             <form onSubmit={handleVerify}>
               <TwoFactorInput value={verifyCode} onChange={setVerifyCode} />
 
@@ -84,9 +102,29 @@ export default function TwoFactorSetup() {
                 className="tfa-verify-btn"
                 disabled={loading || verifyCode.length !== 6}
               >
-                {loading ? 'Verifying...' : 'Submit'}
+                {loading ? 'Verifying...' : 'Verify & Enable'}
               </button>
             </form>
+
+            {recoveryCodes.length > 0 && (
+              <div className="tfa-recovery-codes">
+                <p className="tfa-recovery-codes-title">
+                  <AlertTriangle size={14} /> Save your recovery codes
+                </p>
+                <p className="tfa-recovery-codes-desc">
+                  Store these codes somewhere safe. Each code can only be used once if you lose access to your authenticator app.
+                </p>
+                <div className="tfa-recovery-codes-grid">
+                  {recoveryCodes.map((code, i) => (
+                    <code key={i} className="tfa-recovery-code">{code}</code>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button type="button" className="tfa-skip-btn" onClick={handleSkip}>
+              Skip for now
+            </button>
           </>
         )}
       </div>

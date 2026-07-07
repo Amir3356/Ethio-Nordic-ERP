@@ -9,11 +9,14 @@ export function useActivateAccount() {
   const token = searchParams.get('token');
 
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // After successful activation, auto-redirect to 2FA setup
   useEffect(() => {
     if (!success || !token) {
       return undefined;
@@ -21,7 +24,7 @@ export function useActivateAccount() {
 
     const redirectTimer = window.setTimeout(() => {
       navigate(`/setup-2fa?token=${token}`, { replace: true });
-    }, 1200);
+    }, 2000);
 
     return () => window.clearTimeout(redirectTimer);
   }, [success, token, navigate]);
@@ -30,16 +33,23 @@ export function useActivateAccount() {
     e.preventDefault();
     setError('');
 
+    // Validate password meets complexity policy
     const validationError = validatePassword(password);
     if (validationError) {
       setError(validationError);
       return;
     }
 
+    // Validate confirm password matches
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please re-enter your password.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await api.post('/auth/activate', { token, password });
+      await api.post('/auth/activate', { token, password, confirm_password: confirmPassword });
       setSuccess(true);
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
@@ -52,8 +62,12 @@ export function useActivateAccount() {
     token,
     password,
     setPassword,
+    confirmPassword,
+    setConfirmPassword,
     showPassword,
     setShowPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
     error,
     loading,
     success,

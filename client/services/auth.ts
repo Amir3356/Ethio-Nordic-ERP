@@ -1,8 +1,8 @@
 import { api } from './client';
 
 export const authAPI = {
-  login: (email: string, password: string, twoFactorCode: string | null = null) =>
-    api.post('/auth/login', { email, password, two_factor_code: twoFactorCode }),
+  login: (email: string, password: string, confirmPassword: string, twoFactorCode: string | null = null) =>
+    api.post('/auth/login', { email, password, confirm_password: confirmPassword, two_factor_code: twoFactorCode }),
 
   logout: () =>
     api.post('/auth/logout'),

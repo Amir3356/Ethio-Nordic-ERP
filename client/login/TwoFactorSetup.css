@@ -45,11 +45,35 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  color: #111827;
 }
 
 .tfa-success-text {
   color: #6b7280;
   margin-bottom: 1.5rem;
+  font-size: 14px;
+}
+
+/* ── Loading Bar ── */
+.tfa-loading-bar {
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.tfa-loading-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: #4f46e5;
+  border-radius: 2px;
+  animation: tfaProgress 2.5s ease-in-out forwards;
+}
+
+@keyframes tfaProgress {
+  from { width: 0%; }
+  to { width: 100%; }
 }
 
 /* ── Header Subtitle ── */
@@ -93,6 +117,40 @@
   display: block;
 }
 
+/* ── Manual Entry ── */
+.tfa-manual-entry {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.tfa-manual-entry-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.tfa-secret-key {
+  display: block;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  letter-spacing: 2px;
+  word-break: break-all;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
 /* ── Verify Code Input ── */
 .tfa-code-input {
   text-align: center;
@@ -107,4 +165,65 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+/* ── Recovery Codes ── */
+.tfa-recovery-codes {
+  margin-top: 1.5rem;
+  padding: 14px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+}
+
+.tfa-recovery-codes-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tfa-recovery-codes-desc {
+  font-size: 12px;
+  color: #a16207;
+  margin: 0 0 10px 0;
+}
+
+.tfa-recovery-codes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+.tfa-recovery-code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: #374151;
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid #fde68a;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* ── Skip Button ── */
+.tfa-skip-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
+  background: transparent;
+  color: #9ca3af;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.tfa-skip-btn:hover {
+  color: #6b7280;
 }
