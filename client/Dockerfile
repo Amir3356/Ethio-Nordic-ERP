@@ -1,16 +1,13 @@
-FROM node:20-alpine
+FROM node:24.18.0-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY client/package.json client/package-lock.json* ./
+COPY package*.json ./
 
-# Install dependencies
 RUN npm install
 
-# Copy the rest of the application
-COPY client/ .
+COPY . .
 
 EXPOSE 5173
 
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--host"]
