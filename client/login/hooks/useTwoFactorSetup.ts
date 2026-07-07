@@ -12,8 +12,6 @@ export function useTwoFactorSetup() {
 
   const [step, setStep] = useState<SetupStep>('loading');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
-  const [secret, setSecret] = useState('');
-  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [verifyCode, setVerifyCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,8 +35,6 @@ export function useTwoFactorSetup() {
       }
 
       setQrCodeUrl(data.data?.qr_code_url || '');
-      setSecret(data.data?.secret || '');
-      setRecoveryCodes(data.data?.recovery_codes || []);
       setStep('scan');
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
@@ -70,26 +66,14 @@ export function useTwoFactorSetup() {
     }
   };
 
-  const handleSkip = async () => {
-    try {
-      await authAPI.skipTwoFactorOnboarding(token!);
-    } catch {
-      // ignore
-    }
-    navigate('/login', { replace: true });
-  };
-
   return {
     token,
     step,
     qrCodeUrl,
-    secret,
-    recoveryCodes,
     verifyCode,
     setVerifyCode,
     error,
     loading,
     handleVerify,
-    handleSkip,
   };
 }

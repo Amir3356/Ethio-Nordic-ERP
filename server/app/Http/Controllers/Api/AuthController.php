@@ -405,14 +405,14 @@ class AuthController extends Controller
         $secret = $this->generateTwoFactorSecret();
         $recoveryCodes = $this->generateRecoveryCodes();
 
-        TwoFactorSecret::where('user_id', $user->id)->forceDelete();
-
-        TwoFactorSecret::create([
-            'user_id' => $user->id,
-            'secret' => $secret,
-            'recovery_codes' => $recoveryCodes,
-            'is_enabled' => false,
-        ]);
+        TwoFactorSecret::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'secret' => $secret,
+                'recovery_codes' => $recoveryCodes,
+                'is_enabled' => false,
+            ]
+        );
 
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
 
@@ -748,10 +748,10 @@ class AuthController extends Controller
     private function parseBrowser(?string $userAgent): string
     {
         if (!$userAgent) return 'Unknown';
+        if (preg_match('/edg/i', $userAgent)) return 'Edge';
         if (preg_match('/chrome/i', $userAgent)) return 'Chrome';
         if (preg_match('/firefox/i', $userAgent)) return 'Firefox';
         if (preg_match('/safari/i', $userAgent)) return 'Safari';
-        if (preg_match('/edge/i', $userAgent)) return 'Edge';
         return 'Other';
     }
 

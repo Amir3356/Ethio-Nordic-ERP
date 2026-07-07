@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, Shield, Copy, KeyRound } from 'lucide-react';
+import { CheckCircle, Shield } from 'lucide-react';
 import { useTwoFactorSetup } from './hooks/useTwoFactorSetup';
 import AuthCard from './components/AuthCard';
 import AuthError from './components/AuthError';
@@ -11,14 +11,11 @@ export default function TwoFactorSetup() {
     token,
     step,
     qrCodeUrl,
-    secret,
-    recoveryCodes,
     verifyCode,
     setVerifyCode,
     error,
     loading,
     handleVerify,
-    handleSkip,
   } = useTwoFactorSetup();
 
   if (!token || step === 'error') {
@@ -85,15 +82,6 @@ export default function TwoFactorSetup() {
               <QRCodeDisplay url={qrCodeUrl} />
             </div>
 
-            {secret && (
-              <div className="tfa-manual-entry">
-                <p className="tfa-manual-entry-label">
-                  <KeyRound size={14} /> Or enter this key manually:
-                </p>
-                <code className="tfa-secret-key">{secret}</code>
-              </div>
-            )}
-
             <form onSubmit={handleVerify}>
               <TwoFactorInput value={verifyCode} onChange={setVerifyCode} />
 
@@ -106,25 +94,6 @@ export default function TwoFactorSetup() {
               </button>
             </form>
 
-            {recoveryCodes.length > 0 && (
-              <div className="tfa-recovery-codes">
-                <p className="tfa-recovery-codes-title">
-                  <AlertTriangle size={14} /> Save your recovery codes
-                </p>
-                <p className="tfa-recovery-codes-desc">
-                  Store these codes somewhere safe. Each code can only be used once if you lose access to your authenticator app.
-                </p>
-                <div className="tfa-recovery-codes-grid">
-                  {recoveryCodes.map((code, i) => (
-                    <code key={i} className="tfa-recovery-code">{code}</code>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <button type="button" className="tfa-skip-btn" onClick={handleSkip}>
-              Skip for now
-            </button>
           </>
         )}
       </div>

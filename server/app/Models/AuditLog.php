@@ -37,7 +37,7 @@ class AuditLog extends Model
     /**
      * Audit records are immutable — prevent any updates.
      */
-    public function update(array $attributes = []): bool
+    public function update(array $attributes = [], array $options = []): bool
     {
         \Log::warning('Attempted to update an audit log record.', ['id' => $this->getKey()]);
         return false;

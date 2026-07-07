@@ -25,6 +25,10 @@ class TokenStateService
         $ip = $request->ip();
         $location = $this->getGeoLocation($ip);
 
+        $deviceType = $this->parseDeviceType($request->userAgent());
+        $browser = $this->parseBrowser($request->userAgent());
+        $platform = $this->parseOs($request->userAgent());
+
         $this->redis()->hmset($metaKey, [
             'user_id' => $user->id,
             'user_name' => $user->full_name,
@@ -33,14 +37,24 @@ class TokenStateService
             'abilities' => json_encode($token->abilities ?? ['*']),
             'ip_address' => $ip,
             'user_agent' => $request->userAgent(),
-            'device_type' => $this->parseDeviceType($request->userAgent()),
-            'browser' => $this->parseBrowser($request->userAgent()),
-            'platform' => $this->parseOs($request->userAgent()),
+            'device_type' => $deviceType,
+            'browser' => $browser,
+            'platform' => $platform,
             'location' => $location,
             'created_at' => $token->created_at?->toIso8601String() ?? now()->toIso8601String(),
             'expires_at' => $token->expires_at?->toIso8601String(),
             'last_used_at' => now()->toIso8601String(),
             'last_activity_at' => now()->toIso8601String(),
+        ]);
+
+        // Persist device info to the database so it survives Redis expiry
+        PersonalAccessToken::where('id', $token->getKey())->update([
+            'ip_address' => $ip,
+            'user_agent' => $request->userAgent(),
+            'device_type' => $deviceType,
+            'browser' => $browser,
+            'platform' => $platform,
+            'location' => $location,
         ]);
 
         $ttl = $token->expires_at ? $token->expires_at->diffInSeconds(now()) : 86400;
@@ -348,11 +362,12 @@ class TokenStateService
                 'user_name' => $user->full_name,
                 'user_email' => $user->email,
                 'token_name' => $token->name,
-                'ip_address' => null,
-                'device_type' => 'Unknown',
-                'browser' => 'Unknown',
-                'platform' => 'Unknown',
-                'location' => null,
+                'ip_address' => $token->ip_address,
+                'user_agent' => $token->user_agent,
+                'device_type' => $token->device_type ?? 'Unknown',
+                'browser' => $token->browser ?? 'Unknown',
+                'platform' => $token->platform ?? 'Unknown',
+                'location' => $token->location,
                 'created_at' => $token->created_at?->toIso8601String(),
                 'expires_at' => $token->expires_at?->toIso8601String(),
                 'last_used_at' => $token->last_used_at?->toIso8601String(),
@@ -385,11 +400,12 @@ class TokenStateService
                 'user_name' => $token->tokenable?->full_name,
                 'user_email' => $token->tokenable?->email,
                 'token_name' => $token->name,
-                'ip_address' => null,
-                'device_type' => 'Unknown',
-                'browser' => 'Unknown',
-                'platform' => 'Unknown',
-                'location' => null,
+                'ip_address' => $token->ip_address,
+                'user_agent' => $token->user_agent,
+                'device_type' => $token->device_type ?? 'Unknown',
+                'browser' => $token->browser ?? 'Unknown',
+                'platform' => $token->platform ?? 'Unknown',
+                'location' => $token->location,
                 'created_at' => $token->created_at?->toIso8601String(),
                 'expires_at' => $token->expires_at?->toIso8601String(),
                 'last_used_at' => $token->last_used_at?->toIso8601String(),
@@ -408,10 +424,10 @@ class TokenStateService
     private function parseBrowser(?string $userAgent): string
     {
         if (!$userAgent) return 'Unknown';
+        if (preg_match('/edg/i', $userAgent)) return 'Edge';
         if (preg_match('/chrome/i', $userAgent)) return 'Chrome';
         if (preg_match('/firefox/i', $userAgent)) return 'Firefox';
         if (preg_match('/safari/i', $userAgent)) return 'Safari';
-        if (preg_match('/edge/i', $userAgent)) return 'Edge';
         return 'Other';
     }
 

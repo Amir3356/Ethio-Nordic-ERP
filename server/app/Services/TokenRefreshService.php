@@ -136,10 +136,10 @@ class TokenRefreshService
     private function parseBrowser(?string $userAgent): string
     {
         if (!$userAgent) return 'Unknown';
+        if (preg_match('/edg/i', $userAgent)) return 'Edge';
         if (preg_match('/chrome/i', $userAgent)) return 'Chrome';
         if (preg_match('/firefox/i', $userAgent)) return 'Firefox';
         if (preg_match('/safari/i', $userAgent)) return 'Safari';
-        if (preg_match('/edge/i', $userAgent)) return 'Edge';
         return 'Other';
     }
 

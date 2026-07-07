@@ -52,16 +52,6 @@ export default function ActivateAccount() {
       <form className="login-form" onSubmit={handleActivate}>
         {error && <AuthError message={error} />}
 
-        <div className="activate-password-requirements">
-          <p className="activate-requirements-title">Password must contain:</p>
-          <ul className="activate-requirements-list">
-            <li className={password.length >= 8 ? 'met' : ''}>At least 8 characters</li>
-            <li className={/[A-Z]/.test(password) ? 'met' : ''}>1 uppercase letter</li>
-            <li className={/[a-z]/.test(password) ? 'met' : ''}>1 lowercase letter</li>
-            <li className={/[0-9]/.test(password) ? 'met' : ''}>1 number</li>
-            <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? 'met' : ''}>1 special character</li>
-          </ul>
-        </div>
 
         <div className="form-group">
           <label htmlFor="password">Password</label>

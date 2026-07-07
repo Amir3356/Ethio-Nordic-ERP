@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../../services';
-import { validatePassword, getAuthErrorMessage } from '../utils';
+import { getAuthErrorMessage } from '../utils';
 
 export function useActivateAccount() {
   const [searchParams] = useSearchParams();
@@ -32,13 +32,6 @@ export function useActivateAccount() {
   const handleActivate = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-
-    // Validate password meets complexity policy
-    const validationError = validatePassword(password);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
 
     // Validate confirm password matches
     if (password !== confirmPassword) {
