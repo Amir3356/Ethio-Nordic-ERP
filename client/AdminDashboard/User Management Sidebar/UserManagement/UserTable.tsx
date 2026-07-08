@@ -12,7 +12,7 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
       <table className="content-table">
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Full name</th>
             <th>Email</th>
             <th>Department</th>
             <th>Roles</th>

@@ -746,19 +746,44 @@ class AuthController extends Controller
             return false;
         }
 
-        $secret = $user->twoFactorSecret->getDecryptedSecret();
+        try {
+            $secret = $user->twoFactorSecret->getDecryptedSecret();
+        } catch (\Throwable $e) {
+            \Log::error('2FA verify: failed to decrypt secret for user ' . $user->id . ': ' . $e->getMessage());
+            return false;
+        }
+
+        if (strlen($secret) < 8) {
+            \Log::error('2FA verify: decrypted secret too short for user ' . $user->id . ' (len=' . strlen($secret) . ')');
+            return false;
+        }
+
         $google2fa = new Google2FA();
 
-        // Debug: generate current code to compare
-        $currentCode = $google2fa->getCurrentOtp($secret);
+        try {
+            $currentCode = $google2fa->getCurrentOtp($secret);
+        } catch (\Throwable $e) {
+            \Log::error('2FA verify: getCurrentOtp failed for user ' . $user->id . ': ' . $e->getMessage());
+            return false;
+        }
+
         $serverTime = now()->timestamp;
-        $result = $google2fa->verifyKey($secret, $code, 4);
+        $serverTimeHuman = now()->toDateTimeString();
+
+        try {
+            $result = $google2fa->verifyKey($secret, $code, 8);
+        } catch (\Throwable $e) {
+            \Log::error('2FA verify: verifyKey failed for user ' . $user->id . ': ' . $e->getMessage());
+            return false;
+        }
 
         \Log::info('2FA verify', [
             'user_id' => $user->id,
             'input_code' => $code,
             'current_code' => $currentCode,
             'server_time' => $serverTime,
+            'server_time_human' => $serverTimeHuman,
+            'secret_length' => strlen($secret),
             'secret_first_4' => substr($secret, 0, 4),
             'result' => $result,
         ]);
