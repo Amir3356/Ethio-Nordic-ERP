@@ -23,7 +23,7 @@ export function useActivateAccount() {
     }
 
     const redirectTimer = window.setTimeout(() => {
-      navigate(`/setup-2fa?token=${token}`, { replace: true });
+      navigate(`/setup-2fa?token=${encodeURIComponent(token!)}`, { replace: true });
     }, 2000);
 
     return () => window.clearTimeout(redirectTimer);

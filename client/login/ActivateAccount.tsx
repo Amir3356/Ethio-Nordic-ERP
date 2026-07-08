@@ -48,7 +48,7 @@ export default function ActivateAccount() {
   }
 
   return (
-    <AuthCard title="Ethio Nordic Trading PLC" subtitle="Activate Your Account">
+    <AuthCard title="Ethio Nordic Trading PLC">
       <form className="login-form" onSubmit={handleActivate}>
         {error && <AuthError message={error} />}
 

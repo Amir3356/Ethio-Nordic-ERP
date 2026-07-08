@@ -44,10 +44,11 @@ class AuthController extends Controller
             return $this->errorResponse('Passwords do not match.', 422);
         }
 
-        $email = str_replace(' ', '+', $request->token);
+        $email = str_replace(' ', '+', urldecode($request->token));
         $email = base64_decode($email, true);
 
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            \Log::warning('Activation: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid activation token.', 422);
         }
 
@@ -384,9 +385,10 @@ class AuthController extends Controller
             'token' => 'required|string',
         ]);
 
-        $email = str_replace(' ', '+', $request->token);
+        $email = str_replace(' ', '+', urldecode($request->token));
         $email = base64_decode($email, true);
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            \Log::warning('setupTwoFactorOnboarding: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid token.', 422);
         }
 
@@ -441,9 +443,10 @@ class AuthController extends Controller
             'two_factor_code' => 'required|string|size:6',
         ]);
 
-        $email = str_replace(' ', '+', $request->token);
+        $email = str_replace(' ', '+', urldecode($request->token));
         $email = base64_decode($email, true);
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            \Log::warning('verifyTwoFactorOnboarding: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid token.', 422);
         }
 
@@ -478,9 +481,10 @@ class AuthController extends Controller
             'token' => 'required|string',
         ]);
 
-        $email = str_replace(' ', '+', $request->token);
+        $email = str_replace(' ', '+', urldecode($request->token));
         $email = base64_decode($email, true);
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            \Log::warning('skipTwoFactorOnboarding: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid token.', 422);
         }
 
@@ -748,7 +752,7 @@ class AuthController extends Controller
         // Debug: generate current code to compare
         $currentCode = $google2fa->getCurrentOtp($secret);
         $serverTime = now()->timestamp;
-        $result = $google2fa->verifyKey($secret, $code, 1);
+        $result = $google2fa->verifyKey($secret, $code, 4);
 
         \Log::info('2FA verify', [
             'user_id' => $user->id,
