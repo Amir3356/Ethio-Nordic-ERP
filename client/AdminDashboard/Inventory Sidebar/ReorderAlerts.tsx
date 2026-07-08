@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function ReorderAlerts({ inventory }: Props) {
-  const { data, getProduct, getWarehouse, getTotalStockForProduct, getLowStockProducts } = inventory;
+  const { data, getProduct, getWarehouse, getLowStockProducts } = inventory;
 
   const lowStockProducts = useMemo(() => getLowStockProducts(), [getLowStockProducts]);
 

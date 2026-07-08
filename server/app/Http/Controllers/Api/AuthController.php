@@ -44,8 +44,7 @@ class AuthController extends Controller
             return $this->errorResponse('Passwords do not match.', 422);
         }
 
-        $email = str_replace(' ', '+', urldecode($request->token));
-        $email = base64_decode($email, true);
+        $email = $this->decodeEmailFromToken($request);
 
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             \Log::warning('Activation: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
@@ -103,43 +102,21 @@ class AuthController extends Controller
             return $this->errorResponse('Your account has been deactivated. Please contact administrator.', 403);
         }
 
-        if (!$user->isAdmin() && !$user->hasTwoFactorEnabled()) {
-            $this->logLoginAttempt($request, $user, 'failed', 'Not an admin');
-            return $this->errorResponse('Access denied. Only administrators can log in.', 403);
-        }
-
         // Check if temporary password has expired
         if ($user->hasExpiredTemporaryPassword()) {
             $this->logLoginAttempt($request, $user, 'failed', 'Temporary password expired');
             return $this->errorResponse('Your temporary password has expired. Please contact administrator for a new one.', 403);
         }
 
-        // Force 2FA setup for admin users who don't have it yet
-        if ($user->isAdmin() && !$user->hasTwoFactorEnabled()) {
+        // Force 2FA setup for users who don't have it yet
+        if (!$user->hasTwoFactorEnabled()) {
             if (!$request->two_factor_code) {
-                $twoFactorSecret = $user->twoFactorSecret;
+                $setupData = $this->provideTwoFactorSetupData($user);
 
-                if (!$twoFactorSecret) {
-                    $google2fa = new \PragmaRX\Google2FA\Google2FA();
-                    $secret = $google2fa->generateSecretKey();
-                    $recoveryCodes = $this->generateRecoveryCodes();
-
-                    $twoFactorSecret = \App\Models\TwoFactorSecret::create([
-                        'user_id' => $user->id,
-                        'secret' => $secret,
-                        'recovery_codes' => json_encode($recoveryCodes),
-                        'is_enabled' => false,
-                    ]);
-                }
-
-                $qrCodeUrl = $this->generateQrCodeUrl($user->email, $twoFactorSecret->getDecryptedSecret());
-
-                return $this->successResponse([
-                    'requires_2fa_setup' => true,
-                    'secret' => $twoFactorSecret->getDecryptedSecret(),
-                    'qr_code_url' => $qrCodeUrl,
-                    'recovery_codes' => json_decode($twoFactorSecret->recovery_codes),
-                ], 'Scan the QR code with your authenticator app to set up two-factor authentication.', 202);
+                return $this->successResponse(array_merge(
+                    ['requires_2fa_setup' => true],
+                    $setupData
+                ), 'Scan the QR code with your authenticator app to set up two-factor authentication.', 202);
             }
 
             if (!$this->verifyTwoFactorCode($user, $request->two_factor_code)) {
@@ -192,7 +169,7 @@ class AuthController extends Controller
             'department' => $request->department,
             'password' => Hash::make($tempPassword),
             'confirm_password' => Hash::make($tempPassword),
-            'is_active' => true,
+            'is_active' => false,
             'temp_password_expires_at' => now()->addDays(7),
         ]);
 
@@ -424,8 +401,8 @@ class AuthController extends Controller
             'token' => 'required|string',
         ]);
 
-        $email = str_replace(' ', '+', urldecode($request->token));
-        $email = base64_decode($email, true);
+        $email = $this->decodeEmailFromToken($request);
+
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             \Log::warning('setupTwoFactorOnboarding: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid token.', 422);
@@ -443,39 +420,15 @@ class AuthController extends Controller
             ], '2FA already enabled.');
         }
 
-        // Reuse existing secret if 2FA is pending (not yet verified)
-        $existing = TwoFactorSecret::where('user_id', $user->id)->first();
-
-        if ($existing && !$existing->is_enabled) {
-            $secret = $existing->getDecryptedSecret();
-            $recoveryCodes = $existing->getDecryptedRecoveryCodes();
-        } else {
-            $secret = $this->generateTwoFactorSecret();
-            $recoveryCodes = $this->generateRecoveryCodes();
-
-            TwoFactorSecret::updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'secret' => $secret,
-                    'recovery_codes' => $recoveryCodes,
-                    'is_enabled' => false,
-                ]
-            );
-        }
-
-        $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
+        $setupData = $this->provideTwoFactorSetupData($user);
 
         \Log::info('2FA setup onboarding', [
             'user_id' => $user->id,
-            'secret_first_4' => substr($secret, 0, 4),
-            'qr_code_url' => $qrCodeUrl,
+            'secret_first_4' => substr($setupData['secret'], 0, 4),
+            'qr_code_url' => $setupData['qr_code_url'],
         ]);
 
-        return $this->successResponse([
-            'secret' => $secret,
-            'qr_code_url' => $qrCodeUrl,
-            'recovery_codes' => $recoveryCodes,
-        ], 'Scan the QR code with your authenticator app, then enter the 6-digit code to verify.');
+        return $this->successResponse($setupData, 'Scan the QR code with your authenticator app, then enter the 6-digit code to verify.');
     }
 
     /**
@@ -488,8 +441,8 @@ class AuthController extends Controller
             'two_factor_code' => 'required|string|size:6',
         ]);
 
-        $email = str_replace(' ', '+', urldecode($request->token));
-        $email = base64_decode($email, true);
+        $email = $this->decodeEmailFromToken($request);
+
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             \Log::warning('verifyTwoFactorOnboarding: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid token.', 422);
@@ -526,8 +479,8 @@ class AuthController extends Controller
             'token' => 'required|string',
         ]);
 
-        $email = str_replace(' ', '+', urldecode($request->token));
-        $email = base64_decode($email, true);
+        $email = $this->decodeEmailFromToken($request);
+
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             \Log::warning('skipTwoFactorOnboarding: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid token.', 422);
@@ -724,7 +677,7 @@ class AuthController extends Controller
 
         LoginActivity::create([
             'user_id' => $user?->id,
-            'email' => $request->email,
+            'email' => $request->email ?? $user?->email ?? 'unknown@unknown.com',
             'ip_address' => $ip,
             'user_agent' => $request->userAgent(),
             'device_type' => $this->parseDeviceType($request->userAgent()),
@@ -760,6 +713,43 @@ class AuthController extends Controller
         }
 
         return null;
+    }
+
+    private function provideTwoFactorSetupData(User $user): array
+    {
+        $twoFactorSecret = $user->twoFactorSecret;
+
+        if (!$twoFactorSecret || $twoFactorSecret->is_enabled) {
+            $secret = $this->generateTwoFactorSecret();
+            $recoveryCodes = $this->generateRecoveryCodes();
+
+            TwoFactorSecret::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'secret' => $secret,
+                    'recovery_codes' => json_encode($recoveryCodes),
+                    'is_enabled' => false,
+                ]
+            );
+        } else {
+            $secret = $twoFactorSecret->getDecryptedSecret();
+            $recoveryCodes = json_decode($twoFactorSecret->recovery_codes, true);
+        }
+
+        $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
+
+        return [
+            'secret' => $secret,
+            'qr_code_url' => $qrCodeUrl,
+            'recovery_codes' => $recoveryCodes,
+        ];
+    }
+
+    private function decodeEmailFromToken(Request $request): ?string
+    {
+        $email = str_replace(' ', '+', urldecode($request->token));
+        $email = base64_decode($email, true);
+        return $email;
     }
 
     private function generateTwoFactorSecret(): string

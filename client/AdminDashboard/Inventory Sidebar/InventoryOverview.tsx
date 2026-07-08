@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function InventoryOverview({ inventory }: Props) {
-  const { data, getTotalStockForProduct, getInventoryValue, getLowStockProducts, getExpiringBatches } = inventory;
+  const { data, getInventoryValue, getLowStockProducts, getExpiringBatches } = inventory;
 
   const stats = useMemo(() => {
     if (!data) return null;

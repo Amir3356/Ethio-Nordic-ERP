@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services';
-import { getAuthErrorMessage } from '../utils';
+import { storeAuth, getAuthErrorMessage } from '../utils';
 
 type SetupStep = 'loading' | 'error' | 'already_setup' | 'scan' | 'success';
 
@@ -30,7 +30,7 @@ export function useTwoFactorSetup() {
       const data = response.data;
 
       if (data.data?.already_setup) {
-        setStep('already_setup');
+        navigate('/login', { replace: true });
         return;
       }
 
@@ -55,9 +55,7 @@ export function useTwoFactorSetup() {
     try {
       const response = await authAPI.verifyTwoFactorOnboarding(token!, verifyCode);
       const data = response.data;
-      localStorage.setItem('authToken', data.data.token);
-      localStorage.setItem('refreshToken', data.data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(data.data.user));
+      storeAuth(data.data);
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));

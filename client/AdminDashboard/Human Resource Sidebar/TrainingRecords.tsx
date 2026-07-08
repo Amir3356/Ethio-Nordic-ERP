@@ -32,7 +32,6 @@ export default function TrainingRecords({ hr }: Props) {
   }, [data, search, statusFilter, getEmployee]);
 
   const upcomingCount = getUpcomingTrainings().length;
-  const totalCost = data.training_records.reduce((s, t) => s + t.cost_etb, 0);
   const certifiedCount = data.training_records.filter((t) => t.certification).length;
 
   const expiringCerts = useMemo(() => {

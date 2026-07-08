@@ -4,6 +4,7 @@ import AuthCard from './components/AuthCard';
 import AuthError from './components/AuthError';
 import PasswordInput from './components/PasswordInput';
 import QRCodeDisplay from './components/QRCodeDisplay';
+import TwoFactorInput from './components/TwoFactorInput';
 import './Login.css';
 
 export default function Login() {
@@ -84,42 +85,12 @@ export default function Login() {
             <Shield size={40} color="#4f46e5" className="tfa-scan-icon" />
             <p className="form-hint">Scan this QR code with your authenticator app, then enter the 6-digit code below.</p>
             <QRCodeDisplay url={qrCodeUrl} />
-            <div className="form-group">
-              <label htmlFor="twoFactorCode">Two-Factor Code</label>
-              <div className="input-wrapper">
-                <input
-                  id="twoFactorCode"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  value={twoFactorCode}
-                  onChange={(e) => setTwoFactorCode(e.target.value.slice(0, 6))}
-                  maxLength={6}
-                  required
-                  autoFocus
-                />
-              </div>
-              <p className="form-hint">After scanning, enter the code shown in your authenticator app</p>
-            </div>
+            <TwoFactorInput value={twoFactorCode} onChange={setTwoFactorCode} />
           </div>
         )}
 
         {requiresTwoFactor && !requiresTwoFactorSetup && (
-          <div className="form-group">
-            <label htmlFor="twoFactorCode">Two-Factor Code</label>
-            <div className="input-wrapper">
-              <input
-                id="twoFactorCode"
-                type="text"
-                placeholder="Enter 6-digit code"
-                value={twoFactorCode}
-                onChange={(e) => setTwoFactorCode(e.target.value.slice(0, 6))}
-                maxLength={6}
-                required
-                autoFocus
-              />
-            </div>
-            <p className="form-hint">Check your authenticator app for the code</p>
-          </div>
+          <TwoFactorInput value={twoFactorCode} onChange={setTwoFactorCode} />
         )}
 
         <button type="submit" className="login-btn" disabled={loading}>

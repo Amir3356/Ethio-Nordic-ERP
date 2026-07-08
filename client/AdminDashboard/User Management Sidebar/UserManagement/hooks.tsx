@@ -10,7 +10,6 @@ export function useUserManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [showNewUserForm, setShowNewUserForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editUser, setEditUser] = useState<EditUser | null>(null);
@@ -66,17 +65,16 @@ export function useUserManagement() {
     fetchPermissions();
   }, [fetchUsers, fetchRoles, fetchPermissions]);
 
-  const handleCreateUser = async (): Promise<boolean> => {
-    if (submittingRef.current) return false;
+  const handleCreateUser = async (): Promise<{ success: boolean; message: string; error?: string }> => {
+    if (submittingRef.current) return { success: false, message: '', error: 'Already submitting' };
     submittingRef.current = true;
 
     const { isValid, errors } = validateNewUser(newUser);
     setNewUserErrors(errors);
-    if (!isValid) { submittingRef.current = false; return false; }
+    if (!isValid) { submittingRef.current = false; return { success: false, message: '' }; }
 
     try {
       setLoading(true);
-      setSuccess('');
       const response = await userAPI.create({
         full_name: newUser.name,
         email: newUser.email,
@@ -89,12 +87,12 @@ export function useUserManagement() {
       setNewUser({ name: '', email: '', department: '', roles: [], permissions: [] });
       setNewUserErrors({});
       await fetchUsers();
-      setSuccess('User created successfully.' + (emailSent ? ' Activation email sent.' : ''));
-      return true;
+      const msg = 'User created successfully.' + (emailSent ? ' Activation email sent.' : '');
+      return { success: true, message: msg };
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
-      setError(axiosErr.response?.data?.message || 'Failed to create user');
-      return false;
+      const errorMsg = axiosErr.response?.data?.message || 'Failed to create user';
+      return { success: false, message: '', error: errorMsg };
     } finally {
       setLoading(false);
       submittingRef.current = false;
@@ -133,13 +131,14 @@ export function useUserManagement() {
     setShowEditForm(true);
   };
 
-  const handleUpdateUser = async (): Promise<boolean> => {
-    if (submittingRef.current) return false;
+  const handleUpdateUser = async (): Promise<{ success: boolean; message: string; error?: string }> => {
+    if (!editUser) return { success: false, message: '', error: 'No user selected' };
+    if (submittingRef.current) return { success: false, message: '', error: 'Already submitting' };
     submittingRef.current = true;
 
     const { isValid, errors } = validateEditUser(editUser);
     setEditUserErrors(errors);
-    if (!isValid) { submittingRef.current = false; return false; }
+    if (!isValid) { submittingRef.current = false; return { success: false, message: '' }; }
 
     try {
       setLoading(true);
@@ -154,12 +153,11 @@ export function useUserManagement() {
       setEditUser(null);
       setEditUserErrors({});
       await fetchUsers();
-      setError('');
-      return true;
+      return { success: true, message: 'User updated successfully.' };
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
-      setError(axiosErr.response?.data?.message || 'Failed to update user');
-      return false;
+      const errorMsg = axiosErr.response?.data?.message || 'Failed to update user';
+      return { success: false, message: '', error: errorMsg };
     } finally {
       setLoading(false);
       submittingRef.current = false;
@@ -196,8 +194,6 @@ export function useUserManagement() {
     loading,
     error,
     setError,
-    success,
-    setSuccess,
     showNewUserForm,
     showEditForm,
     editUser,

@@ -36,9 +36,6 @@ export default function BankingCash({ finance }: Props) {
   }, [data, search, typeFilter, reconciledFilter]);
 
   const unreconciled = getUnreconciledTransactions();
-  const totalDebits = transactions.filter((t) => t.type === 'debit').reduce((sum, t) => sum + t.amount, 0);
-  const totalCredits = transactions.filter((t) => t.type === 'credit').reduce((sum, t) => sum + t.amount, 0);
-
   if (!data) return null;
 
   return (

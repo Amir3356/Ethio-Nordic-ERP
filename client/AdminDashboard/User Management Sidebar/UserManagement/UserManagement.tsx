@@ -3,6 +3,7 @@ import UserSearch from './UserSearch';
 import UserTable from './UserTable';
 import UserForm from './UserForm';
 import UserModal from './UserModal';
+import { ToastContainer, useToast } from '../../components/Toast';
 import './UserManagement.css';
 
 export default function UserManagement() {
@@ -14,8 +15,6 @@ export default function UserManagement() {
     loading,
     error,
     setError,
-    success,
-    setSuccess,
     showNewUserForm,
     showEditForm,
     editUser,
@@ -36,8 +35,32 @@ export default function UserManagement() {
     closeEditForm,
   } = useUserManagement();
 
+  const toast = useToast();
+
+  const onSubmitCreate = async () => {
+    const result = await handleCreateUser();
+    if (result.success) {
+      toast.success(result.message);
+      closeNewUserForm();
+    } else if (result.error) {
+      toast.error(result.error);
+    }
+  };
+
+  const onSubmitEdit = async () => {
+    const result = await handleUpdateUser();
+    if (result.success) {
+      toast.success(result.message);
+      closeEditForm();
+    } else if (result.error) {
+      toast.error(result.error);
+    }
+  };
+
   return (
     <section className="content-section" id="users">
+      <ToastContainer toasts={toast.toasts} onDismiss={toast.removeToast} />
+
       <div className="content-section-header content-section-header-centered">
         <h2 className="content-section-title-centered">User Management</h2>
         <button type="button" className="content-btn-new" onClick={openNewUserForm}>
@@ -49,13 +72,6 @@ export default function UserManagement() {
         <div className="content-error">
           <p>{error}</p>
           <button onClick={() => setError('')}>Dismiss</button>
-        </div>
-      )}
-
-      {success && (
-        <div className="content-success">
-          <p>{success}</p>
-          <button onClick={() => setSuccess('')}>Dismiss</button>
         </div>
       )}
 
@@ -74,10 +90,7 @@ export default function UserManagement() {
             onEditUserChange={() => {}}
             onNewUserErrorsChange={setNewUserErrors}
             onEditUserErrorsChange={() => {}}
-            onSubmit={async () => {
-              const success = await handleCreateUser();
-              if (success) closeNewUserForm();
-            }}
+            onSubmit={onSubmitCreate}
             onCancel={closeNewUserForm}
           />
         </UserModal>
@@ -98,10 +111,7 @@ export default function UserManagement() {
             onEditUserChange={setEditUser}
             onNewUserErrorsChange={() => {}}
             onEditUserErrorsChange={setEditUserErrors}
-            onSubmit={async () => {
-              const success = await handleUpdateUser();
-              if (success) closeEditForm();
-            }}
+            onSubmit={onSubmitEdit}
             onCancel={closeEditForm}
           />
         </UserModal>

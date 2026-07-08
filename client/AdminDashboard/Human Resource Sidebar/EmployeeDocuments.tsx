@@ -41,7 +41,6 @@ export default function EmployeeDocuments({ hr }: Props) {
 
   const expiringDocs = getExpiringDocuments();
   const activeCount = data.employee_documents.filter((d) => d.status === 'Active').length;
-  const expiredCount = data.employee_documents.filter((d) => d.status === 'Expired').length;
   const totalSize = data.employee_documents.reduce((s, d) => s + d.file_size_kb, 0);
 
   const getStatusBadge = (status: string) => {

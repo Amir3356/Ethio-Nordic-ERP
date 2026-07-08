@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function JournalEntries({ finance }: Props) {
-  const { data, getJournalLines } = finance;
+  const { data } = finance;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 

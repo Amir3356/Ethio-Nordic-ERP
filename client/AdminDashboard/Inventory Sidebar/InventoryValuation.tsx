@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function InventoryValuation({ inventory }: Props) {
-  const { data, getProduct, getWarehouse, getInventoryValue } = inventory;
+  const { data, getInventoryValue } = inventory;
 
   const valuationByProduct = useMemo(() => {
     if (!data) return [];

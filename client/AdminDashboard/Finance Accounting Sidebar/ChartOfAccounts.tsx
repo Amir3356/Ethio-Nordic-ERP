@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function ChartOfAccounts({ finance }: Props) {
-  const { data, getRootAccounts, getChildAccounts } = finance;
+  const { data, getChildAccounts } = finance;
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
 

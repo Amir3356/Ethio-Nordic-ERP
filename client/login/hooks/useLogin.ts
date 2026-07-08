@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services';
-import { getAuthErrorMessage } from '../utils';
+import { storeAuth, getAuthErrorMessage } from '../utils';
 
 export function useLogin() {
   const navigate = useNavigate();
@@ -10,6 +10,17 @@ export function useLogin() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [error, setError] = useState('');
+  const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      if (errorTimer.current) clearTimeout(errorTimer.current);
+      errorTimer.current = setTimeout(() => setError(''), 4000);
+    }
+    return () => {
+      if (errorTimer.current) clearTimeout(errorTimer.current);
+    };
+  }, [error]);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -30,24 +41,23 @@ export function useLogin() {
 
     try {
       const response = await authAPI.login(email, password, confirmPassword, requiresTwoFactor || requiresTwoFactorSetup ? twoFactorCode : null);
-      const data = response.data;
+      const body = response.data;
+      const payload = body.data;
 
-      if (data.requires_2fa_setup) {
+      if (payload?.requires_2fa_setup) {
         setRequiresTwoFactorSetup(true);
-        setQrCodeUrl(data.qr_code_url || '');
+        setQrCodeUrl(payload.qr_code_url || '');
         setLoading(false);
         return;
       }
 
-      if (data.requires_2fa) {
+      if (payload?.requires_2fa) {
         setRequiresTwoFactor(true);
         setLoading(false);
         return;
       }
 
-      localStorage.setItem('authToken', data.data.token);
-      localStorage.setItem('refreshToken', data.data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(data.data.user));
+      storeAuth(payload);
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));

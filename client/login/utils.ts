@@ -1,3 +1,15 @@
+interface AuthResponseData {
+  token?: string;
+  refresh_token?: string;
+  user?: Record<string, unknown>;
+}
+
+export const storeAuth = (data: AuthResponseData): void => {
+  if (data.token) localStorage.setItem('authToken', data.token);
+  if (data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token);
+  if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+};
+
 export const getQrCodeDataUrl = (url: string): string => {
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
 };

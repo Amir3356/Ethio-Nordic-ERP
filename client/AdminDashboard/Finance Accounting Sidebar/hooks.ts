@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { FinanceData, ChartOfAccount, JournalEntry, JournalLine, APInvoice, ARInvoice, BankTransaction, Budget, FixedAsset, TaxRecord } from './types';
+import type { FinanceData, ChartOfAccount, JournalLine, APInvoice, ARInvoice, BankTransaction, Budget, FixedAsset, TaxRecord } from './types';
 
 export function useFinance() {
   const [data, setData] = useState<FinanceData | null>(null);
