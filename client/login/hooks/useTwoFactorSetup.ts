@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services';
 import { storeAuth, getAuthErrorMessage } from '../utils';
@@ -15,6 +15,17 @@ export function useTwoFactorSetup() {
   const [verifyCode, setVerifyCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      if (errorTimer.current) clearTimeout(errorTimer.current);
+      errorTimer.current = setTimeout(() => setError(''), 4000);
+    }
+    return () => {
+      if (errorTimer.current) clearTimeout(errorTimer.current);
+    };
+  }, [error]);
 
   useEffect(() => {
     if (!token) {

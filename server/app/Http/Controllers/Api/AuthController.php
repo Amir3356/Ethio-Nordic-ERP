@@ -121,7 +121,7 @@ class AuthController extends Controller
 
             if (!$this->verifyTwoFactorCode($user, $request->two_factor_code)) {
                 $this->logLoginAttempt($request, $user, 'failed', 'Invalid 2FA code');
-                return $this->errorResponse('Invalid two-factor authentication code.', 401);
+                return $this->errorResponse('Invalid two-factor authentication code.', 422);
             }
 
             $user->twoFactorSecret->update([
@@ -133,15 +133,18 @@ class AuthController extends Controller
         // Handle existing 2FA verification
         if ($user->hasTwoFactorEnabled()) {
             if (!$request->two_factor_code) {
+                $twoFactorSecret = $user->twoFactorSecret;
+
                 return $this->successResponse([
-                    'requires_2fa' => true,
-                    'message' => 'Two-factor authentication code required',
-                ], 'Two-factor authentication code required', 202);
+                    'requires_2fa_setup' => true,
+                    'qr_code_url' => $twoFactorSecret ? $this->generateQrCodeUrl($user->email, $twoFactorSecret->getDecryptedSecret()) : null,
+                    'secret' => $twoFactorSecret ? $twoFactorSecret->getDecryptedSecret() : null,
+                ], 'Scan this QR code with your authenticator app, then enter the 6-digit code.', 202);
             }
 
             if (!$this->verifyTwoFactorCode($user, $request->two_factor_code)) {
                 $this->logLoginAttempt($request, $user, 'failed', 'Invalid 2FA code');
-                return $this->errorResponse('Invalid two-factor authentication code.', 401);
+                return $this->errorResponse('Invalid two-factor authentication code.', 422);
             }
         }
 
@@ -733,7 +736,7 @@ class AuthController extends Controller
             );
         } else {
             $secret = $twoFactorSecret->getDecryptedSecret();
-            $recoveryCodes = json_decode($twoFactorSecret->recovery_codes, true);
+            $recoveryCodes = $twoFactorSecret->getDecryptedRecoveryCodes();
         }
 
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
