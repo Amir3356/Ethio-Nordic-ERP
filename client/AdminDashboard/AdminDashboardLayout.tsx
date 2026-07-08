@@ -75,6 +75,18 @@ export default function Layout() {
                 <Package size={16} /> Inventory
               </a>
             </li>
+            <li>
+              <a
+                href="#finance"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('finance');
+                }}
+                className={activeSection === 'finance' ? 'active' : ''}
+              >
+                <DollarSign size={16} /> Finance & Accounting
+              </a>
+            </li>
           </ul>
         </section>
 
@@ -115,6 +127,12 @@ export default function Layout() {
         {activeSection === 'inventory' && (
           <section id="inventory">
             <InventorySidebar />
+          </section>
+        )}
+
+        {activeSection === 'finance' && (
+          <section id="finance">
+            <FinanceSidebar />
           </section>
         )}
       </main>
