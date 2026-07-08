@@ -77,7 +77,6 @@ export function useUserManagement() {
     try {
       setLoading(true);
       setSuccess('');
-      const email = newUser.email;
       const response = await userAPI.create({
         full_name: newUser.name,
         email: newUser.email,

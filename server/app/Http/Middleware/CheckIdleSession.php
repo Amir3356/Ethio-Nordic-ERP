@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\TokenRefreshService;
 use App\Services\TokenStateService;
 use Closure;
 use Illuminate\Http\Request;
@@ -11,8 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckIdleSession
 {
     public function __construct(
-        private readonly TokenStateService $tokenState,
-        private readonly TokenRefreshService $refreshService
+        private readonly TokenStateService $tokenState
     ) {}
 
     public function handle(Request $request, Closure $next): Response

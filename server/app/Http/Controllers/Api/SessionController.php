@@ -32,8 +32,17 @@ class SessionController extends Controller
         $offset = ($page - 1) * $perPage;
         $items = array_slice($sessions, $offset, $perPage);
 
+        $enriched = array_map(fn($s) => [
+            'id' => $s['id'] ?? null,
+            'user_id' => $s['user_id'] ?? null,
+            'user_name' => $s['user_name'] ?? null,
+            'user_email' => $s['user_email'] ?? null,
+            'device_type' => $s['device_type'] ?? null,
+            'location' => $s['location'] ?? null,
+        ], $items);
+
         return $this->successResponse([
-            'data' => array_values($this->formatSessions($items)),
+            'data' => array_values($enriched),
             'current_page' => $page,
             'per_page' => $perPage,
             'total' => $total,
@@ -63,7 +72,16 @@ class SessionController extends Controller
     {
         $sessions = $this->tokenState->getAllSessions();
 
-        return $this->successResponse($this->formatSessions($sessions));
+        return $this->successResponse(
+            array_map(fn($s) => [
+                'id' => $s['id'] ?? null,
+                'user_id' => $s['user_id'] ?? null,
+                'user_name' => $s['user_name'] ?? null,
+                'user_email' => $s['user_email'] ?? null,
+                'device_type' => $s['device_type'] ?? null,
+                'location' => $s['location'] ?? null,
+            ], $sessions)
+        );
     }
 
     /**
@@ -145,20 +163,5 @@ class SessionController extends Controller
         $token->update(['location' => $request->location]);
 
         return $this->successResponse(null, 'Session location updated successfully.');
-    }
-
-    /**
-     * Format sessions array to consistent API response structure.
-     */
-    private function formatSessions(array $sessions): array
-    {
-        return array_map(fn($s) => [
-            'id' => $s['id'] ?? null,
-            'user_id' => $s['user_id'] ?? null,
-            'user_name' => $s['user_name'] ?? null,
-            'user_email' => $s['user_email'] ?? null,
-            'device_type' => $s['device_type'] ?? null,
-            'location' => $s['location'] ?? null,
-        ], $sessions);
     }
 }

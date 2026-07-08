@@ -1,10 +1,5 @@
 import { api } from './client';
 
-interface GeolocationCoords {
-  latitude: number;
-  longitude: number;
-}
-
 interface ReverseGeocodeResult {
   city?: string;
   region?: string;

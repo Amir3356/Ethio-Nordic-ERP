@@ -194,39 +194,6 @@ class AuditObserver
     ];
 
     /**
-     * All 27 ERP module names (for reference and validation).
-     */
-    public const ALL_MODULES = [
-        'User Management',
-        'Security',
-        'System Administration',
-        'Human Resources',
-        'Finance & Accounting',
-        'Procurement',
-        'Inventory Management',
-        'Sales & CRM',
-        'Purchase Management',
-        'Warehouse Management',
-        'Manufacturing',
-        'Project Management',
-        'Document Management',
-        'Reporting & Analytics',
-        'Notification & Communication',
-        'Organization & Settings',
-        'Audit & Compliance',
-        'Tax Management',
-        'Banking & Payments',
-        'Fixed Assets',
-        'Payroll',
-        'Employee Self-Service',
-        'Customer Management',
-        'Vendor/Supplier Management',
-        'Quality Control',
-        'Logistics & Shipping',
-        'Integration & API',
-    ];
-
-    /**
      * Handle the model "created" event.
      */
     public function created(Model $model): void

@@ -5,10 +5,6 @@ export const formatDate = (date: string | null): string => {
   return new Date(date).toLocaleDateString();
 };
 
-export const getStatus = (daysSinceLogin: number, inactiveDays: number): 'active' | 'flagged' => {
-  return daysSinceLogin >= inactiveDays ? 'flagged' : 'active';
-};
-
 export const getStatusLabel = (daysSinceLogin: number, inactiveDays: number): string => {
   return daysSinceLogin >= inactiveDays ? 'Needs Review' : 'Active';
 };

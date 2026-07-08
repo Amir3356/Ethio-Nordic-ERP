@@ -8,10 +8,6 @@ export const formatDateTime = (date: string): string => {
   return new Date(date).toLocaleString();
 };
 
-export const formatDetails = (log: AuditLog): string => {
-  return `Before: ${JSON.stringify(log.old_values || {})}\nAfter: ${JSON.stringify(log.new_values || {})}`;
-};
-
 export const filterLogs = (logs: AuditLog[], filter: string): AuditLog[] => {
   if (!filter.trim()) return logs;
   

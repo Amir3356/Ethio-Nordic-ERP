@@ -163,7 +163,7 @@ class LoginActivityController extends Controller
         return $this->successResponse($failedLogins);
     }
 
-    public function suspiciousActivity(Request $request): JsonResponse
+    public function suspiciousActivity(): JsonResponse
     {
         $threshold = now()->subHours(24);
         $ipThreshold = 5;

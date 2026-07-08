@@ -76,12 +76,6 @@
   to { width: 100%; }
 }
 
-/* ── Header Subtitle ── */
-.tfa-subtitle {
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
 /* ── Scan Step ── */
 .tfa-scan-header {
   text-align: center;
@@ -127,10 +121,29 @@
 
 /* ── Verify Button ── */
 .tfa-verify-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  display: block;
+  margin: 0 auto;
+  padding: 11px 20px;
+  background: #4f46e5;
+  color: #000;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.tfa-verify-btn:hover:not(:disabled),
+.tfa-verify-btn:active:not(:disabled) {
+  color: #000;
+  background: #4f46e5;
+  box-shadow: none;
+  transform: none;
+}
+
+.tfa-verify-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 

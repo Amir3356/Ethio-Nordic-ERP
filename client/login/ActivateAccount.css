@@ -1,56 +1,5 @@
 @import './Login.css';
 
-/* ── Password Requirements ── */
-.activate-password-requirements {
-  margin-bottom: 18px;
-  padding: 12px 14px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-.activate-requirements-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-  margin: 0 0 8px 0;
-}
-
-.activate-requirements-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 12px;
-}
-
-.activate-requirements-list li {
-  font-size: 11px;
-  color: #9ca3af;
-  position: relative;
-  padding-left: 16px;
-  transition: color 0.2s;
-}
-
-.activate-requirements-list li::before {
-  content: '\2717';
-  position: absolute;
-  left: 0;
-  color: #dc2626;
-  font-weight: 700;
-  transition: color 0.2s;
-}
-
-.activate-requirements-list li.met {
-  color: #059669;
-}
-
-.activate-requirements-list li.met::before {
-  content: '\2713';
-  color: #059669;
-}
-
 /* ── Success State ── */
 .activate-success {
   text-align: center;

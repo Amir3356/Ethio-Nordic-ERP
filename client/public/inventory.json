@@ -1,0 +1,95 @@
+{
+  "products": [
+    { "id": "PRD-001", "sku": "PH-AMX-500", "name": "Amoxicillin 500mg Capsules", "category": "Pharmaceuticals", "unit": "Capsules", "min_stock": 5000, "reorder_level": 8000, "fifo_fefo": "FEFO", "is_active": true },
+    { "id": "PRD-002", "sku": "PH-CTX-250", "name": "Ceftriaxone 250mg Injection", "category": "Pharmaceuticals", "unit": "Vials", "min_stock": 2000, "reorder_level": 3500, "fifo_fefo": "FEFO", "is_active": true },
+    { "id": "PRD-003", "sku": "PH-IBU-400", "name": "Ibuprofen 400mg Tablets", "category": "Pharmaceuticals", "unit": "Tablets", "min_stock": 10000, "reorder_level": 15000, "fifo_fefo": "FEFO", "is_active": true },
+    { "id": "PRD-004", "sku": "MD-SYG-100", "name": "Surgical Gloves (Medium)", "category": "Medical Devices", "unit": "Pairs", "min_stock": 3000, "reorder_level": 5000, "fifo_fefo": "FIFO", "is_active": true },
+    { "id": "PRD-005", "sku": "MD-MSK-3Ply", "name": "3-Ply Face Masks", "category": "Medical Devices", "unit": "Boxes (50)", "min_stock": 1000, "reorder_level": 2000, "fifo_fefo": "FIFO", "is_active": true },
+    { "id": "PRD-006", "sku": "CH-ASC-100", "name": "Ascorbic Acid 100mg", "category": "Chemicals", "unit": "Tablets", "min_stock": 20000, "reorder_level": 30000, "fifo_fefo": "FEFO", "is_active": true },
+    { "id": "PRD-007", "sku": "PH-MET-500", "name": "Metformin 500mg Tablets", "category": "Pharmaceuticals", "unit": "Tablets", "min_stock": 8000, "reorder_level": 12000, "fifo_fefo": "FEFO", "is_active": true },
+    { "id": "PRD-008", "sku": "MD-THE-IR", "name": "Infrared Thermometer", "category": "Medical Devices", "unit": "Units", "min_stock": 50, "reorder_level": 100, "fifo_fefo": "FIFO", "is_active": true },
+    { "id": "PRD-009", "sku": "PH-AZI-250", "name": "Azithromycin 250mg Tablets", "category": "Pharmaceuticals", "unit": "Tablets", "min_stock": 6000, "reorder_level": 9000, "fifo_fefo": "FEFO", "is_active": true },
+    { "id": "PRD-010", "sku": "CL-IPC-70", "name": "Isopropyl Alcohol 70%", "category": "Cleaning Supplies", "unit": "Liters", "min_stock": 200, "reorder_level": 400, "fifo_fefo": "FIFO", "is_active": true }
+  ],
+  "warehouses": [
+    { "id": "WH-001", "name": "Addis Ababa Central Warehouse", "code": "AA-CENT", "city": "Addis Ababa", "capacity_sqm": 5000, "manager": "Abebe Kebede" },
+    { "id": "WH-002", "name": "Dire Dawa Regional Depot", "code": "DD-REG", "city": "Dire Dawa", "capacity_sqm": 3000, "manager": "Fatuma Ahmed" },
+    { "id": "WH-003", "name": "Hawassa Distribution Center", "code": "HW-DIST", "city": "Hawassa", "capacity_sqm": 2500, "manager": "Dawit Tesfaye" },
+    { "id": "WH-004", "name": "Bahir Dar Cold Storage", "code": "BD-COLD", "city": "Bahir Dar", "capacity_sqm": 1500, "manager": "Sara Mulugeta" }
+  ],
+  "stock_batches": [
+    { "id": "BAT-001", "product_id": "PRD-001", "warehouse_id": "WH-001", "batch_no": "BATCH-2026-A01", "quantity": 12000, "unit_cost": 0.45, "manufacture_date": "2026-01-15", "expiry_date": "2028-01-15", "received_date": "2026-02-10", "status": "active" },
+    { "id": "BAT-002", "product_id": "PRD-001", "warehouse_id": "WH-001", "batch_no": "BATCH-2026-A02", "quantity": 8500, "unit_cost": 0.42, "manufacture_date": "2026-03-01", "expiry_date": "2028-03-01", "received_date": "2026-04-05", "status": "active" },
+    { "id": "BAT-003", "product_id": "PRD-001", "warehouse_id": "WH-002", "batch_no": "BATCH-2026-A03", "quantity": 3200, "unit_cost": 0.47, "manufacture_date": "2025-11-10", "expiry_date": "2027-11-10", "received_date": "2025-12-20", "status": "active" },
+    { "id": "BAT-004", "product_id": "PRD-002", "warehouse_id": "WH-001", "batch_no": "BATCH-2026-B01", "quantity": 4500, "unit_cost": 3.20, "manufacture_date": "2026-02-20", "expiry_date": "2027-08-20", "received_date": "2026-03-15", "status": "active" },
+    { "id": "BAT-005", "product_id": "PRD-003", "warehouse_id": "WH-003", "batch_no": "BATCH-2026-C01", "quantity": 18000, "unit_cost": 0.08, "manufacture_date": "2026-01-05", "expiry_date": "2028-01-05", "received_date": "2026-02-28", "status": "active" },
+    { "id": "BAT-006", "product_id": "PRD-004", "warehouse_id": "WH-001", "batch_no": "BATCH-2026-D01", "quantity": 6000, "unit_cost": 0.35, "manufacture_date": "2025-06-15", "expiry_date": "2027-06-15", "received_date": "2025-08-10", "status": "active" },
+    { "id": "BAT-007", "product_id": "PRD-005", "warehouse_id": "WH-002", "batch_no": "BATCH-2026-E01", "quantity": 2800, "unit_cost": 4.50, "manufacture_date": "2026-04-01", "expiry_date": "2029-04-01", "received_date": "2026-05-12", "status": "active" },
+    { "id": "BAT-008", "product_id": "PRD-006", "warehouse_id": "WH-004", "batch_no": "BATCH-2026-F01", "quantity": 25000, "unit_cost": 0.03, "manufacture_date": "2026-05-01", "expiry_date": "2027-05-01", "received_date": "2026-06-01", "status": "active" },
+    { "id": "BAT-009", "product_id": "PRD-007", "warehouse_id": "WH-001", "batch_no": "BATCH-2026-G01", "quantity": 10000, "unit_cost": 0.12, "manufacture_date": "2026-03-10", "expiry_date": "2028-03-10", "received_date": "2026-04-20", "status": "active" },
+    { "id": "BAT-010", "product_id": "PRD-008", "warehouse_id": "WH-003", "batch_no": "BATCH-2026-H01", "quantity": 75, "unit_cost": 18.50, "manufacture_date": "2025-09-01", "expiry_date": "2030-09-01", "received_date": "2025-10-15", "status": "active" },
+    { "id": "BAT-011", "product_id": "PRD-009", "warehouse_id": "WH-002", "batch_no": "BATCH-2026-I01", "quantity": 4800, "unit_cost": 0.38, "manufacture_date": "2026-02-01", "expiry_date": "2027-02-01", "received_date": "2026-03-10", "status": "active" },
+    { "id": "BAT-012", "product_id": "PRD-010", "warehouse_id": "WH-004", "batch_no": "BATCH-2026-J01", "quantity": 350, "unit_cost": 2.80, "manufacture_date": "2026-04-15", "expiry_date": "2028-04-15", "received_date": "2026-05-20", "status": "active" },
+    { "id": "BAT-013", "product_id": "PRD-001", "warehouse_id": "WH-003", "batch_no": "BATCH-2025-A04", "quantity": 1200, "unit_cost": 0.40, "manufacture_date": "2025-06-01", "expiry_date": "2026-09-30", "received_date": "2025-07-15", "status": "expiring_soon" },
+    { "id": "BAT-014", "product_id": "PRD-003", "warehouse_id": "WH-001", "batch_no": "BATCH-2025-C02", "quantity": 5000, "unit_cost": 0.09, "manufacture_date": "2025-05-10", "expiry_date": "2026-08-10", "received_date": "2025-06-20", "status": "expiring_soon" }
+  ],
+  "stock_ledger": [
+    { "id": "TXN-001", "product_id": "PRD-001", "warehouse_id": "WH-001", "batch_id": "BAT-001", "type": "stock-in", "quantity": 12000, "unit_cost": 0.45, "reference": "GRN-2026-001", "reference_type": "goods_receipt", "created_by": "Abebe Kebede", "created_at": "2026-02-10T09:30:00Z", "notes": "Received from Swiss Pharma AG" },
+    { "id": "TXN-002", "product_id": "PRD-001", "warehouse_id": "WH-001", "batch_id": "BAT-001", "type": "stock-out", "quantity": -3000, "unit_cost": 0.45, "reference": "SO-2026-0042", "reference_type": "sales_order", "created_by": "System", "created_at": "2026-03-15T14:20:00Z", "notes": "Dispensed to Black Lion Pharmacy" },
+    { "id": "TXN-003", "product_id": "PRD-001", "warehouse_id": "WH-001", "batch_id": "BAT-002", "type": "stock-in", "quantity": 8500, "unit_cost": 0.42, "reference": "GRN-2026-008", "reference_type": "goods_receipt", "created_by": "Abebe Kebede", "created_at": "2026-04-05T11:00:00Z", "notes": "Restocked from Swiss Pharma AG" },
+    { "id": "TXN-004", "product_id": "PRD-001", "warehouse_id": "WH-001", "batch_id": "BAT-001", "type": "stock-out", "quantity": -2000, "unit_cost": 0.45, "reference": "SO-2026-0058", "reference_type": "sales_order", "created_by": "System", "created_at": "2026-05-01T10:15:00Z", "notes": "Dispensed to St. Paulos Hospital" },
+    { "id": "TXN-005", "product_id": "PRD-001", "warehouse_id": "WH-001", "warehouse_id": "WH-001", "batch_id": "BAT-001", "type": "transfer-out", "quantity": -1500, "unit_cost": 0.45, "reference": "TR-2026-0005", "reference_type": "transfer", "created_by": "Abebe Kebede", "created_at": "2026-05-10T08:45:00Z", "notes": "Transferred to Dire Dawa depot" },
+    { "id": "TXN-006", "product_id": "PRD-001", "warehouse_id": "WH-002", "batch_id": "BAT-003", "type": "stock-in", "quantity": 3200, "unit_cost": 0.47, "reference": "TR-2026-0005", "reference_type": "transfer", "created_by": "Fatuma Ahmed", "created_at": "2026-05-11T14:30:00Z", "notes": "Received transfer from Addis Ababa" },
+    { "id": "TXN-007", "product_id": "PRD-002", "warehouse_id": "WH-001", "batch_id": "BAT-004", "type": "stock-in", "quantity": 4500, "unit_cost": 3.20, "reference": "GRN-2026-012", "reference_type": "goods_receipt", "created_by": "Abebe Kebede", "created_at": "2026-03-15T16:00:00Z", "notes": "Received from BioTech Industries" },
+    { "id": "TXN-008", "product_id": "PRD-003", "warehouse_id": "WH-003", "batch_id": "BAT-005", "type": "stock-in", "quantity": 18000, "unit_cost": 0.08, "reference": "GRN-2026-015", "reference_type": "goods_receipt", "created_by": "Dawit Tesfaye", "created_at": "2026-02-28T10:00:00Z", "notes": "Bulk order from Himalaya Drug Co." },
+    { "id": "TXN-009", "product_id": "PRD-003", "warehouse_id": "WH-003", "batch_id": "BAT-005", "type": "stock-out", "quantity": -5000, "unit_cost": 0.08, "reference": "SO-2026-0061", "reference_type": "sales_order", "created_by": "System", "created_at": "2026-04-20T09:00:00Z", "notes": "Dispensed to Tikur Anbessa Hospital" },
+    { "id": "TXN-010", "product_id": "PRD-004", "warehouse_id": "WH-001", "batch_id": "BAT-006", "type": "stock-in", "quantity": 6000, "unit_cost": 0.35, "reference": "GRN-2025-045", "reference_type": "goods_receipt", "created_by": "Abebe Kebede", "created_at": "2025-08-10T13:00:00Z", "notes": "Received from Top Glove Corp" },
+    { "id": "TXN-011", "product_id": "PRD-004", "warehouse_id": "WH-001", "batch_id": "BAT-006", "type": "adjustment", "quantity": -200, "unit_cost": 0.35, "reference": "ADJ-2026-003", "reference_type": "adjustment", "created_by": "Abebe Kebede", "created_at": "2026-06-01T11:30:00Z", "notes": "Damaged units written off - water damage" },
+    { "id": "TXN-012", "product_id": "PRD-005", "warehouse_id": "WH-002", "batch_id": "BAT-007", "type": "stock-in", "quantity": 2800, "unit_cost": 4.50, "reference": "GRN-2026-020", "reference_type": "goods_receipt", "created_by": "Fatuma Ahmed", "created_at": "2026-05-12T15:45:00Z", "notes": "Received from 3M Ethiopia" },
+    { "id": "TXN-013", "product_id": "PRD-006", "warehouse_id": "WH-004", "batch_id": "BAT-008", "type": "stock-in", "quantity": 25000, "unit_cost": 0.03, "reference": "GRN-2026-022", "reference_type": "goods_receipt", "created_by": "Sara Mulugeta", "created_at": "2026-06-01T09:15:00Z", "notes": "Received from Shanghai Pharma" },
+    { "id": "TXN-014", "product_id": "PRD-007", "warehouse_id": "WH-001", "batch_id": "BAT-009", "type": "stock-in", "quantity": 10000, "unit_cost": 0.12, "reference": "GRN-2026-018", "reference_type": "goods_receipt", "created_by": "Abebe Kebede", "created_at": "2026-04-20T10:30:00Z", "notes": "Received from USV Pvt. Ltd." },
+    { "id": "TXN-015", "product_id": "PRD-007", "warehouse_id": "WH-001", "batch_id": "BAT-009", "type": "stock-out", "quantity": -2500, "unit_cost": 0.12, "reference": "SO-2026-0070", "reference_type": "sales_order", "created_by": "System", "created_at": "2026-05-25T08:00:00Z", "notes": "Dispensed to ALERT Hospital" }
+  ],
+  "stock_adjustments": [
+    { "id": "ADJ-001", "product_id": "PRD-004", "warehouse_id": "WH-001", "batch_id": "BAT-006", "quantity_before": 6200, "quantity_after": 6000, "adjustment_qty": -200, "reason": "Damaged - water leak in storage area", "reason_code": "DAMAGED", "status": "approved", "requested_by": "Warehouse Staff", "approved_by": "Abebe Kebede", "requested_at": "2026-06-01T10:00:00Z", "approved_at": "2026-06-01T11:30:00Z", "financial_impact": -70.00 },
+    { "id": "ADJ-002", "product_id": "PRD-001", "warehouse_id": "WH-001", "batch_id": "BAT-001", "quantity_before": 12050, "quantity_after": 12000, "adjustment_qty": -50, "reason": "Count discrepancy found during cycle count", "reason_code": "CYCLE_COUNT", "status": "approved", "requested_by": "Inventory Clerk", "approved_by": "Abebe Kebede", "requested_at": "2026-05-15T16:00:00Z", "approved_at": "2026-05-16T09:00:00Z", "financial_impact": -22.50 },
+    { "id": "ADJ-003", "product_id": "PRD-003", "warehouse_id": "WH-003", "batch_id": "BAT-005", "quantity_before": 18000, "quantity_after": 17980, "adjustment_qty": -20, "reason": "Expired tablets removed from stock", "reason_code": "EXPIRED", "status": "approved", "requested_by": "Quality Inspector", "approved_by": "Dawit Tesfaye", "requested_at": "2026-06-05T14:00:00Z", "approved_at": "2026-06-05T15:30:00Z", "financial_impact": -1.60 },
+    { "id": "ADJ-004", "product_id": "PRD-008", "warehouse_id": "WH-003", "batch_id": "BAT-010", "quantity_before": 75, "quantity_after": 73, "adjustment_qty": -2, "reason": "Defective units returned to manufacturer", "reason_code": "DEFECTIVE", "status": "pending", "requested_by": "Warehouse Staff", "approved_by": null, "requested_at": "2026-07-01T11:00:00Z", "approved_at": null, "financial_impact": -37.00 }
+  ],
+  "reorder_rules": [
+    { "id": "RR-001", "product_id": "PRD-001", "warehouse_id": "WH-001", "min_stock": 5000, "reorder_level": 8000, "auto_reorder": true, "preferred_supplier": "Swiss Pharma AG", "lead_time_days": 21 },
+    { "id": "RR-002", "product_id": "PRD-001", "warehouse_id": "WH-002", "min_stock": 2000, "reorder_level": 3500, "auto_reorder": true, "preferred_supplier": "Swiss Pharma AG", "lead_time_days": 21 },
+    { "id": "RR-003", "product_id": "PRD-002", "warehouse_id": "WH-001", "min_stock": 2000, "reorder_level": 3500, "auto_reorder": false, "preferred_supplier": "BioTech Industries", "lead_time_days": 30 },
+    { "id": "RR-004", "product_id": "PRD-003", "warehouse_id": "WH-003", "min_stock": 10000, "reorder_level": 15000, "auto_reorder": true, "preferred_supplier": "Himalaya Drug Co.", "lead_time_days": 28 },
+    { "id": "RR-005", "product_id": "PRD-004", "warehouse_id": "WH-001", "min_stock": 3000, "reorder_level": 5000, "auto_reorder": false, "preferred_supplier": "Top Glove Corp", "lead_time_days": 14 },
+    { "id": "RR-006", "product_id": "PRD-005", "warehouse_id": "WH-002", "min_stock": 1000, "reorder_level": 2000, "auto_reorder": true, "preferred_supplier": "3M Ethiopia", "lead_time_days": 10 },
+    { "id": "RR-007", "product_id": "PRD-006", "warehouse_id": "WH-004", "min_stock": 20000, "reorder_level": 30000, "auto_reorder": true, "preferred_supplier": "Shanghai Pharma", "lead_time_days": 35 },
+    { "id": "RR-008", "product_id": "PRD-007", "warehouse_id": "WH-001", "min_stock": 8000, "reorder_level": 12000, "auto_reorder": true, "preferred_supplier": "USV Pvt. Ltd.", "lead_time_days": 25 },
+    { "id": "RR-009", "product_id": "PRD-009", "warehouse_id": "WH-002", "min_stock": 6000, "reorder_level": 9000, "auto_reorder": false, "preferred_supplier": "Azista Industries", "lead_time_days": 20 },
+    { "id": "RR-010", "product_id": "PRD-010", "warehouse_id": "WH-004", "min_stock": 200, "reorder_level": 400, "auto_reorder": true, "preferred_supplier": "Local Chemical Co.", "lead_time_days": 7 }
+  ],
+  "damaged_goods": [
+    { "id": "DG-001", "product_id": "PRD-004", "warehouse_id": "WH-001", "batch_id": "BAT-006", "quantity": 200, "damage_type": "Water Damage", "description": "Surgical gloves packaging compromised due to roof leak in Zone B storage area. Product unsuitable for distribution.", "photos": ["damage_report_DG001_1.jpg", "damage_report_DG001_2.jpg"], "status": "disposed", "reported_by": "Warehouse Staff", "reported_at": "2026-06-01T09:00:00Z", "reviewed_by": "Abebe Kebede", "reviewed_at": "2026-06-01T11:30:00Z", "write_off_amount": 70.00 },
+    { "id": "DG-002", "product_id": "PRD-003", "warehouse_id": "WH-003", "batch_id": "BAT-005", "quantity": 20, "damage_type": "Expired", "description": "Ibuprofen tablets found expired during routine inspection. Batch DATE-2025-C02 partially expired.", "photos": ["expiry_report_DG002_1.jpg"], "status": "disposed", "reported_by": "Quality Inspector", "reported_at": "2026-06-05T14:00:00Z", "reviewed_by": "Dawit Tesfaye", "reviewed_at": "2026-06-05T15:30:00Z", "write_off_amount": 1.60 },
+    { "id": "DG-003", "product_id": "PRD-008", "warehouse_id": "WH-003", "batch_id": "BAT-010", "quantity": 2, "damage_type": "Defective", "description": "Infrared thermometers displaying inaccurate readings. Manufacturer defect confirmed.", "photos": ["defect_report_DG003_1.jpg", "defect_report_DG003_2.jpg", "defect_report_DG003_3.jpg"], "status": "pending_review", "reported_by": "Warehouse Staff", "reported_at": "2026-07-01T11:00:00Z", "reviewed_by": null, "reviewed_at": null, "write_off_amount": null }
+  ],
+  "system_architecture": {
+    "layers": [
+      { "layer": "Presentation", "responsibility": "Stock lookup, adjustments, alerts UI", "technology": "React + TypeScript" },
+      { "layer": "Event Consumer", "responsibility": "Reacts to WMS, Procurement, and Sales events", "technology": "Laravel Queues (Redis-backed)" },
+      { "layer": "Inventory Service", "responsibility": "Ledger updates, FIFO/FEFO allocation logic", "technology": "Laravel Service Layer" },
+      { "layer": "Scheduler", "responsibility": "Reorder & expiry monitoring jobs", "technology": "Laravel Task Scheduler" },
+      { "layer": "AI Forecasting", "responsibility": "Demand prediction & reorder recommendations", "technology": "OpenAI / Gemini API" },
+      { "layer": "Persistence", "responsibility": "Stock ledger, batches, adjustments", "technology": "PostgreSQL" }
+    ],
+    "database_entities": [
+      { "table": "products", "purpose": "Master product catalog (linked to PIM module)" },
+      { "table": "warehouses", "purpose": "Warehouse and storage location master data" },
+      { "table": "stock_batches", "purpose": "Batch-level quantity, cost, manufacture & expiry dates" },
+      { "table": "stock_ledger", "purpose": "Immutable append-only log of every stock movement" },
+      { "table": "stock_adjustments", "purpose": "Approval-gated correction records with reason codes" },
+      { "table": "reorder_rules", "purpose": "Per-SKU minimum stock and reorder threshold configuration" },
+      { "table": "damaged_goods", "purpose": "Damaged/rejected stock records with disposition status" }
+    ]
+  }
+}

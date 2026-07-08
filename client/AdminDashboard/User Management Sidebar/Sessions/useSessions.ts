@@ -89,23 +89,11 @@ export function useSessions() {
     }
   };
 
-  const handleTerminateAllForUser = async (userId: number) => {
-    if (!window.confirm('Are you sure you want to terminate ALL sessions for this user? This will force them to log in again on all devices.')) return;
-
-    try {
-      await sessionAPI.terminateAllUserSessions(userId);
-      await fetchSessions();
-    } catch {
-      setError('Failed to terminate user sessions');
-    }
-  };
-
   return {
     sessions,
     loading,
     error,
     fetchSessions,
     handleTerminateSession,
-    handleTerminateAllForUser,
   };
 }

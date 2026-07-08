@@ -36,27 +36,6 @@
   margin-bottom: 20px;
 }
 
-.sidebar-section-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 0 4px;
-}
-
-.sidebar-section-header h2 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.sidebar-icon {
-  font-size: 14px;
-}
-
 .sidebar-links {
   list-style: none;
   margin: 0;
@@ -346,16 +325,6 @@
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.content-section-count {
-  margin-left: auto;
-  font-size: 13px;
-  font-weight: 600;
-  color: #6b7280;
-  padding: 4px 12px;
-  background: #f3f4f6;
-  border-radius: 999px;
-}
-
 .content-table-wrapper {
   overflow-x: auto;
 }
@@ -394,16 +363,6 @@
 .content-table-name {
   font-weight: 600;
   color: #111827;
-}
-
-.content-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #eff6ff;
-  color: #1d4ed8;
 }
 
 .content-status {
@@ -558,68 +517,6 @@
   line-height: 1.7;
   color: #4b5563;
   margin: 0 0 24px;
-}
-
-.content-subtitle {
-  margin: 0 0 16px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.content-card {
-  padding: 16px;
-  border-radius: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-}
-
-.content-card h4 {
-  margin: 0 0 8px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #111827;
-}
-
-.content-card p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #6b7280;
-}
-
-.content-workflow {
-  display: grid;
-  gap: 12px;
-}
-
-.content-workflow-item {
-  padding: 16px;
-  border-radius: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-}
-
-.content-workflow-step {
-  display: inline-block;
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #4f46e5;
-}
-
-.content-workflow-item p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #4b5563;
 }
 
 .content-audit-action {

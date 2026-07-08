@@ -33,7 +33,6 @@ export default function UserForm({
   onSubmit,
   onCancel,
 }: UserFormProps) {
-  const user = mode === 'edit' ? editUser : newUser;
   const errors = mode === 'edit' ? editUserErrors : newUserErrors;
 
   const handleNameChange = (value: string) => {
