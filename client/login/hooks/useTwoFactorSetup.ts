@@ -53,12 +53,12 @@ export function useTwoFactorSetup() {
 
     setLoading(true);
     try {
-      await authAPI.verifyTwoFactorOnboarding(token!, verifyCode);
-      setStep('success');
-      // Redirect to login after 2.5 seconds
-      setTimeout(() => {
-        navigate('/login', { replace: true });
-      }, 2500);
+      const response = await authAPI.verifyTwoFactorOnboarding(token!, verifyCode);
+      const data = response.data;
+      localStorage.setItem('authToken', data.data.token);
+      localStorage.setItem('refreshToken', data.data.refresh_token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
+      navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
     } finally {

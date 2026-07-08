@@ -57,7 +57,7 @@ export default function TwoFactorSetup() {
           <CheckCircle size={48} color="#22c55e" className="tfa-success-icon" />
           <h2 className="tfa-success-title">Two-Factor Authentication Enabled!</h2>
           <p className="tfa-success-text">
-            Your account is now secured. Redirecting to login...
+            Your account is now secured. Redirecting to dashboard...
           </p>
           <div className="tfa-loading-bar">
             <div className="tfa-loading-bar-fill" />

@@ -475,7 +475,7 @@ class AuthController extends Controller
             'enabled_at' => now(),
         ]);
 
-        return $this->successResponse(null, 'Your two-factor authentication has been enabled successfully');
+        return $this->loginUser($request, $user);
     }
 
     /**
