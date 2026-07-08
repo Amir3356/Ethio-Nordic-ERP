@@ -21,9 +21,7 @@
 
     <hr>
 
-    <p style="font-size:12px;color:#777;">
-        If you did not request this account, please ignore this email.
-    </p>
+ 
 
     <p>Regards,<br>Ethio Nordic Trading PLC Team</p>
 

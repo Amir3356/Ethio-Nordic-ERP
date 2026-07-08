@@ -1,0 +1,351 @@
+/* ===== HR Section Styles ===== */
+.hr-subsection-title {
+  margin: 24px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== Stats Grid ===== */
+.hr-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.hr-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.hr-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hr-stat-icon-blue { background: #eff6ff; color: #2563eb; }
+.hr-stat-icon-green { background: #ecfdf5; color: #059669; }
+.hr-stat-icon-purple { background: #f5f3ff; color: #7c3aed; }
+.hr-stat-icon-amber { background: #fffbeb; color: #d97706; }
+.hr-stat-icon-red { background: #fef2f2; color: #dc2626; }
+.hr-stat-icon-teal { background: #f0fdfa; color: #0d9488; }
+.hr-stat-icon-indigo { background: #eef2ff; color: #4f46e5; }
+.hr-stat-icon-pink { background: #fdf2f8; color: #db2777; }
+
+.hr-stat-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.hr-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.hr-stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ===== Toolbar ===== */
+.hr-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.hr-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  flex: 1;
+  max-width: 360px;
+}
+
+.hr-search svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.hr-search input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #111827;
+  width: 100%;
+  background: transparent;
+}
+
+.hr-filter-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+  color: #374151;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.hr-filter-select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* ===== Table ===== */
+.hr-table-wrapper {
+  overflow-x: auto;
+}
+
+.hr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.hr-table thead tr {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hr-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.hr-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.hr-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.hr-table-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.hr-empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 32px 14px !important;
+}
+
+/* ===== Badges ===== */
+.hr-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.hr-badge-green { background: #ecfdf5; color: #047857; }
+.hr-badge-red { background: #fef2f2; color: #b91c1c; }
+.hr-badge-amber { background: #fffbeb; color: #b45309; }
+.hr-badge-blue { background: #eff6ff; color: #1d4ed8; }
+.hr-badge-gray { background: #f3f4f6; color: #6b7280; }
+.hr-badge-purple { background: #f5f3ff; color: #7c3aed; }
+.hr-badge-pink { background: #fdf2f8; color: #be185d; }
+
+/* ===== Text Helpers ===== */
+.hr-text-red { color: #b91c1c; font-weight: 600; }
+.hr-text-green { color: #047857; font-weight: 600; }
+.hr-text-muted { color: #9ca3af; }
+.hr-text-bold { font-weight: 700; color: #111827; }
+
+/* ===== Employee Card ===== */
+.hr-employee-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.hr-employee-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.hr-employee-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hr-employee-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 13px;
+}
+
+.hr-employee-position {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.hr-employee-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ===== Performance Score ===== */
+.hr-score-bar {
+  width: 60px;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+.hr-score-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.hr-score-excellent { background: #10b981; }
+.hr-score-good { background: #3b82f6; }
+.hr-score-average { background: #f59e0b; }
+.hr-score-needs-improvement { background: #ef4444; }
+
+/* ===== Leave Balance Grid ===== */
+.hr-leave-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.hr-leave-card {
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.hr-leave-type {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+}
+
+.hr-leave-remaining {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.hr-leave-total {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* ===== Payroll Summary ===== */
+.hr-payroll-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.hr-payroll-card {
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  text-align: center;
+}
+
+.hr-payroll-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.hr-payroll-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 4px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .hr-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hr-leave-grid {
+    grid-template-columns: 1fr;
+  }
+  .hr-payroll-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .hr-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .hr-payroll-summary {
+    grid-template-columns: 1fr;
+  }
+}

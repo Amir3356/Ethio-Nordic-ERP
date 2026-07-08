@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, LogOut, User, Package, AlertTriangle, DollarSign } from 'lucide-react';
+import { Users, LogOut, User, Package, AlertTriangle, DollarSign, Briefcase } from 'lucide-react';
 import { authAPI } from '../services';
 import UserManagement from './User Management Sidebar/UserManagement/UserManagement';
 import Sessions from './User Management Sidebar/Sessions/Sessions';
@@ -8,6 +8,7 @@ import AuditTrailLogging from './User Management Sidebar/AuditTrailLogging/Audit
 import PeriodicAccessReview from './User Management Sidebar/PeriodicAccessReview/PeriodicAccessReview';
 import InventorySidebar from './Inventory Sidebar/InventorySidebar';
 import FinanceSidebar from './Finance Accounting Sidebar/FinanceSidebar';
+import HRSidebar from './Human Resource Sidebar/HRSidebar';
 import './AdminDashboardLayout.css';
 
 interface CurrentUser {
@@ -87,6 +88,18 @@ export default function Layout() {
                 <DollarSign size={16} /> Finance & Accounting
               </a>
             </li>
+            <li>
+              <a
+                href="#hr"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveSection('hr');
+                }}
+                className={activeSection === 'hr' ? 'active' : ''}
+              >
+                <Briefcase size={16} /> Human Resources
+              </a>
+            </li>
           </ul>
         </section>
 
@@ -133,6 +146,12 @@ export default function Layout() {
         {activeSection === 'finance' && (
           <section id="finance">
             <FinanceSidebar />
+          </section>
+        )}
+
+        {activeSection === 'hr' && (
+          <section id="hr">
+            <HRSidebar />
           </section>
         )}
       </main>
