@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, LogOut, User, Package, AlertTriangle, DollarSign, Briefcase } from 'lucide-react';
+import { Users, LogOut, Package, AlertTriangle, DollarSign, Briefcase } from 'lucide-react';
 import { authAPI } from '../services';
 import UserManagement from './User Management Sidebar/UserManagement/UserManagement';
 import Sessions from './User Management Sidebar/Sessions/Sessions';
@@ -105,8 +105,7 @@ export default function Layout() {
 
         <div className="sidebar-bottom">
           <a href="/profile" onClick={(e) => e.preventDefault()} className="sidebar-bottom-link">
-            <User size={16} />
-            <span>Profile</span>
+            <span>{currentUser?.name || currentUser?.full_name || 'Profile'}</span>
           </a>
           <button
             onClick={handleLogout}

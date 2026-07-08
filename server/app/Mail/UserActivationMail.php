@@ -35,6 +35,7 @@ class UserActivationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
             to: [new Address($this->user->email, $this->user->full_name)],
             subject: 'Welcome to Ethio Nordic Trading PLC - Activate Your Account',
         );
