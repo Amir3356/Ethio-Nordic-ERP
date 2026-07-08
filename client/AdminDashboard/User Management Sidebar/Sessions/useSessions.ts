@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { sessionAPI } from '../../../services';
+import { getBrowserLocation, updateSessionLocation } from '../../../services/geolocation';
 import { Session } from './types';
 
 const POLL_INTERVAL_MS = 30000; // 30 seconds for real-time updates
@@ -9,6 +10,7 @@ export function useSessions() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const locationUpdatedRef = useRef<Set<string>>(new Set());
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -25,10 +27,43 @@ export function useSessions() {
     }
   }, []);
 
+  // Get browser location and update current session
+  const updateLocationForSessions = useCallback(async (sessionList: Session[]) => {
+    const currentSession = sessionList.find(s => s.is_current);
+    if (!currentSession || locationUpdatedRef.current.has(currentSession.id)) {
+      return;
+    }
+
+    // Check if location is missing or is "Local Network" or "Local"
+    const needsUpdate = !currentSession.location ||
+      currentSession.location === 'Local Network' ||
+      currentSession.location === 'Local';
+
+    if (!needsUpdate) {
+      locationUpdatedRef.current.add(currentSession.id);
+      return;
+    }
+
+    const browserLocation = await getBrowserLocation();
+    if (browserLocation) {
+      locationUpdatedRef.current.add(currentSession.id);
+      await updateSessionLocation(currentSession.id, browserLocation);
+      // Refresh sessions to show updated location
+      await fetchSessions();
+    }
+  }, [fetchSessions]);
+
   // Initial fetch
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
+
+  // Update location when sessions are loaded
+  useEffect(() => {
+    if (sessions.length > 0) {
+      updateLocationForSessions(sessions);
+    }
+  }, [sessions, updateLocationForSessions]);
 
   // Real-time polling: refresh sessions every 30 seconds
   useEffect(() => {

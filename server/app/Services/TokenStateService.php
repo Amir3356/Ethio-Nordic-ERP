@@ -361,22 +361,7 @@ class TokenStateService
                 $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
             })
             ->get()
-            ->map(fn($token) => [
-                'id' => $token->id,
-                'user_id' => $user->id,
-                'user_name' => $user->full_name,
-                'user_email' => $user->email,
-                'token_name' => $token->name,
-                'ip_address' => $token->ip_address,
-                'user_agent' => $token->user_agent,
-                'device_type' => $token->device_type ?? 'Unknown',
-                'browser' => $token->browser ?? 'Unknown',
-                'platform' => $token->platform ?? 'Unknown',
-                'location' => $token->location,
-                'created_at' => $token->created_at?->toIso8601String(),
-                'expires_at' => $token->expires_at?->toIso8601String(),
-                'last_used_at' => $token->last_used_at?->toIso8601String(),
-            ])
+            ->map(fn($token) => $this->formatTokenToArray($token))
             ->toArray();
     }
 
@@ -399,23 +384,31 @@ class TokenStateService
         }
 
         return $query->get()
-            ->map(fn($token) => [
-                'id' => $token->id,
-                'user_id' => $token->tokenable_id,
-                'user_name' => $token->tokenable?->full_name,
-                'user_email' => $token->tokenable?->email,
-                'token_name' => $token->name,
-                'ip_address' => $token->ip_address,
-                'user_agent' => $token->user_agent,
-                'device_type' => $token->device_type ?? 'Unknown',
-                'browser' => $token->browser ?? 'Unknown',
-                'platform' => $token->platform ?? 'Unknown',
-                'location' => $token->location,
-                'created_at' => $token->created_at?->toIso8601String(),
-                'expires_at' => $token->expires_at?->toIso8601String(),
-                'last_used_at' => $token->last_used_at?->toIso8601String(),
-            ])
+            ->map(fn($token) => $this->formatTokenToArray($token))
             ->toArray();
+    }
+
+    /**
+     * Format a PersonalAccessToken model to a consistent session array structure.
+     */
+    private function formatTokenToArray($token): array
+    {
+        return [
+            'id' => $token->id,
+            'user_id' => $token->tokenable_id,
+            'user_name' => $token->tokenable?->full_name,
+            'user_email' => $token->tokenable?->email,
+            'token_name' => $token->name,
+            'ip_address' => $token->ip_address,
+            'user_agent' => $token->user_agent,
+            'device_type' => $token->device_type ?? 'Unknown',
+            'browser' => $token->browser ?? 'Unknown',
+            'platform' => $token->platform ?? 'Unknown',
+            'location' => $token->location,
+            'created_at' => $token->created_at?->toIso8601String(),
+            'expires_at' => $token->expires_at?->toIso8601String(),
+            'last_used_at' => $token->last_used_at?->toIso8601String(),
+        ];
     }
 
     private function parseDeviceType(?string $userAgent): string

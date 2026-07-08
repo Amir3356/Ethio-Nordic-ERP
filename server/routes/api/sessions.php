@@ -15,6 +15,9 @@ Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
         Route::put('/idle-timeout', [SessionController::class, 'updateIdleTimeout'])
             ->middleware('rbac:role:admin|role:super-admin');
 
+        // Update session location (users can update their own)
+        Route::put('/{tokenId}/location', [SessionController::class, 'updateLocation']);
+
         Route::middleware(['rbac:sessions.terminate'])->group(function () {
             Route::delete('/{tokenId}', [SessionController::class, 'destroy']);
             Route::post('/user/{userId}/terminate-all', [SessionController::class, 'destroyAllForUser']);

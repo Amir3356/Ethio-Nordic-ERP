@@ -32,17 +32,8 @@ class SessionController extends Controller
         $offset = ($page - 1) * $perPage;
         $items = array_slice($sessions, $offset, $perPage);
 
-        $enriched = array_map(fn($s) => [
-            'id' => $s['id'] ?? null,
-            'user_id' => $s['user_id'] ?? null,
-            'user_name' => $s['user_name'] ?? null,
-            'user_email' => $s['user_email'] ?? null,
-            'device_type' => $s['device_type'] ?? null,
-            'location' => $s['location'] ?? null,
-        ], $items);
-
         return $this->successResponse([
-            'data' => array_values($enriched),
+            'data' => array_values($this->formatSessions($items)),
             'current_page' => $page,
             'per_page' => $perPage,
             'total' => $total,
@@ -72,16 +63,7 @@ class SessionController extends Controller
     {
         $sessions = $this->tokenState->getAllSessions();
 
-        return $this->successResponse(
-            array_map(fn($s) => [
-                'id' => $s['id'] ?? null,
-                'user_id' => $s['user_id'] ?? null,
-                'user_name' => $s['user_name'] ?? null,
-                'user_email' => $s['user_email'] ?? null,
-                'device_type' => $s['device_type'] ?? null,
-                'location' => $s['location'] ?? null,
-            ], $sessions)
-        );
+        return $this->successResponse($this->formatSessions($sessions));
     }
 
     /**
@@ -135,5 +117,48 @@ class SessionController extends Controller
             'idle_timeout_minutes' => $minutes,
             'message' => "Idle session timeout updated to {$minutes} minutes. Changes take effect immediately.",
         ]);
+    }
+
+    /**
+     * Update session location (e.g., from browser geolocation).
+     * Allows users to update their own session location when IP-based geolocation fails.
+     */
+    public function updateLocation(Request $request, string $tokenId): JsonResponse
+    {
+        $request->validate([
+            'location' => 'required|string|max:255',
+        ]);
+
+        $token = \Laravel\Sanctum\PersonalAccessToken::find($tokenId);
+        if (!$token) {
+            return $this->errorResponse('Session not found.', 404);
+        }
+
+        // Only allow users to update their own session location
+        if ($token->tokenable_id !== $request->user()->id) {
+            return $this->errorResponse('Unauthorized to update this session.', 403);
+        }
+
+        $this->tokenState->updateSessionLocation($tokenId, $request->location);
+
+        // Also persist to database
+        $token->update(['location' => $request->location]);
+
+        return $this->successResponse(null, 'Session location updated successfully.');
+    }
+
+    /**
+     * Format sessions array to consistent API response structure.
+     */
+    private function formatSessions(array $sessions): array
+    {
+        return array_map(fn($s) => [
+            'id' => $s['id'] ?? null,
+            'user_id' => $s['user_id'] ?? null,
+            'user_name' => $s['user_name'] ?? null,
+            'user_email' => $s['user_email'] ?? null,
+            'device_type' => $s['device_type'] ?? null,
+            'location' => $s['location'] ?? null,
+        ], $sessions);
     }
 }
