@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { auditLogAPI } from '../../../../services';
 import { AuditLog } from '../types';
-import { filterLogs } from '../utils';
 
 export function useAuditLogs() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('');
 
   const fetchAuditLogs = useCallback(async () => {
     try {
@@ -28,15 +26,10 @@ export function useAuditLogs() {
     fetchAuditLogs();
   }, [fetchAuditLogs]);
 
-  const filteredLogs = filterLogs(auditLogs, filter);
-
   return {
     auditLogs,
-    filteredLogs,
     loading,
     error,
-    filter,
-    setFilter,
     fetchAuditLogs,
   };
 }

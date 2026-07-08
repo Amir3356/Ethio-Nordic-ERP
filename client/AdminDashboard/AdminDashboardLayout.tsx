@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, LogOut, User, Package, AlertTriangle } from 'lucide-react';
+import { Users, LogOut, User, Package, AlertTriangle, DollarSign } from 'lucide-react';
 import { authAPI } from '../services';
 import UserManagement from './User Management Sidebar/UserManagement/UserManagement';
 import Sessions from './User Management Sidebar/Sessions/Sessions';
 import AuditTrailLogging from './User Management Sidebar/AuditTrailLogging/AuditTrailLogging';
 import PeriodicAccessReview from './User Management Sidebar/PeriodicAccessReview/PeriodicAccessReview';
 import InventorySidebar from './Inventory Sidebar/InventorySidebar';
+import FinanceSidebar from './Finance Accounting Sidebar/FinanceSidebar';
 import './AdminDashboardLayout.css';
 
 interface CurrentUser {

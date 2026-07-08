@@ -8,7 +8,7 @@ export default function UserSearch({ value, onChange }: UserSearchProps) {
     <div className="content-search">
       <input
         type="text"
-        placeholder="Search users..."
+        placeholder="Search Fullname or email..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="content-search-input"
