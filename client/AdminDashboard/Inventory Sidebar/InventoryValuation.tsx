@@ -1,0 +1,131 @@
+import { useMemo } from 'react';
+import { DollarSign } from 'lucide-react';
+import type { useInventory } from './hooks';
+
+type InventoryHook = ReturnType<typeof useInventory>;
+
+interface Props {
+  inventory: InventoryHook;
+}
+
+export default function InventoryValuation({ inventory }: Props) {
+  const { data, getProduct, getWarehouse, getInventoryValue } = inventory;
+
+  const valuationByProduct = useMemo(() => {
+    if (!data) return [];
+    return data.products.map((product) => {
+      const batches = data.stock_batches.filter(
+        (b) => b.product_id === product.id && b.status === 'active'
+      );
+      const totalQuantity = batches.reduce((sum, b) => sum + b.quantity, 0);
+      const totalValue = batches.reduce((sum, b) => sum + b.quantity * b.unit_cost, 0);
+      const avgCost = totalQuantity > 0 ? totalValue / totalQuantity : 0;
+      return { product, totalQuantity, totalValue, avgCost, batchCount: batches.length };
+    }).filter((v) => v.totalQuantity > 0);
+  }, [data]);
+
+  const valuationByWarehouse = useMemo(() => {
+    if (!data) return [];
+    return data.warehouses.map((warehouse) => {
+      const batches = data.stock_batches.filter(
+        (b) => b.warehouse_id === warehouse.id && b.status === 'active'
+      );
+      const totalQuantity = batches.reduce((sum, b) => sum + b.quantity, 0);
+      const totalValue = batches.reduce((sum, b) => sum + b.quantity * b.unit_cost, 0);
+      return { warehouse, totalQuantity, totalValue, batchCount: batches.length };
+    });
+  }, [data]);
+
+  const totalValue = getInventoryValue();
+
+  if (!data) return null;
+
+  return (
+    <div className="inv-section">
+      <h3 className="inv-section-title">Inventory Valuation</h3>
+      <div className="inv-description">
+        FIFO/FEFO-based costing for financial reporting. Cost-of-goods-sold is matched to specific batches consumed.
+      </div>
+
+      <div className="inv-valuation-total">
+        <DollarSign size={24} />
+        <div>
+          <span className="inv-valuation-total-value">
+            ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+          <span className="inv-valuation-total-label">Total Inventory Value</span>
+        </div>
+      </div>
+
+      <h4 className="inv-subsection-title">Valuation by Product</h4>
+      <div className="inv-table-wrapper">
+        <table className="inv-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Category</th>
+              <th>Method</th>
+              <th>Batches</th>
+              <th>Total Qty</th>
+              <th>Avg Unit Cost</th>
+              <th>Total Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {valuationByProduct
+              .sort((a, b) => b.totalValue - a.totalValue)
+              .map(({ product, totalQuantity, totalValue, avgCost, batchCount }) => (
+                <tr key={product.id}>
+                  <td className="inv-table-name">{product.name}</td>
+                  <td>{product.sku}</td>
+                  <td>{product.category}</td>
+                  <td>
+                    <span className={`inv-badge ${product.fifo_fefo === 'FEFO' ? 'inv-badge-green' : 'inv-badge-blue'}`}>
+                      {product.fifo_fefo}
+                    </span>
+                  </td>
+                  <td>{batchCount}</td>
+                  <td>{totalQuantity.toLocaleString()}</td>
+                  <td>${avgCost.toFixed(2)}</td>
+                  <td className="inv-text-bold">
+                    ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h4 className="inv-subsection-title">Valuation by Warehouse</h4>
+      <div className="inv-table-wrapper">
+        <table className="inv-table">
+          <thead>
+            <tr>
+              <th>Warehouse</th>
+              <th>City</th>
+              <th>Batches</th>
+              <th>Total Qty</th>
+              <th>Total Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {valuationByWarehouse
+              .sort((a, b) => b.totalValue - a.totalValue)
+              .map(({ warehouse, totalQuantity, totalValue, batchCount }) => (
+                <tr key={warehouse.id}>
+                  <td className="inv-table-name">{warehouse.name}</td>
+                  <td>{warehouse.city}</td>
+                  <td>{batchCount}</td>
+                  <td>{totalQuantity.toLocaleString()}</td>
+                  <td className="inv-text-bold">
+                    ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
