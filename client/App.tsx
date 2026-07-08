@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './AdminDashboard/AdminDashboardLayout';
+import Layout from './Dashboard/AdminDashboardLayout';
 import Login from './login/Login';
 import Logout from './login/Logout';
 import ActivateAccount from './login/ActivateAccount';
