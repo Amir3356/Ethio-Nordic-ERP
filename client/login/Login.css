@@ -139,6 +139,24 @@
   flex-shrink: 0;
 }
 
+/* ── 2FA Setup Inline ── */
+.tfa-scan-section {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.tfa-scan-icon {
+  margin-bottom: 0.5rem;
+}
+
+.form-hint {
+  display: block;
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 6px;
+  text-align: center;
+}
+
 /* ── Button ── */
 .login-btn {
   width: 100%;

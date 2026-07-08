@@ -14,6 +14,8 @@ export function useLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [requiresTwoFactorSetup, setRequiresTwoFactorSetup] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -27,8 +29,15 @@ export function useLogin() {
     setLoading(true);
 
     try {
-      const response = await authAPI.login(email, password, confirmPassword, requiresTwoFactor ? twoFactorCode : null);
+      const response = await authAPI.login(email, password, confirmPassword, requiresTwoFactor || requiresTwoFactorSetup ? twoFactorCode : null);
       const data = response.data;
+
+      if (data.requires_2fa_setup) {
+        setRequiresTwoFactorSetup(true);
+        setQrCodeUrl(data.qr_code_url || '');
+        setLoading(false);
+        return;
+      }
 
       if (data.requires_2fa) {
         setRequiresTwoFactor(true);
@@ -43,6 +52,7 @@ export function useLogin() {
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
       setRequiresTwoFactor(false);
+      setRequiresTwoFactorSetup(false);
       setTwoFactorCode('');
     } finally {
       setLoading(false);
@@ -51,7 +61,9 @@ export function useLogin() {
 
   const resetTwoFactor = () => {
     setRequiresTwoFactor(false);
+    setRequiresTwoFactorSetup(false);
     setTwoFactorCode('');
+    setQrCodeUrl('');
     setError('');
   };
 
@@ -71,6 +83,8 @@ export function useLogin() {
     showConfirmPassword,
     setShowConfirmPassword,
     requiresTwoFactor,
+    requiresTwoFactorSetup,
+    qrCodeUrl,
     handleLogin,
     resetTwoFactor,
   };

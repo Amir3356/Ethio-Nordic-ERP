@@ -114,7 +114,46 @@ class AuthController extends Controller
             return $this->errorResponse('Your temporary password has expired. Please contact administrator for a new one.', 403);
         }
 
-        // Handle 2FA verification
+        // Force 2FA setup for admin users who don't have it yet
+        if ($user->isAdmin() && !$user->hasTwoFactorEnabled()) {
+            if (!$request->two_factor_code) {
+                $twoFactorSecret = $user->twoFactorSecret;
+
+                if (!$twoFactorSecret) {
+                    $google2fa = new \PragmaRX\Google2FA\Google2FA();
+                    $secret = $google2fa->generateSecretKey();
+                    $recoveryCodes = $this->generateRecoveryCodes();
+
+                    $twoFactorSecret = \App\Models\TwoFactorSecret::create([
+                        'user_id' => $user->id,
+                        'secret' => $secret,
+                        'recovery_codes' => json_encode($recoveryCodes),
+                        'is_enabled' => false,
+                    ]);
+                }
+
+                $qrCodeUrl = $this->generateQrCodeUrl($user->email, $twoFactorSecret->getDecryptedSecret());
+
+                return $this->successResponse([
+                    'requires_2fa_setup' => true,
+                    'secret' => $twoFactorSecret->getDecryptedSecret(),
+                    'qr_code_url' => $qrCodeUrl,
+                    'recovery_codes' => json_decode($twoFactorSecret->recovery_codes),
+                ], 'Scan the QR code with your authenticator app to set up two-factor authentication.', 202);
+            }
+
+            if (!$this->verifyTwoFactorCode($user, $request->two_factor_code)) {
+                $this->logLoginAttempt($request, $user, 'failed', 'Invalid 2FA code');
+                return $this->errorResponse('Invalid two-factor authentication code.', 401);
+            }
+
+            $user->twoFactorSecret->update([
+                'is_enabled' => true,
+                'enabled_at' => now(),
+            ]);
+        }
+
+        // Handle existing 2FA verification
         if ($user->hasTwoFactorEnabled()) {
             if (!$request->two_factor_code) {
                 return $this->successResponse([
