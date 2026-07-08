@@ -15,7 +15,6 @@ export default function Sessions() {
     <section className="content-section" id="sessions">
       <div className="content-section-header content-section-header-center">
         <h2> Sessions</h2>
-        <span className="session-refresh-indicator">Auto-refreshing every 30s</span>
       </div>
 
       {error && (
