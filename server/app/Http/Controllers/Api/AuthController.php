@@ -40,13 +40,12 @@ class AuthController extends Controller
             'confirm_password' => 'required|string',
         ]);
 
-        // Validate passwords match
         if ($request->password !== $request->confirm_password) {
             return $this->errorResponse('Passwords do not match.', 422);
         }
 
-        // Decode the token (base64 encoded email)
-        $email = base64_decode($request->token, true);
+        $email = str_replace(' ', '+', $request->token);
+        $email = base64_decode($email, true);
 
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->errorResponse('Invalid activation token.', 422);
@@ -62,7 +61,6 @@ class AuthController extends Controller
             return $this->errorResponse('Account is already activated.', 422);
         }
 
-        // Activate user and set permanent password
         $user->update([
             'password' => Hash::make($request->password),
             'confirm_password' => Hash::make($request->confirm_password),
@@ -386,7 +384,8 @@ class AuthController extends Controller
             'token' => 'required|string',
         ]);
 
-        $email = base64_decode($request->token, true);
+        $email = str_replace(' ', '+', $request->token);
+        $email = base64_decode($email, true);
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->errorResponse('Invalid token.', 422);
         }
@@ -442,7 +441,8 @@ class AuthController extends Controller
             'two_factor_code' => 'required|string|size:6',
         ]);
 
-        $email = base64_decode($request->token, true);
+        $email = str_replace(' ', '+', $request->token);
+        $email = base64_decode($email, true);
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->errorResponse('Invalid token.', 422);
         }
@@ -478,7 +478,8 @@ class AuthController extends Controller
             'token' => 'required|string',
         ]);
 
-        $email = base64_decode($request->token, true);
+        $email = str_replace(' ', '+', $request->token);
+        $email = base64_decode($email, true);
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->errorResponse('Invalid token.', 422);
         }

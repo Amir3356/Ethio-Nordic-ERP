@@ -27,11 +27,15 @@ export default function DamagedGoods({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <div className="inv-section">
-      <h3 className="inv-section-title">Damaged Goods</h3>
-      <div className="inv-description">
-        Structured logging and disposition of damaged or rejected stock.
+    <section className="content-section" id="damaged">
+      <div className="content-section-header">
+        <h2>Damaged Goods</h2>
       </div>
+
+      <p className="content-description">
+        Structured logging and disposition of damaged or rejected stock.
+      </p>
+
       <div className="inv-table-wrapper">
         <table className="inv-table">
           <thead>
@@ -83,6 +87,6 @@ export default function DamagedGoods({ inventory }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

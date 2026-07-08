@@ -102,13 +102,3 @@ export interface InventoryData {
   reorder_rules: ReorderRule[];
   damaged_goods: DamagedGood[];
 }
-
-export type InventorySection =
-  | 'overview'
-  | 'batches'
-  | 'movements'
-  | 'adjustments'
-  | 'reorder'
-  | 'damaged'
-  | 'expiry'
-  | 'valuation';

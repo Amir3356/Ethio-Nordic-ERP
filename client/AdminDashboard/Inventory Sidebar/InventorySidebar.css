@@ -1,0 +1,381 @@
+/* ===== Content Area ===== */
+.inv-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.inv-loading,
+.inv-error {
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.inv-error {
+  color: #b91c1c;
+}
+
+/* ===== Subsection Title ===== */
+.inv-subsection-title {
+  margin: 24px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== Stats Grid (Overview) ===== */
+.inv-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.inv-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.inv-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.inv-stat-icon-blue { background: #eff6ff; color: #2563eb; }
+.inv-stat-icon-green { background: #ecfdf5; color: #059669; }
+.inv-stat-icon-purple { background: #f5f3ff; color: #7c3aed; }
+.inv-stat-icon-amber { background: #fffbeb; color: #d97706; }
+.inv-stat-icon-red { background: #fef2f2; color: #dc2626; }
+.inv-stat-icon-orange { background: #fff7ed; color: #ea580c; }
+.inv-stat-icon-teal { background: #f0fdfa; color: #0d9488; }
+.inv-stat-icon-indigo { background: #eef2ff; color: #4f46e5; }
+
+.inv-stat-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.inv-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.inv-stat-label {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ===== Toolbar ===== */
+.inv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.inv-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  flex: 1;
+  max-width: 360px;
+}
+
+.inv-search svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.inv-search input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #111827;
+  width: 100%;
+  background: transparent;
+}
+
+.inv-filter-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+  color: #374151;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.inv-filter-select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* ===== Table ===== */
+.inv-table-wrapper {
+  overflow-x: auto;
+}
+
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.inv-table thead tr {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.inv-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.inv-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.inv-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.inv-table-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.inv-empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 32px 14px !important;
+}
+
+/* ===== Badges ===== */
+.inv-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.inv-badge-green { background: #ecfdf5; color: #047857; }
+.inv-badge-red { background: #fef2f2; color: #b91c1c; }
+.inv-badge-amber { background: #fffbeb; color: #b45309; }
+.inv-badge-blue { background: #eff6ff; color: #1d4ed8; }
+.inv-badge-gray { background: #f3f4f6; color: #6b7280; }
+
+/* ===== Text helpers ===== */
+.inv-text-red { color: #b91c1c; font-weight: 600; }
+.inv-text-green { color: #047857; font-weight: 600; }
+.inv-text-muted { color: #9ca3af; }
+.inv-text-bold { font-weight: 700; color: #111827; }
+.inv-text-truncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Alerts ===== */
+.inv-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.inv-alert-card {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.inv-alert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.inv-alert-product {
+  font-weight: 600;
+  color: #111827;
+  font-size: 13px;
+}
+
+.inv-alert-details {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.inv-alert-warehouses {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.inv-alert-wh {
+  background: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+.inv-alert-ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* ===== Expiry Summary ===== */
+.inv-expiry-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.inv-expiry-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.inv-expiry-critical {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.inv-expiry-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.inv-expiry-watch {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.inv-expiry-count {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.inv-expiry-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.8;
+}
+
+/* ===== Photo Count ===== */
+.inv-photo-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ===== Valuation Total ===== */
+.inv-valuation-total {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  margin-bottom: 24px;
+}
+
+.inv-valuation-total svg {
+  flex-shrink: 0;
+}
+
+.inv-valuation-total-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.inv-valuation-total-label {
+  display: block;
+  font-size: 12px;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .inv-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .inv-expiry-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .inv-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

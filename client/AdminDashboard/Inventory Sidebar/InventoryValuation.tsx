@@ -41,11 +41,14 @@ export default function InventoryValuation({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <div className="inv-section">
-      <h3 className="inv-section-title">Inventory Valuation</h3>
-      <div className="inv-description">
-        FIFO/FEFO-based costing for financial reporting. Cost-of-goods-sold is matched to specific batches consumed.
+    <section className="content-section" id="valuation">
+      <div className="content-section-header">
+        <h2>Inventory Valuation</h2>
       </div>
+
+      <p className="content-description">
+        FIFO/FEFO-based costing for financial reporting. Cost-of-goods-sold is matched to specific batches consumed.
+      </p>
 
       <div className="inv-valuation-total">
         <DollarSign size={24} />
@@ -57,7 +60,7 @@ export default function InventoryValuation({ inventory }: Props) {
         </div>
       </div>
 
-      <h4 className="inv-subsection-title">Valuation by Product</h4>
+      <h3 className="inv-subsection-title">Valuation by Product</h3>
       <div className="inv-table-wrapper">
         <table className="inv-table">
           <thead>
@@ -97,7 +100,7 @@ export default function InventoryValuation({ inventory }: Props) {
         </table>
       </div>
 
-      <h4 className="inv-subsection-title">Valuation by Warehouse</h4>
+      <h3 className="inv-subsection-title">Valuation by Warehouse</h3>
       <div className="inv-table-wrapper">
         <table className="inv-table">
           <thead>
@@ -126,6 +129,6 @@ export default function InventoryValuation({ inventory }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

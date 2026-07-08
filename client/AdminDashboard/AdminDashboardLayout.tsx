@@ -6,6 +6,7 @@ import UserManagement from './User Management Sidebar/UserManagement/UserManagem
 import Sessions from './User Management Sidebar/Sessions/Sessions';
 import AuditTrailLogging from './User Management Sidebar/AuditTrailLogging/AuditTrailLogging';
 import PeriodicAccessReview from './User Management Sidebar/PeriodicAccessReview/PeriodicAccessReview';
+import InventorySidebar from './Inventory Sidebar/InventorySidebar';
 import './AdminDashboardLayout.css';
 
 interface CurrentUser {
@@ -111,11 +112,8 @@ export default function Layout() {
         )}
 
         {activeSection === 'inventory' && (
-          <section className="content-section" id="inventory">
-            <div className="content-section-header">
-              <h2>Inventory Management</h2>
-            </div>
-            <p className="content-description">Inventory management features coming soon.</p>
+          <section id="inventory">
+            <InventorySidebar />
           </section>
         )}
       </main>

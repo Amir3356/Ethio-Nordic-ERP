@@ -30,11 +30,14 @@ export default function ExpiryMonitor({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <div className="inv-section">
-      <h3 className="inv-section-title">Expiry Monitoring</h3>
-      <div className="inv-description">
-        Batch-level expiry tracking with escalating alerts. FEFO enforcement ensures earliest-expiring batches are allocated first.
+    <section className="content-section" id="expiry">
+      <div className="content-section-header">
+        <h2>Expiry Monitor</h2>
       </div>
+
+      <p className="content-description">
+        Batch-level expiry tracking with escalating alerts. FEFO enforcement ensures earliest-expiring batches are allocated first.
+      </p>
 
       <div className="inv-expiry-summary">
         <div className="inv-expiry-card inv-expiry-critical">
@@ -62,7 +65,7 @@ export default function ExpiryMonitor({ inventory }: Props) {
 
       {expiring90.length > 0 && (
         <>
-          <h4 className="inv-subsection-title">Batches Expiring Within 90 Days</h4>
+          <h3 className="inv-subsection-title">Batches Expiring Within 90 Days</h3>
           <div className="inv-table-wrapper">
             <table className="inv-table">
               <thead>
@@ -106,6 +109,6 @@ export default function ExpiryMonitor({ inventory }: Props) {
           <Clock size={16} /> No batches expiring within the next 90 days.
         </div>
       )}
-    </div>
+    </section>
   );
 }

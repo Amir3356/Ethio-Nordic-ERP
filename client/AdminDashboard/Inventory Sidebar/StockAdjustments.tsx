@@ -28,11 +28,15 @@ export default function StockAdjustments({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <div className="inv-section">
-      <h3 className="inv-section-title">Stock Adjustments</h3>
-      <div className="inv-description">
-        Controlled, approval-gated stock corrections with full audit trail.
+    <section className="content-section" id="adjustments">
+      <div className="content-section-header">
+        <h2>Stock Adjustments</h2>
       </div>
+
+      <p className="content-description">
+        Controlled, approval-gated stock corrections with full audit trail.
+      </p>
+
       <div className="inv-table-wrapper">
         <table className="inv-table">
           <thead>
@@ -84,6 +88,6 @@ export default function StockAdjustments({ inventory }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

@@ -21,17 +21,20 @@ export default function ReorderAlerts({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <div className="inv-section">
-      <h3 className="inv-section-title">Reorder Level Monitoring</h3>
-      <div className="inv-description">
-        Automated low-stock notifications when inventory falls below configured reorder thresholds.
+    <section className="content-section" id="reorder">
+      <div className="content-section-header">
+        <h2>Reorder Alerts</h2>
       </div>
+
+      <p className="content-description">
+        Automated low-stock notifications when inventory falls below configured reorder thresholds.
+      </p>
 
       {lowStockProducts.length > 0 && (
         <>
-          <h4 className="inv-subsection-title">
+          <h3 className="inv-subsection-title">
             <AlertTriangle size={16} /> Active Alerts ({lowStockProducts.length})
-          </h4>
+          </h3>
           <div className="inv-alert-list">
             {lowStockProducts.map(({ product, totalStock, warehouseStocks }) => (
               <div key={product.id} className="inv-alert-card">
@@ -64,7 +67,7 @@ export default function ReorderAlerts({ inventory }: Props) {
         </div>
       )}
 
-      <h4 className="inv-subsection-title">Reorder Rules Configuration</h4>
+      <h3 className="inv-subsection-title">Reorder Rules Configuration</h3>
       <div className="inv-table-wrapper">
         <table className="inv-table">
           <thead>
@@ -101,6 +104,6 @@ export default function ReorderAlerts({ inventory }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

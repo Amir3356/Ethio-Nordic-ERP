@@ -30,7 +30,11 @@ export default function InventoryOverview({ inventory }: Props) {
   if (!stats) return null;
 
   return (
-    <div className="inv-overview">
+    <section className="content-section" id="overview">
+      <div className="content-section-header">
+        <h2>Inventory Overview</h2>
+      </div>
+
       <div className="inv-stats-grid">
         <div className="inv-stat-card">
           <div className="inv-stat-icon inv-stat-icon-blue"><Package size={20} /></div>
@@ -90,38 +94,36 @@ export default function InventoryOverview({ inventory }: Props) {
         </div>
       </div>
 
-      <div className="inv-section">
-        <h3 className="inv-section-title">Warehouse Summary</h3>
-        <div className="inv-table-wrapper">
-          <table className="inv-table">
-            <thead>
-              <tr>
-                <th>Warehouse</th>
-                <th>City</th>
-                <th>Manager</th>
-                <th>Capacity (sqm)</th>
-                <th>Active Batches</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data!.warehouses.map((wh) => {
-                const batchCount = data!.stock_batches.filter(
-                  (b) => b.warehouse_id === wh.id && b.status === 'active'
-                ).length;
-                return (
-                  <tr key={wh.id}>
-                    <td className="inv-table-name">{wh.name}</td>
-                    <td>{wh.city}</td>
-                    <td>{wh.manager}</td>
-                    <td>{wh.capacity_sqm.toLocaleString()}</td>
-                    <td>{batchCount}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <h3 className="inv-subsection-title">Warehouse Summary</h3>
+      <div className="inv-table-wrapper">
+        <table className="inv-table">
+          <thead>
+            <tr>
+              <th>Warehouse</th>
+              <th>City</th>
+              <th>Manager</th>
+              <th>Capacity (sqm)</th>
+              <th>Active Batches</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data!.warehouses.map((wh) => {
+              const batchCount = data!.stock_batches.filter(
+                (b) => b.warehouse_id === wh.id && b.status === 'active'
+              ).length;
+              return (
+                <tr key={wh.id}>
+                  <td className="inv-table-name">{wh.name}</td>
+                  <td>{wh.city}</td>
+                  <td>{wh.manager}</td>
+                  <td>{wh.capacity_sqm.toLocaleString()}</td>
+                  <td>{batchCount}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
   );
 }

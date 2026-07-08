@@ -38,8 +38,11 @@ export default function StockBatches({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <div className="inv-section">
-      <h3 className="inv-section-title">Stock Batches</h3>
+    <section className="content-section" id="batches">
+      <div className="content-section-header">
+        <h2>Stock Batches</h2>
+      </div>
+
       <div className="inv-toolbar">
         <div className="inv-search">
           <Search size={16} />
@@ -61,6 +64,7 @@ export default function StockBatches({ inventory }: Props) {
           ))}
         </select>
       </div>
+
       <div className="inv-table-wrapper">
         <table className="inv-table">
           <thead>
@@ -98,6 +102,6 @@ export default function StockBatches({ inventory }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

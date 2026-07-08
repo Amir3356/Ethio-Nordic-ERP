@@ -46,8 +46,11 @@ export default function StockMovements({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <div className="inv-section">
-      <h3 className="inv-section-title">Stock Movements</h3>
+    <section className="content-section" id="movements">
+      <div className="content-section-header">
+        <h2>Stock Movements</h2>
+      </div>
+
       <div className="inv-toolbar">
         <div className="inv-search">
           <Search size={16} />
@@ -71,6 +74,7 @@ export default function StockMovements({ inventory }: Props) {
           <option value="adjustment">Adjustment</option>
         </select>
       </div>
+
       <div className="inv-table-wrapper">
         <table className="inv-table">
           <thead>
@@ -112,6 +116,6 @@ export default function StockMovements({ inventory }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

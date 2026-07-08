@@ -3,10 +3,23 @@ export const getQrCodeDataUrl = (url: string): string => {
 };
 
 export const getAuthErrorMessage = (err: unknown): string => {
-  const axiosErr = err as { response?: { data?: { message?: string; error?: string } } };
-  return (
-    axiosErr.response?.data?.message ||
-    axiosErr.response?.data?.error ||
-    'An error occurred. Please try again.'
-  );
+  const axiosErr = err as { response?: { data?: { message?: string; error?: string; errors?: unknown } } };
+  const responseData = axiosErr.response?.data;
+  const message =
+    responseData?.message ||
+    responseData?.error ||
+    '';
+
+  if (message) {
+    return message;
+  }
+
+  if (responseData?.errors && typeof responseData.errors === 'object') {
+    const firstError = Object.values(responseData.errors)[0];
+    if (Array.isArray(firstError) && firstError[0]) {
+      return String(firstError[0]);
+    }
+  }
+
+  return 'An error occurred. Please try again.';
 };
