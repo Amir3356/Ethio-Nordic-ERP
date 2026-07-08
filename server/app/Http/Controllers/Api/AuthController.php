@@ -426,6 +426,12 @@ class AuthController extends Controller
 
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
 
+        \Log::info('2FA setup onboarding', [
+            'user_id' => $user->id,
+            'secret_first_4' => substr($secret, 0, 4),
+            'qr_code_url' => $qrCodeUrl,
+        ]);
+
         return $this->successResponse([
             'secret' => $secret,
             'qr_code_url' => $qrCodeUrl,
@@ -771,7 +777,7 @@ class AuthController extends Controller
         $serverTimeHuman = now()->toDateTimeString();
 
         try {
-            $result = $google2fa->verifyKey($secret, $code, 8);
+            $result = $google2fa->verifyKey($secret, $code, 56);
         } catch (\Throwable $e) {
             \Log::error('2FA verify: verifyKey failed for user ' . $user->id . ': ' . $e->getMessage());
             return false;
