@@ -216,7 +216,6 @@ class RolePermissionSeeder extends Seeder
                 'full_name' => 'Admin',
                 'department' => 'IT',
                 'password' => Hash::make('AEHJSS36'),
-                'confirm_password' => Hash::make('AEHJSS36'),
                 'is_active' => true,
                 'email_verified_at' => now(),
             ]

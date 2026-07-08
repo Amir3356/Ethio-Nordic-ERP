@@ -96,7 +96,6 @@ class UserController extends Controller
                 'email' => $request->email,
                 'department' => $request->department,
                 'password' => Hash::make($tempPassword),
-                'confirm_password' => Hash::make($tempPassword),
                 'is_active' => false,
                 'temp_password_expires_at' => now()->addDays(7),
             ]);

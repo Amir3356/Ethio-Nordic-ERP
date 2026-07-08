@@ -29,6 +29,7 @@ export default function UserManagement() {
     handleCreateUser,
     handleDeleteUser,
     handleEditUser,
+    handleToggleActive,
     handleUpdateUser,
     openNewUserForm,
     closeNewUserForm,
@@ -125,6 +126,7 @@ export default function UserManagement() {
         users={filteredUsers}
         onEdit={handleEditUser}
         onDelete={handleDeleteUser}
+        onToggleActive={handleToggleActive}
       />
     </section>
   );

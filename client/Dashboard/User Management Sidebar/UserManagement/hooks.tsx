@@ -118,6 +118,26 @@ export function useUserManagement() {
     }
   };
 
+  const handleToggleActive = async (user: User) => {
+    const action = user.is_active ? 'deactivate' : 'activate';
+    if (!window.confirm(`Are you sure you want to ${action} this user? All active sessions will be terminated.`)) return;
+
+    try {
+      setLoading(true);
+      if (user.is_active) {
+        await userAPI.deactivate(user.id);
+      } else {
+        await userAPI.activate(user.id);
+      }
+      await fetchUsers();
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.message || `Failed to ${action} user`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEditUser = (user: User) => {
     setEditUser({
       id: user.id,
@@ -208,6 +228,7 @@ export function useUserManagement() {
     handleCreateUser,
     handleDeleteUser,
     handleEditUser,
+    handleToggleActive,
     handleUpdateUser,
     openNewUserForm,
     closeNewUserForm,

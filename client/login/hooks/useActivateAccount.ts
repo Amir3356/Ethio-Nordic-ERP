@@ -9,9 +9,7 @@ export function useActivateAccount() {
   const token = searchParams.get('token');
 
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -33,16 +31,10 @@ export function useActivateAccount() {
     e.preventDefault();
     setError('');
 
-    // Validate confirm password matches
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please re-enter your password.');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      await api.post('/auth/activate', { token, password, confirm_password: confirmPassword });
+      await api.post('/auth/activate', { token, password });
       setSuccess(true);
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
@@ -55,12 +47,8 @@ export function useActivateAccount() {
     token,
     password,
     setPassword,
-    confirmPassword,
-    setConfirmPassword,
     showPassword,
     setShowPassword,
-    showConfirmPassword,
-    setShowConfirmPassword,
     error,
     loading,
     success,

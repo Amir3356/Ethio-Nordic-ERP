@@ -13,16 +13,12 @@ export default function Login() {
     setEmail,
     password,
     setPassword,
-    confirmPassword,
-    setConfirmPassword,
     twoFactorCode,
     setTwoFactorCode,
     error,
     loading,
     showPassword,
     setShowPassword,
-    showConfirmPassword,
-    setShowConfirmPassword,
     requiresTwoFactor,
     requiresTwoFactorSetup,
     qrCodeUrl,
@@ -66,17 +62,6 @@ export default function Login() {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <PasswordInput
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={setConfirmPassword}
-                showPassword={showConfirmPassword}
-                onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-                placeholder="Re-enter your password"
-              />
-            </div>
           </>
         )}
 

@@ -212,10 +212,10 @@
 
 .content-search-input {
   width: 100%;
-  max-width: 320px;
+  max-width: 400px;
   padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  border: 0.5px solid #e5e7eb;
   font-size: 14px;
   color: #111827;
 }

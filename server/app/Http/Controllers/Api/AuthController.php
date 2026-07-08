@@ -37,12 +37,7 @@ class AuthController extends Controller
                 ->mixedCase()
                 ->numbers()
                 ->symbols()],
-            'confirm_password' => 'required|string',
         ]);
-
-        if ($request->password !== $request->confirm_password) {
-            return $this->errorResponse('Passwords do not match.', 422);
-        }
 
         $email = $this->decodeEmailFromToken($request);
 
@@ -63,7 +58,6 @@ class AuthController extends Controller
 
         $user->update([
             'password' => Hash::make($request->password),
-            'confirm_password' => Hash::make($request->confirm_password),
             'is_active' => true,
             'temp_password_expires_at' => null,
             'email_verified_at' => now(),
@@ -73,14 +67,13 @@ class AuthController extends Controller
     }
 
     /**
-     * Login with email, password, and confirm_password
+     * Login with email and password
      */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
-            'confirm_password' => 'required|string',
             'two_factor_code' => 'nullable|string|size:6',
         ]);
 
@@ -89,12 +82,6 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             $this->logLoginAttempt($request, $user, 'failed', 'Invalid credentials');
             return $this->errorResponse('Invalid credentials.', 401);
-        }
-
-        // Validate confirm_password matches password
-        if (!Hash::check($request->confirm_password, $user->password)) {
-            $this->logLoginAttempt($request, $user, 'failed', 'Confirm password mismatch');
-            return $this->errorResponse('Passwords do not match. Please re-enter your password.', 401);
         }
 
         if (!$user->is_active) {
@@ -171,7 +158,6 @@ class AuthController extends Controller
             'email' => $request->email,
             'department' => $request->department,
             'password' => Hash::make($tempPassword),
-            'confirm_password' => Hash::make($tempPassword),
             'is_active' => false,
             'temp_password_expires_at' => now()->addDays(7),
         ]);
@@ -252,7 +238,6 @@ class AuthController extends Controller
 
         $user->update([
             'password' => Hash::make($request->password),
-            'confirm_password' => Hash::make($request->password),
             'temp_password_expires_at' => null,
         ]);
 

@@ -360,6 +360,13 @@
   background: #f9fafb;
 }
 
+.content-table td.content-table-number {
+  width: 40px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
 .content-table-name {
   font-weight: 600;
   color: #111827;
@@ -503,6 +510,8 @@
 .content-btn-delete:hover {
   background: #fee2e2;
 }
+
+
 
 .content-loading {
   margin: 0;

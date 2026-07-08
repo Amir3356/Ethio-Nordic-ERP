@@ -18,7 +18,6 @@ class User extends Authenticatable
         'email',
         'department',
         'password',
-        'confirm_password',
         'is_active',
         'email_verified_at',
         'temp_password_expires_at',
@@ -27,7 +26,6 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password',
-        'confirm_password',
         'remember_token',
     ];
 

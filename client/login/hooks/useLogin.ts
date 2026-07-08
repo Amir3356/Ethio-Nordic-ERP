@@ -7,7 +7,6 @@ export function useLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('admin@ethionordic.com');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [error, setError] = useState('');
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -23,7 +22,6 @@ export function useLogin() {
   }, [error]);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
   const [requiresTwoFactorSetup, setRequiresTwoFactorSetup] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -32,15 +30,10 @@ export function useLogin() {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please re-enter your password.');
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const response = await authAPI.login(email, password, confirmPassword, requiresTwoFactor || requiresTwoFactorSetup ? twoFactorCode : null);
+      const response = await authAPI.login(email, password, requiresTwoFactor || requiresTwoFactorSetup ? twoFactorCode : null);
       const body = response.data;
       const payload = body.data;
 
@@ -61,8 +54,10 @@ export function useLogin() {
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
-      setRequiresTwoFactor(false);
-      setRequiresTwoFactorSetup(false);
+      if (!requiresTwoFactor && !requiresTwoFactorSetup) {
+        setRequiresTwoFactor(false);
+        setRequiresTwoFactorSetup(false);
+      }
       setTwoFactorCode('');
     } finally {
       setLoading(false);
@@ -82,16 +77,12 @@ export function useLogin() {
     setEmail,
     password,
     setPassword,
-    confirmPassword,
-    setConfirmPassword,
     twoFactorCode,
     setTwoFactorCode,
     error,
     loading,
     showPassword,
     setShowPassword,
-    showConfirmPassword,
-    setShowConfirmPassword,
     requiresTwoFactor,
     requiresTwoFactorSetup,
     qrCodeUrl,

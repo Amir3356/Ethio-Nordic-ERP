@@ -10,12 +10,8 @@ export default function ActivateAccount() {
     token,
     password,
     setPassword,
-    confirmPassword,
-    setConfirmPassword,
     showPassword,
     setShowPassword,
-    showConfirmPassword,
-    setShowConfirmPassword,
     error,
     loading,
     success,
@@ -63,18 +59,6 @@ export default function ActivateAccount() {
             onToggleShow={() => setShowPassword(!showPassword)}
             placeholder="Enter your new password"
             autoFocus
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
-          <PasswordInput
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            showPassword={showConfirmPassword}
-            onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-            placeholder="Re-enter your password"
           />
         </div>
 
