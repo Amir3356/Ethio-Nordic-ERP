@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { sessionAPI } from '../../../services';
 import { getBrowserLocation, updateSessionLocation } from '../../../services/geolocation';
 import { Session } from './types';
@@ -7,6 +8,7 @@ const POLL_INTERVAL_MS = 30000; // 30 seconds for real-time updates
 const LOCATION_RETRY_MAX = 3; // Max retries for location update
 
 export function useSessions() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,7 +30,6 @@ export function useSessions() {
       if (axiosErr.response?.status === 403) {
         setError('You do not have permission to view sessions.');
         setHasPermission(false);
-        // Stop polling on permission error
         if (pollRef.current) {
           clearInterval(pollRef.current);
           pollRef.current = null;
@@ -110,11 +111,26 @@ export function useSessions() {
   }, [fetchSessions]);
 
   const handleTerminateSession = async (tokenId: string) => {
-    if (!window.confirm('Are you sure you want to terminate this session?')) return;
+    const isCurrentSession = sessions.find(s => s.id === tokenId)?.is_current;
+
+    if (isCurrentSession) {
+      if (!window.confirm('Are you sure you want to terminate your current session? You will be logged out.')) return;
+    } else {
+      if (!window.confirm('Are you sure you want to terminate this session?')) return;
+    }
 
     try {
       await sessionAPI.terminate(tokenId);
-      await fetchSessions();
+
+      if (isCurrentSession) {
+        // Clear auth data and redirect to login
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        navigate('/login', { replace: true });
+      } else {
+        await fetchSessions();
+      }
     } catch {
       setError('Failed to terminate session');
     }

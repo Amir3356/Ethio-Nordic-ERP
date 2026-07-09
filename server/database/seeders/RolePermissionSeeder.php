@@ -58,19 +58,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'Configure Security Policies', 'slug' => 'security.configure_policies', 'action' => 'configure_policies', 'description' => 'Configure system security policies'],
         ];
 
-        // Create System Administration permissions
-        $systemPermissions = [
-            ['name' => 'System Configuration', 'slug' => 'system.configure', 'action' => 'configure', 'description' => 'Configure system settings'],
-            ['name' => 'Database Management', 'slug' => 'system.database', 'action' => 'database', 'description' => 'Manage database operations'],
-            ['name' => 'Backup Management', 'slug' => 'system.backup', 'action' => 'backup', 'description' => 'Manage system backups'],
-            ['name' => 'System Monitoring', 'slug' => 'system.monitor', 'action' => 'monitor', 'description' => 'Monitor system performance and health'],
-        ];
-
         // Add all permissions to array with module information
         $allPermissions = collect()
             ->merge(collect($userManagementPermissions)->map(fn($p) => array_merge($p, ['module' => 'User Management'])))
             ->merge(collect($securityPermissions)->map(fn($p) => array_merge($p, ['module' => 'Security'])))
-            ->merge(collect($systemPermissions)->map(fn($p) => array_merge($p, ['module' => 'System Administration'])))
             ->toArray();
 
         // Create permissions
@@ -83,10 +74,6 @@ class RolePermissionSeeder extends Seeder
 
         // Create roles
         $roles = [
-            [
-                'name' => 'Super Administrator',
-                'slug' => 'super-admin',
-            ],
             [
                 'name' => 'Administrator',
                 'slug' => 'admin',
@@ -127,9 +114,6 @@ class RolePermissionSeeder extends Seeder
         // Assign permissions to roles
         $this->assignPermissionsToRoles();
 
-        // Create default super admin user
-        $this->createDefaultSuperAdmin();
-
         if (isset($this->command)) {
             $this->command->info('Roles and permissions seeded successfully!');
         }
@@ -140,15 +124,10 @@ class RolePermissionSeeder extends Seeder
      */
     private function assignPermissionsToRoles(): void
     {
-        // Super Admin gets all permissions
-        $superAdmin = Role::where('slug', 'super-admin')->first();
-        $allPermissions = Permission::all();
-        $superAdmin->permissions()->sync($allPermissions->pluck('id'));
-
-        // Admin gets most permissions except system administration
+        // Admin gets all permissions
         $admin = Role::where('slug', 'admin')->first();
-        $adminPermissions = Permission::where('module', '!=', 'System Administration')->get();
-        $admin->permissions()->sync($adminPermissions->pluck('id'));
+        $allPermissions = Permission::all();
+        $admin->permissions()->sync($allPermissions->pluck('id'));
 
         // HR Manager gets user management permissions
         $hrManager = Role::where('slug', 'hr-manager')->first();
@@ -202,30 +181,5 @@ class RolePermissionSeeder extends Seeder
         $employee = Role::where('slug', 'employee')->first();
         // No default permissions for regular employees - granted on case-by-case basis
         $employee->permissions()->sync([]);
-    }
-
-    /**
-     * Create default super admin user
-     */
-    private function createDefaultSuperAdmin(): void
-    {
-        $superAdminRole = Role::where('slug', 'super-admin')->first();
-
-        $user = User::firstOrCreate(
-            ['email' => 'amirsiraj1995@gmail.com'],
-            [
-                'full_name' => 'Admin',
-                'department' => 'IT',
-                'password' => Hash::make('AEHJSS36'),
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ]
-        );
-
-        $user->roles()->sync([$superAdminRole->id]);
-
-        if (isset($this->command)) {
-            $this->command->info('Default super admin created: amirsiraj1995@gmail.com / AEHJSS36');
-        }
     }
 }

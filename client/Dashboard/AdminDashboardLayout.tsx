@@ -45,7 +45,6 @@ export default function Layout() {
     <div className="layout">
       <aside className="layout-sidebar">
         <div className="sidebar-brand">
-          <h1 className="sidebar-title">Admin Dashboard</h1>
           {currentUser && <p className="sidebar-user">Welcome, {currentUser.name || currentUser.full_name}</p>}
         </div>
 

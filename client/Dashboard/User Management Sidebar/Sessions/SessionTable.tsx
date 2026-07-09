@@ -57,15 +57,13 @@ export default function SessionTable({ sessions, onTerminate }: SessionTableProp
                 </td>
                 <td className="session-location">{session.location || 'Unknown'}</td>
                 <td>
-                  {!session.is_current && (
-                    <button
-                      type="button"
-                      className="content-btn-delete"
-                      onClick={() => onTerminate(session.id)}
-                    >
-                      Terminate
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="content-btn-delete"
+                    onClick={() => onTerminate(session.id)}
+                  >
+                    Terminate
+                  </button>
                 </td>
               </tr>
             ))

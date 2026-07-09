@@ -22,7 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // Security (admin only)
-    Route::middleware(['rbac:role:admin|role:super-admin'])->group(function () {
+    Route::middleware(['rbac:role:admin'])->group(function () {
         Route::prefix('security')->group(function () {
             Route::middleware(['rbac:security.view_events'])->group(function () {
                 Route::get('/failed-logins', [LoginActivityController::class, 'failedLogins']);

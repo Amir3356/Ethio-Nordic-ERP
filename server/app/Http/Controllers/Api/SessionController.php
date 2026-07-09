@@ -52,17 +52,11 @@ class SessionController extends Controller
     }
 
     /**
-     * Admin: Force terminate any session (e.g., on suspected compromise or employee termination).
+     * Force terminate any session including current.
      * Blacklists the token, removes metadata, revokes refresh tokens, and deletes the access token.
      */
     public function destroy(Request $request, $tokenId): JsonResponse
     {
-        $currentTokenId = (string) $request->user()?->currentAccessToken()?->getKey();
-
-        if ($currentTokenId !== '' && (string) $tokenId === $currentTokenId) {
-            return $this->errorResponse('You cannot terminate your own session.', 422);
-        }
-
         $result = $this->tokenState->forceTerminateSession($tokenId);
 
         if (!$result) {

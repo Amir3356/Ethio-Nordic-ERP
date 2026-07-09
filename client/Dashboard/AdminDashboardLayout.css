@@ -25,13 +25,6 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.18);
 }
 
-.sidebar-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
 .sidebar-section {
   margin-bottom: 20px;
 }
@@ -125,11 +118,6 @@
   gap: 10px;
   margin-bottom: 20px;
 }
-
-.content-section-icon {
-  font-size: 20px;
-}
-
 .content-section-header h2 {
   margin: 0;
   font-size: 18px;

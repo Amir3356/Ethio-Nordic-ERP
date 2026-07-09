@@ -215,7 +215,7 @@ class UserController extends Controller
         // Prevent deleting the last admin
         if ($user->isAdmin()) {
             $adminCount = User::whereHas('roles', function ($q) {
-                $q->where('slug', 'admin')->orWhere('slug', 'super-admin');
+                $q->where('slug', 'admin');
             })->count();
 
             if ($adminCount <= 1) {
@@ -256,7 +256,7 @@ class UserController extends Controller
         // Prevent deactivating the last admin
         if ($user->isAdmin()) {
             $adminCount = User::active()->whereHas('roles', function ($q) {
-                $q->where('slug', 'admin')->orWhere('slug', 'super-admin');
+                $q->where('slug', 'admin');
             })->count();
 
             if ($adminCount <= 1) {
@@ -370,7 +370,7 @@ class UserController extends Controller
                         // Skip if last admin
                         if ($user->isAdmin()) {
                             $adminCount = User::active()->whereHas('roles', function ($q) {
-                                $q->where('slug', 'admin')->orWhere('slug', 'super-admin');
+                                $q->where('slug', 'admin');
                             })->count();
 
                             if ($adminCount <= 1) {
@@ -386,7 +386,7 @@ class UserController extends Controller
                         // Skip if last admin
                         if ($user->isAdmin()) {
                             $adminCount = User::whereHas('roles', function ($q) {
-                                $q->where('slug', 'admin')->orWhere('slug', 'super-admin');
+                                $q->where('slug', 'admin');
                             })->count();
 
                             if ($adminCount <= 1) {

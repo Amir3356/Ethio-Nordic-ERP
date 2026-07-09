@@ -34,7 +34,7 @@ Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
     });
 
     // User registration (admin only)
-    Route::middleware(['rbac:role:admin|role:super-admin'])->group(function () {
+    Route::middleware(['rbac:role:admin'])->group(function () {
         Route::post('/auth/register', [AuthController::class, 'register']);
     });
 });

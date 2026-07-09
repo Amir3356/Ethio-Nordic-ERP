@@ -74,22 +74,6 @@ async function getLocationFromServer(): Promise<string | null> {
 }
 
 /**
- * Check if browser geolocation is likely blocked (user dismissed the prompt).
- * We try a quick request with a short timeout to detect this without annoying the user.
- */
-function isGeolocationBlocked(): boolean {
-  try {
-    const permission = (navigator as { permissions?: Permissions }).permissions;
-    if (!permission) return false;
-    // If permission API is available, check if geolocation is denied
-    // This is async but we can't wait - just return false and let the normal flow handle it
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Get browser geolocation and convert to city/country string.
  * Falls back to server-side geolocation if browser geolocation fails or is blocked.
  */

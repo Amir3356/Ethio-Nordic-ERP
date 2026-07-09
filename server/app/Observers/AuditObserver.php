@@ -42,10 +42,7 @@ class AuditObserver
         // Module 2: Security
         'TwoFactorSecret' => 'Security',
 
-        // Module 3: System Administration
-        // (no model yet)
-
-        // Module 4: Human Resources
+        // Module 3: Human Resources
         'Employee' => 'Human Resources',
         'Department' => 'Human Resources',
         'Designation' => 'Human Resources',

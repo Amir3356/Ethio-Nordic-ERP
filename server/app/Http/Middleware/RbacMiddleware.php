@@ -130,6 +130,7 @@ class RbacMiddleware
             $log->forceFill([
                 'user_id' => $user->id,
                 'email' => $user->email,
+                'full_name' => $user->full_name,
                 'action' => 'unauthorized_access_attempt',
                 'module' => 'Security',
                 'model_type' => 'Access Control',
