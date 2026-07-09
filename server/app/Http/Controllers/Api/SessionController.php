@@ -174,4 +174,41 @@ class SessionController extends Controller
 
         return $this->successResponse(null, 'Session location updated successfully.');
     }
+
+    /**
+     * Get geolocation from the client's public IP address.
+     * This is a server-side fallback when browser geolocation fails.
+     */
+    public function getGeoLocation(Request $request): JsonResponse
+    {
+        $ip = $request->ip();
+
+        // Skip private/local IPs
+        if ($ip === '127.0.0.1' || $ip === '::1' || $ip === 'localhost') {
+            return $this->successResponse(['location' => null]);
+        }
+
+        if (preg_match('/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/', $ip)) {
+            return $this->successResponse(['location' => null]);
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)
+                ->get("https://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
+
+            if ($response->successful() && $response->json('status') === 'success') {
+                $parts = array_filter([
+                    $response->json('city'),
+                    $response->json('regionName'),
+                    $response->json('country'),
+                ]);
+                $location = implode(', ', $parts) ?: null;
+                return $this->successResponse(['location' => $location]);
+            }
+        } catch (\Exception $e) {
+            \Log::debug('Geolocation lookup failed for IP: ' . $ip);
+        }
+
+        return $this->successResponse(['location' => null]);
+    }
 }

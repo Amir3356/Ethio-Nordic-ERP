@@ -318,12 +318,12 @@ class TokenStateService
     private function getGeoLocation(string $ip): ?string
     {
         if ($ip === '127.0.0.1' || $ip === '::1' || $ip === 'localhost') {
-            return 'Local';
+            return null;
         }
 
-        // Handle private/internal IPs (Docker, LAN, etc.)
+        // Handle private/internal IPs (Docker, LAN, etc.) - return null to let client handle geolocation
         if (preg_match('/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/', $ip)) {
-            return 'Local Network';
+            return null;
         }
 
         try {
@@ -432,8 +432,28 @@ class TokenStateService
     private function parseDeviceType(?string $userAgent): string
     {
         if (!$userAgent) return 'Unknown';
-        if (preg_match('/mobile|android|iphone/i', $userAgent)) return 'Mobile';
-        if (preg_match('/tablet|ipad/i', $userAgent)) return 'Tablet';
+
+        // Check for specific mobile devices first
+        if (preg_match('/iphone/i', $userAgent)) return 'iPhone';
+        if (preg_match('/ipad/i', $userAgent)) return 'iPad';
+        if (preg_match('/android/i', $userAgent)) {
+            // Distinguish between Android phone and tablet
+            if (preg_match('/tablet|pad/i', $userAgent)) return 'Android Tablet';
+            return 'Android Phone';
+        }
+
+        // Check for tablets
+        if (preg_match('/tablet/i', $userAgent)) return 'Tablet';
+
+        // Desktop devices - be more specific
+        if (preg_match('/windows/i', $userAgent)) return 'Windows PC';
+        if (preg_match('/macintosh|mac os/i', $userAgent)) return 'Mac';
+        if (preg_match('/linux/i', $userAgent)) return 'Linux PC';
+        if (preg_match('/chromebook/i', $userAgent)) return 'Chromebook';
+
+        // Generic mobile fallback
+        if (preg_match('/mobile/i', $userAgent)) return 'Mobile Device';
+
         return 'Desktop';
     }
 

@@ -63,7 +63,7 @@ export default function UserManagement() {
       <ToastContainer toasts={toast.toasts} onDismiss={toast.removeToast} />
 
       <div className="content-section-header content-section-header-centered">
-        <h2 className="content-section-title-centered">User Management</h2>
+        <h2 className="content-section-title-centered">User Provisioning</h2>
         <button type="button" className="content-btn-new" onClick={openNewUserForm}>
           + New User
         </button>

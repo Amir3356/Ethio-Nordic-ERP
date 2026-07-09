@@ -7,6 +7,17 @@ interface ReverseGeocodeResult {
   display_name: string;
 }
 
+interface IpGeoResult {
+  status: string;
+  country: string;
+  regionName: string;
+  city: string;
+}
+
+interface ServerGeoLocationResponse {
+  location: string | null;
+}
+
 /**
  * Reverse geocode coordinates to city/country using Nominatim (OpenStreetMap)
  */
@@ -46,35 +57,82 @@ function formatLocation(result: ReverseGeocodeResult): string {
 }
 
 /**
- * Get browser geolocation and convert to city/country string
+ * Get location from server-side geolocation endpoint (most reliable fallback)
  */
-export async function getBrowserLocation(): Promise<string | null> {
-  if (!navigator.geolocation) {
+async function getLocationFromServer(): Promise<string | null> {
+  try {
+    const response = await api.get('/sessions/geo-location');
+    const data = response.data?.data as ServerGeoLocationResponse;
+    return data?.location || null;
+  } catch {
     return null;
   }
+}
 
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        const result = await reverseGeocode(latitude, longitude);
-        if (result) {
-          resolve(formatLocation(result));
-        } else {
+/**
+ * Get location from public IP using ip-api.com (client-side fallback)
+ */
+async function getLocationFromPublicIP(): Promise<string | null> {
+  try {
+    const response = await fetch('https://ip-api.com/json/?fields=status,country,regionName,city', {
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) return null;
+
+    const data: IpGeoResult = await response.json();
+    if (data.status === 'success') {
+      const parts = [data.city, data.regionName, data.country].filter(Boolean);
+      return parts.join(', ') || null;
+    }
+  } catch {
+    // Fallback failed
+  }
+  return null;
+}
+
+/**
+ * Get browser geolocation and convert to city/country string.
+ * Falls back to server-side or public IP geolocation if browser geolocation fails.
+ */
+export async function getBrowserLocation(): Promise<string | null> {
+  // Try browser geolocation first (most accurate)
+  if (navigator.geolocation) {
+    const browserLocation = await new Promise<string | null>((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          const result = await reverseGeocode(latitude, longitude);
+          if (result) {
+            resolve(formatLocation(result));
+          } else {
+            resolve(null);
+          }
+        },
+        () => {
           resolve(null);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000, // Cache for 5 minutes
         }
-      },
-      () => {
-        // User denied permission or error occurred
-        resolve(null);
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 300000, // Cache for 5 minutes
-      }
-    );
-  });
+      );
+    });
+
+    if (browserLocation) {
+      return browserLocation;
+    }
+  }
+
+  // Fallback 1: Try server-side geolocation (uses client's public IP)
+  const serverLocation = await getLocationFromServer();
+  if (serverLocation) {
+    return serverLocation;
+  }
+
+  // Fallback 2: Try client-side public IP geolocation
+  return getLocationFromPublicIP();
 }
 
 /**

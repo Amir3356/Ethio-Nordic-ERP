@@ -79,7 +79,17 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        $passwordCheck = $user ? Hash::check($request->password, $user->password) : false;
+        \Log::debug('Login password check', [
+            'email' => $request->email,
+            'user_found' => $user ? $user->id : null,
+            'password_check' => $passwordCheck,
+            'has_password' => !is_null($request->password),
+            'password_length' => is_string($request->password) ? strlen($request->password) : 'N/A',
+            'two_factor_code' => $request->two_factor_code,
+        ]);
+
+        if (!$user || !$passwordCheck) {
             $this->logLoginAttempt($request, $user, 'failed', 'Invalid credentials');
             return $this->errorResponse('Invalid credentials.', 401);
         }
@@ -120,8 +130,12 @@ class AuthController extends Controller
         // Handle existing 2FA verification
         if ($user->hasTwoFactorEnabled()) {
             if (!$request->two_factor_code) {
+                $secret = $user->twoFactorSecret->getDecryptedSecret();
+                $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
+
                 return $this->successResponse([
                     'requires_2fa' => true,
+                    'qr_code_url' => $qrCodeUrl,
                 ], 'Please enter your two-factor authentication code.', 202);
             }
 
@@ -677,7 +691,7 @@ class AuthController extends Controller
     private function getGeoLocation(string $ip): ?string
     {
         if ($ip === '127.0.0.1' || $ip === '::1') {
-            return 'Local';
+            return null;
         }
 
         try {
@@ -701,23 +715,29 @@ class AuthController extends Controller
 
     private function provideTwoFactorSetupData(User $user): array
     {
-        $twoFactorSecret = $user->twoFactorSecret;
+        $twoFactorSecret = TwoFactorSecret::where('user_id', $user->id)->first();
 
-        if (!$twoFactorSecret || $twoFactorSecret->is_enabled) {
+        if ($twoFactorSecret) {
+            $secret = $twoFactorSecret->getDecryptedSecret();
+            $recoveryCodes = $twoFactorSecret->getDecryptedRecoveryCodes();
+        } else {
             $secret = $this->generateTwoFactorSecret();
             $recoveryCodes = $this->generateRecoveryCodes();
 
-            TwoFactorSecret::updateOrCreate(
-                ['user_id' => $user->id],
-                [
+            try {
+                TwoFactorSecret::create([
+                    'user_id' => $user->id,
                     'secret' => $secret,
                     'recovery_codes' => json_encode($recoveryCodes),
                     'is_enabled' => false,
-                ]
-            );
-        } else {
-            $secret = $twoFactorSecret->getDecryptedSecret();
-            $recoveryCodes = $twoFactorSecret->getDecryptedRecoveryCodes();
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                $twoFactorSecret = TwoFactorSecret::where('user_id', $user->id)->first();
+                if ($twoFactorSecret) {
+                    $secret = $twoFactorSecret->getDecryptedSecret();
+                    $recoveryCodes = $twoFactorSecret->getDecryptedRecoveryCodes();
+                }
+            }
         }
 
         $qrCodeUrl = $this->generateQrCodeUrl($user->email, $secret);
@@ -813,8 +833,28 @@ class AuthController extends Controller
     private function parseDeviceType(?string $userAgent): string
     {
         if (!$userAgent) return 'Unknown';
-        if (preg_match('/mobile|android|iphone/i', $userAgent)) return 'Mobile';
-        if (preg_match('/tablet|ipad/i', $userAgent)) return 'Tablet';
+
+        // Check for specific mobile devices first
+        if (preg_match('/iphone/i', $userAgent)) return 'iPhone';
+        if (preg_match('/ipad/i', $userAgent)) return 'iPad';
+        if (preg_match('/android/i', $userAgent)) {
+            // Distinguish between Android phone and tablet
+            if (preg_match('/tablet|pad/i', $userAgent)) return 'Android Tablet';
+            return 'Android Phone';
+        }
+
+        // Check for tablets
+        if (preg_match('/tablet/i', $userAgent)) return 'Tablet';
+
+        // Desktop devices - be more specific
+        if (preg_match('/windows/i', $userAgent)) return 'Windows PC';
+        if (preg_match('/macintosh|mac os/i', $userAgent)) return 'Mac';
+        if (preg_match('/linux/i', $userAgent)) return 'Linux PC';
+        if (preg_match('/chromebook/i', $userAgent)) return 'Chromebook';
+
+        // Generic mobile fallback
+        if (preg_match('/mobile/i', $userAgent)) return 'Mobile Device';
+
         return 'Desktop';
     }
 

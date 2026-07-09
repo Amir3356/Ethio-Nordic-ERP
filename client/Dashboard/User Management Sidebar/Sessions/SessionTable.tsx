@@ -7,9 +7,23 @@ interface SessionTableProps {
 
 function getDeviceIcon(deviceType?: string): string {
   switch (deviceType) {
-    case 'Mobile': return '\u{1F4F1}';
+    // Specific mobile devices
+    case 'iPhone': return '\u{1F4F1}';
+    case 'Android Phone': return '\u{1F4F1}';
+    case 'Mobile Device': return '\u{1F4F1}';
+
+    // Tablets
+    case 'iPad': return '\u{1F4BB}';
+    case 'Android Tablet': return '\u{1F4BB}';
     case 'Tablet': return '\u{1F4BB}';
+
+    // Desktop computers
+    case 'Windows PC': return '\u{1F5A5}';
+    case 'Mac': return '\u{1F34E}';
+    case 'Linux PC': return '\u{1F427}';
+    case 'Chromebook': return '\u{1F4BB}';
     case 'Desktop': return '\u{1F5A5}';
+
     default: return '\u{1F4BB}';
   }
 }

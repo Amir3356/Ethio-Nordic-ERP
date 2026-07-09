@@ -69,34 +69,26 @@ export default function TwoFactorSetup() {
 
   return (
     <AuthCard title="Ethio Nordic Trading PLC" subtitle="Set Up Two-Factor Authentication">
-      <div className="login-form">
+      <form className="login-form" onSubmit={handleVerify}>
         {error && <AuthError message={error} />}
 
         {step === 'scan' && (
-          <>
-            <div className="tfa-scan-header">
-              <Shield size={40} color="#4f46e5" className="tfa-scan-icon" />
-              <p className="tfa-scan-instructions">
-                Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
-              </p>
-              <QRCodeDisplay url={qrCodeUrl} />
-            </div>
+          <div className="tfa-scan-section">
+            <Shield size={40} color="#4f46e5" className="tfa-scan-icon" />
+            <p className="form-hint">Scan this QR code with your authenticator app, then enter the 6-digit code below.</p>
+            <QRCodeDisplay url={qrCodeUrl} />
+            <TwoFactorInput value={verifyCode} onChange={setVerifyCode} />
 
-            <form onSubmit={handleVerify}>
-              <TwoFactorInput value={verifyCode} onChange={setVerifyCode} />
-
-              <button
-                type="submit"
-                className="tfa-verify-btn"
-                disabled={loading || verifyCode.length !== 6}
-              >
-                {loading ? 'Verifying...' : 'Submit'}
-              </button>
-            </form>
-
-          </>
+            <button
+              type="submit"
+              className="login-btn"
+              disabled={loading || verifyCode.length !== 6}
+            >
+              {loading ? 'Verifying...' : 'Verify'}
+            </button>
+          </div>
         )}
-      </div>
+      </form>
     </AuthCard>
   );
 }

@@ -65,17 +65,13 @@ export default function Login() {
           </>
         )}
 
-        {requiresTwoFactorSetup && (
+        {(requiresTwoFactor || requiresTwoFactorSetup) && (
           <div className="tfa-scan-section">
             <Shield size={40} color="#4f46e5" className="tfa-scan-icon" />
             <p className="form-hint">Scan this QR code with your authenticator app, then enter the 6-digit code below.</p>
             <QRCodeDisplay url={qrCodeUrl} />
             <TwoFactorInput value={twoFactorCode} onChange={setTwoFactorCode} />
           </div>
-        )}
-
-        {requiresTwoFactor && !requiresTwoFactorSetup && (
-          <TwoFactorInput value={twoFactorCode} onChange={setTwoFactorCode} />
         )}
 
         <button type="submit" className="login-btn" disabled={loading}>

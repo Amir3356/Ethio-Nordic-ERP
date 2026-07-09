@@ -27,6 +27,11 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verified_at',
+        'temp_password_expires_at',
+        'deleted_at',
+        'created_at',
+        'updated_at',
     ];
 
     protected function casts(): array

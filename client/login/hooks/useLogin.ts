@@ -6,10 +6,20 @@ import { storeAuth, getAuthErrorMessage } from '../utils';
 export function useLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const emailRef = useRef(email);
   const [password, setPassword] = useState('');
+  const passwordRef = useRef(password);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [error, setError] = useState('');
   const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    emailRef.current = email;
+  }, [email]);
+
+  useEffect(() => {
+    passwordRef.current = password;
+  }, [password]);
 
   useEffect(() => {
     if (error) {
@@ -30,10 +40,19 @@ export function useLogin() {
     e.preventDefault();
     setError('');
 
+    const currentEmail = emailRef.current;
+    const currentPassword = passwordRef.current;
+
+    if (!currentEmail || !currentPassword) {
+      setError('Please enter your email and password.');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await authAPI.login(email, password, requiresTwoFactor || requiresTwoFactorSetup ? twoFactorCode : null);
+      const response = await authAPI.login(currentEmail, currentPassword, requiresTwoFactor || requiresTwoFactorSetup ? twoFactorCode : null);
       const body = response.data;
       const contentType = response.headers?.['content-type'] || '';
 
@@ -64,6 +83,7 @@ export function useLogin() {
 
         if (p.requires_2fa) {
           setRequiresTwoFactor(true);
+          setQrCodeUrl(typeof p.qr_code_url === 'string' ? p.qr_code_url : '');
           setLoading(false);
           return;
         }
