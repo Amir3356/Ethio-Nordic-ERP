@@ -176,12 +176,12 @@ class SessionController extends Controller
     }
 
     /**
-     * Get geolocation from the client's public IP address.
-     * This is a server-side fallback when browser geolocation fails.
+     * Get geolocation from an IP address.
+     * Accepts an optional IP parameter; if not provided, uses the request IP.
      */
     public function getGeoLocation(Request $request): JsonResponse
     {
-        $ip = $request->ip();
+        $ip = $request->input('ip', $request->ip());
 
         // Skip private/local IPs
         if ($ip === '127.0.0.1' || $ip === '::1' || $ip === 'localhost') {
@@ -210,5 +210,41 @@ class SessionController extends Controller
         }
 
         return $this->successResponse(['location' => null]);
+    }
+
+    /**
+     * Get the client's public IP address.
+     * Used by clients on local networks to discover their public IP.
+     */
+    public function getPublicIp(): JsonResponse
+    {
+        try {
+            // Use multiple services as fallbacks
+            $services = [
+                'https://api.ipify.org?format=json',
+                'https://httpbin.org/ip',
+                'https://ipinfo.io/ip',
+            ];
+
+            foreach ($services as $url) {
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(3)->get($url);
+                    if ($response->successful()) {
+                        $data = $response->json();
+                        // Handle different API response formats
+                        $ip = $data['ip'] ?? $data['origin'] ?? null;
+                        if ($ip) {
+                            return $this->successResponse(['ip' => $ip]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::debug('Failed to get public IP');
+        }
+
+        return $this->successResponse(['ip' => null]);
     }
 }

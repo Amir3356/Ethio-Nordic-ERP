@@ -10,8 +10,11 @@ Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
         Route::get('/active', [SessionController::class, 'active']);
         Route::get('/stats', [AuthController::class, 'sessionStats']);
 
-        // Get geolocation from client's public IP (fallback for browser geolocation)
-        Route::get('/geo-location', [SessionController::class, 'getGeoLocation']);
+        // Get client's public IP address
+        Route::get('/public-ip', [SessionController::class, 'getPublicIp']);
+
+        // Get geolocation from an IP address
+        Route::post('/geo-location', [SessionController::class, 'getGeoLocation']);
 
         // Idle timeout configuration (admin only)
         Route::get('/idle-timeout', [SessionController::class, 'getIdleTimeout']);

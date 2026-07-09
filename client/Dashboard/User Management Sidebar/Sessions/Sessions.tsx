@@ -11,6 +11,8 @@ export default function Sessions() {
     handleTerminateSession,
   } = useSessions();
 
+  const isPermissionError = error.includes('permission');
+
   return (
     <section className="content-section" id="sessions">
       <div className="content-section-header content-section-header-center">
@@ -20,16 +22,18 @@ export default function Sessions() {
       {error && (
         <div className="content-error">
           <p>{error}</p>
-          <button onClick={fetchSessions}>Retry</button>
+          {!isPermissionError && <button onClick={fetchSessions}>Retry</button>}
         </div>
       )}
 
-      {loading && sessions.length === 0 && <p className="content-loading">Loading sessions...</p>}
+      {!isPermissionError && loading && sessions.length === 0 && <p className="content-loading">Loading sessions...</p>}
 
-      <SessionTable
-        sessions={sessions}
-        onTerminate={handleTerminateSession}
-      />
+      {!isPermissionError && (
+        <SessionTable
+          sessions={sessions}
+          onTerminate={handleTerminateSession}
+        />
+      )}
     </section>
   );
 }

@@ -177,6 +177,7 @@ class RolePermissionSeeder extends Seeder
             'users.view',
             'audit_logs.view', 'audit_logs.export',
             'login_activity.view', 'login_activity.export',
+            'sessions.view', 'sessions.stats',
         ])->get();
         $financeManager->permissions()->sync($financePermissions->pluck('id'));
 

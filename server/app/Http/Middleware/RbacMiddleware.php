@@ -126,7 +126,8 @@ class RbacMiddleware
     private function logUnauthorizedAccess(Request $request, $user, string $reason): void
     {
         try {
-            AuditLog::create([
+            $log = new AuditLog();
+            $log->forceFill([
                 'user_id' => $user->id,
                 'user_email' => $user->email,
                 'action' => 'unauthorized_access_attempt',
@@ -143,6 +144,7 @@ class RbacMiddleware
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
+            $log->save();
 
             Log::warning('Unauthorized access attempt', [
                 'user_id' => $user->id,

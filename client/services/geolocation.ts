@@ -7,14 +7,11 @@ interface ReverseGeocodeResult {
   display_name: string;
 }
 
-interface IpGeoResult {
-  status: string;
-  country: string;
-  regionName: string;
-  city: string;
+interface PublicIpResponse {
+  ip: string | null;
 }
 
-interface ServerGeoLocationResponse {
+interface GeoLocationResponse {
   location: string | null;
 }
 
@@ -57,12 +54,25 @@ function formatLocation(result: ReverseGeocodeResult): string {
 }
 
 /**
- * Get location from server-side geolocation endpoint (most reliable fallback)
+ * Get the client's public IP address from the server
  */
-async function getLocationFromServer(): Promise<string | null> {
+async function getPublicIp(): Promise<string | null> {
   try {
-    const response = await api.get('/sessions/geo-location');
-    const data = response.data?.data as ServerGeoLocationResponse;
+    const response = await api.get('/sessions/public-ip');
+    const data = response.data?.data as PublicIpResponse;
+    return data?.ip || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get geolocation from an IP address using the server
+ */
+async function getGeoLocationFromIp(ip: string): Promise<string | null> {
+  try {
+    const response = await api.post('/sessions/geo-location', { ip });
+    const data = response.data?.data as GeoLocationResponse;
     return data?.location || null;
   } catch {
     return null;
@@ -80,7 +90,7 @@ async function getLocationFromPublicIP(): Promise<string | null> {
 
     if (!response.ok) return null;
 
-    const data: IpGeoResult = await response.json();
+    const data = await response.json();
     if (data.status === 'success') {
       const parts = [data.city, data.regionName, data.country].filter(Boolean);
       return parts.join(', ') || null;
@@ -125,10 +135,13 @@ export async function getBrowserLocation(): Promise<string | null> {
     }
   }
 
-  // Fallback 1: Try server-side geolocation (uses client's public IP)
-  const serverLocation = await getLocationFromServer();
-  if (serverLocation) {
-    return serverLocation;
+  // Fallback 1: Get public IP from server, then geolocate it
+  const publicIp = await getPublicIp();
+  if (publicIp) {
+    const ipLocation = await getGeoLocationFromIp(publicIp);
+    if (ipLocation) {
+      return ipLocation;
+    }
   }
 
   // Fallback 2: Try client-side public IP geolocation

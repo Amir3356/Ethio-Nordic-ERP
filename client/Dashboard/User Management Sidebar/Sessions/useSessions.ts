@@ -10,6 +10,7 @@ export function useSessions() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hasPermission, setHasPermission] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const locationUpdatedRef = useRef<Set<string>>(new Set());
   const locationRetryCountRef = useRef<Map<string, number>>(new Map());
@@ -21,8 +22,20 @@ export function useSessions() {
       const payload = response.data?.data;
       setSessions(Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []);
       setError('');
-    } catch (err) {
-      setError('Failed to load sessions');
+      setHasPermission(true);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (axiosErr.response?.status === 403) {
+        setError('You do not have permission to view sessions.');
+        setHasPermission(false);
+        // Stop polling on permission error
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
+      } else {
+        setError('Failed to load sessions');
+      }
       console.error(err);
     } finally {
       setLoading(false);

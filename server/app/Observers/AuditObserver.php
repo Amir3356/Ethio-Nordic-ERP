@@ -304,7 +304,8 @@ class AuditObserver
             $user = Auth::user();
             $request = request();
 
-            AuditLog::create([
+            $log = new AuditLog();
+            $log->forceFill([
                 'user_id' => $user?->id,
                 'user_email' => $user?->email ?? 'system',
                 'full_name' => $user?->full_name ?? 'System',
@@ -317,6 +318,7 @@ class AuditObserver
                 'ip_address' => $request?->ip(),
                 'user_agent' => $request?->userAgent(),
             ]);
+            $log->save();
         } catch (\Exception $e) {
             // Log error but don't break the application flow
             \Log::error('Audit logging failed: ' . $e->getMessage(), [
