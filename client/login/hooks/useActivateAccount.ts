@@ -8,6 +8,7 @@ export function useActivateAccount() {
   const navigate = useNavigate();
   const token = searchParams.get('token');
 
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -31,10 +32,15 @@ export function useActivateAccount() {
     e.preventDefault();
     setError('');
 
+    if (!email) {
+      setError('Please enter your email address.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await api.post('/auth/activate', { token, password });
+      await api.post('/auth/activate', { token, email, password });
       setSuccess(true);
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
@@ -45,6 +51,8 @@ export function useActivateAccount() {
 
   return {
     token,
+    email,
+    setEmail,
     password,
     setPassword,
     showPassword,

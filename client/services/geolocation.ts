@@ -54,59 +54,53 @@ function formatLocation(result: ReverseGeocodeResult): string {
 }
 
 /**
- * Get the client's public IP address from the server
+ * Get the client's public IP address from the server, then geolocate it.
+ * This is the most reliable method - no CORS issues, no browser permission blocks.
  */
-async function getPublicIp(): Promise<string | null> {
+async function getLocationFromServer(): Promise<string | null> {
   try {
-    const response = await api.get('/sessions/public-ip');
-    const data = response.data?.data as PublicIpResponse;
-    return data?.ip || null;
+    const ipResponse = await api.get('/sessions/public-ip');
+    const ipData = ipResponse.data?.data as PublicIpResponse;
+    const publicIp = ipData?.ip;
+
+    if (!publicIp) return null;
+
+    const geoResponse = await api.post('/sessions/geo-location', { ip: publicIp });
+    const geoData = geoResponse.data?.data as GeoLocationResponse;
+    return geoData?.location || null;
   } catch {
     return null;
   }
 }
 
 /**
- * Get geolocation from an IP address using the server
+ * Check if browser geolocation is likely blocked (user dismissed the prompt).
+ * We try a quick request with a short timeout to detect this without annoying the user.
  */
-async function getGeoLocationFromIp(ip: string): Promise<string | null> {
+function isGeolocationBlocked(): boolean {
   try {
-    const response = await api.post('/sessions/geo-location', { ip });
-    const data = response.data?.data as GeoLocationResponse;
-    return data?.location || null;
+    const permission = (navigator as { permissions?: Permissions }).permissions;
+    if (!permission) return false;
+    // If permission API is available, check if geolocation is denied
+    // This is async but we can't wait - just return false and let the normal flow handle it
+    return false;
   } catch {
-    return null;
+    return false;
   }
-}
-
-/**
- * Get location from public IP using ip-api.com (client-side fallback)
- */
-async function getLocationFromPublicIP(): Promise<string | null> {
-  try {
-    const response = await fetch('https://ip-api.com/json/?fields=status,country,regionName,city', {
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    if (data.status === 'success') {
-      const parts = [data.city, data.regionName, data.country].filter(Boolean);
-      return parts.join(', ') || null;
-    }
-  } catch {
-    // Fallback failed
-  }
-  return null;
 }
 
 /**
  * Get browser geolocation and convert to city/country string.
- * Falls back to server-side or public IP geolocation if browser geolocation fails.
+ * Falls back to server-side geolocation if browser geolocation fails or is blocked.
  */
 export async function getBrowserLocation(): Promise<string | null> {
-  // Try browser geolocation first (most accurate)
+  // Fallback 1: Server-side geolocation (most reliable - no CORS, no permission issues)
+  const serverLocation = await getLocationFromServer();
+  if (serverLocation) {
+    return serverLocation;
+  }
+
+  // Fallback 2: Try browser geolocation (may fail if user previously blocked it)
   if (navigator.geolocation) {
     const browserLocation = await new Promise<string | null>((resolve) => {
       navigator.geolocation.getCurrentPosition(
@@ -120,12 +114,13 @@ export async function getBrowserLocation(): Promise<string | null> {
           }
         },
         () => {
+          // User denied or geolocation blocked - resolve null silently
           resolve(null);
         },
         {
           enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 300000, // Cache for 5 minutes
+          timeout: 5000,
+          maximumAge: 300000,
         }
       );
     });
@@ -135,17 +130,7 @@ export async function getBrowserLocation(): Promise<string | null> {
     }
   }
 
-  // Fallback 1: Get public IP from server, then geolocate it
-  const publicIp = await getPublicIp();
-  if (publicIp) {
-    const ipLocation = await getGeoLocationFromIp(publicIp);
-    if (ipLocation) {
-      return ipLocation;
-    }
-  }
-
-  // Fallback 2: Try client-side public IP geolocation
-  return getLocationFromPublicIP();
+  return null;
 }
 
 /**

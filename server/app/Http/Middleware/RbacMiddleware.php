@@ -129,13 +129,13 @@ class RbacMiddleware
             $log = new AuditLog();
             $log->forceFill([
                 'user_id' => $user->id,
-                'user_email' => $user->email,
+                'email' => $user->email,
                 'action' => 'unauthorized_access_attempt',
                 'module' => 'Security',
                 'model_type' => 'Access Control',
                 'model_id' => null,
-                'old_values' => null,
-                'new_values' => [
+                'before_data' => null,
+                'after_data' => [
                     'url' => $request->fullUrl(),
                     'method' => $request->method(),
                     'reason' => $reason,

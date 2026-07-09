@@ -32,6 +32,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'token' => 'required|string',
+            'email' => 'required|email',
             'password' => ['required', Password::min(8)
                 ->letters()
                 ->mixedCase()
@@ -44,6 +45,11 @@ class AuthController extends Controller
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             \Log::warning('Activation: invalid token', ['token_prefix' => mb_substr($request->token, 0, 20)]);
             return $this->errorResponse('Invalid activation token.', 422);
+        }
+
+        // Verify the provided email matches the token's email
+        if (strtolower($request->email) !== strtolower($email)) {
+            return $this->errorResponse('Email does not match the activation token.', 422);
         }
 
         $user = User::where('email', $email)->first();
@@ -694,9 +700,28 @@ class AuthController extends Controller
             return null;
         }
 
+        // Try ipinfo.io first (reliable, no rate limit issues)
         try {
-            $response = Http::timeout(2)
-                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
+            $response = Http::timeout(3)
+                ->get("https://ipinfo.io/{$ip}/json");
+
+            if ($response->successful() && $response->json('city')) {
+                $parts = array_filter([
+                    $response->json('city'),
+                    $response->json('region'),
+                    $response->json('country'),
+                ]);
+                $location = implode(', ', $parts) ?: null;
+                if ($location) return $location;
+            }
+        } catch (\Exception $e) {
+            \Log::debug('ipinfo.io geolocation failed for IP: ' . $ip);
+        }
+
+        // Fallback to ip-api.com
+        try {
+            $response = Http::timeout(3)
+                ->get("https://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
 
             if ($response->successful() && $response->json('status') === 'success') {
                 $parts = array_filter([
@@ -707,7 +732,7 @@ class AuthController extends Controller
                 return implode(', ', $parts) ?: null;
             }
         } catch (\Exception $e) {
-            \Log::debug('Geolocation lookup failed for IP: ' . $ip);
+            \Log::debug('ip-api.com geolocation failed for IP: ' . $ip);
         }
 
         return null;

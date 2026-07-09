@@ -313,7 +313,7 @@ class TokenStateService
     }
 
     /**
-     * Get geolocation from IP address using ip-api.com
+     * Get geolocation from IP address using multiple services
      */
     private function getGeoLocation(string $ip): ?string
     {
@@ -326,9 +326,28 @@ class TokenStateService
             return null;
         }
 
+        // Try ipinfo.io first (reliable, no rate limit issues)
         try {
-            $response = Http::timeout(2)
-                ->get("http://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
+            $response = Http::timeout(3)
+                ->get("https://ipinfo.io/{$ip}/json");
+
+            if ($response->successful() && $response->json('city')) {
+                $parts = array_filter([
+                    $response->json('city'),
+                    $response->json('region'),
+                    $response->json('country'),
+                ]);
+                $location = implode(', ', $parts) ?: null;
+                if ($location) return $location;
+            }
+        } catch (\Exception $e) {
+            \Log::debug('ipinfo.io geolocation failed for IP: ' . $ip);
+        }
+
+        // Fallback to ip-api.com
+        try {
+            $response = Http::timeout(3)
+                ->get("https://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
 
             if ($response->successful() && $response->json('status') === 'success') {
                 $parts = array_filter([
@@ -339,7 +358,7 @@ class TokenStateService
                 return implode(', ', $parts) ?: null;
             }
         } catch (\Exception $e) {
-            \Log::debug('Geolocation lookup failed for IP: ' . $ip);
+            \Log::debug('ip-api.com geolocation failed for IP: ' . $ip);
         }
 
         return null;

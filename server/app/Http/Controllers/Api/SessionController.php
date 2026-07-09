@@ -192,21 +192,47 @@ class SessionController extends Controller
             return $this->successResponse(['location' => null]);
         }
 
-        try {
-            $response = \Illuminate\Support\Facades\Http::timeout(3)
-                ->get("https://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
+        // Try multiple geolocation services as fallbacks
+        $services = [
+            // ipinfo.io - reliable, no rate limit issues
+            function ($ip) {
+                $response = \Illuminate\Support\Facades\Http::timeout(3)
+                    ->get("https://ipinfo.io/{$ip}/json");
+                if ($response->successful() && $response->json('city')) {
+                    $parts = array_filter([
+                        $response->json('city'),
+                        $response->json('region'),
+                        $response->json('country'),
+                    ]);
+                    return implode(', ', $parts) ?: null;
+                }
+                return null;
+            },
+            // ip-api.com - free tier, may fail for some IPs
+            function ($ip) {
+                $response = \Illuminate\Support\Facades\Http::timeout(3)
+                    ->get("https://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
+                if ($response->successful() && $response->json('status') === 'success') {
+                    $parts = array_filter([
+                        $response->json('city'),
+                        $response->json('regionName'),
+                        $response->json('country'),
+                    ]);
+                    return implode(', ', $parts) ?: null;
+                }
+                return null;
+            },
+        ];
 
-            if ($response->successful() && $response->json('status') === 'success') {
-                $parts = array_filter([
-                    $response->json('city'),
-                    $response->json('regionName'),
-                    $response->json('country'),
-                ]);
-                $location = implode(', ', $parts) ?: null;
-                return $this->successResponse(['location' => $location]);
+        foreach ($services as $service) {
+            try {
+                $location = $service($ip);
+                if ($location) {
+                    return $this->successResponse(['location' => $location]);
+                }
+            } catch (\Exception $e) {
+                \Log::debug('Geolocation service failed: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            \Log::debug('Geolocation lookup failed for IP: ' . $ip);
         }
 
         return $this->successResponse(['location' => null]);

@@ -8,6 +8,8 @@ import './ActivateAccount.css';
 export default function ActivateAccount() {
   const {
     token,
+    email,
+    setEmail,
     password,
     setPassword,
     showPassword,
@@ -48,6 +50,18 @@ export default function ActivateAccount() {
       <form className="login-form" onSubmit={handleActivate}>
         {error && <AuthError message={error} />}
 
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email address"
+            autoFocus
+            required
+          />
+        </div>
 
         <div className="form-group">
           <label htmlFor="password">Password</label>
@@ -58,7 +72,6 @@ export default function ActivateAccount() {
             showPassword={showPassword}
             onToggleShow={() => setShowPassword(!showPassword)}
             placeholder="Enter your new password"
-            autoFocus
           />
         </div>
 

@@ -307,14 +307,14 @@ class AuditObserver
             $log = new AuditLog();
             $log->forceFill([
                 'user_id' => $user?->id,
-                'user_email' => $user?->email ?? 'system',
+                'email' => $user?->email ?? 'system',
                 'full_name' => $user?->full_name ?? 'System',
                 'action' => $action,
                 'module' => $this->getModuleName($model),
                 'model_type' => get_class($model),
                 'model_id' => $model->getKey(),
-                'old_values' => $oldValues,
-                'new_values' => $newValues,
+                'before_data' => $oldValues,
+                'after_data' => $newValues,
                 'ip_address' => $request?->ip(),
                 'user_agent' => $request?->userAgent(),
             ]);
