@@ -24,6 +24,8 @@ class SessionController extends Controller
             userId: $request->user_id
         );
 
+        $currentTokenId = (string) $request->user()?->currentAccessToken()?->getKey();
+
         $perPage = (int) $request->get('per_page', 15);
         $page = (int) $request->get('page', 1);
         $total = count($sessions);
@@ -37,6 +39,7 @@ class SessionController extends Controller
             'user_email' => $s['user_email'] ?? null,
             'device_type' => $s['device_type'] ?? null,
             'location' => $s['location'] ?? null,
+            'is_current' => $currentTokenId !== null && (string) ($s['id'] ?? '') === $currentTokenId,
         ], $items);
 
         return $this->successResponse([
@@ -52,8 +55,14 @@ class SessionController extends Controller
      * Admin: Force terminate any session (e.g., on suspected compromise or employee termination).
      * Blacklists the token, removes metadata, revokes refresh tokens, and deletes the access token.
      */
-    public function destroy($tokenId): JsonResponse
+    public function destroy(Request $request, $tokenId): JsonResponse
     {
+        $currentTokenId = (string) $request->user()?->currentAccessToken()?->getKey();
+
+        if ($currentTokenId !== '' && (string) $tokenId === $currentTokenId) {
+            return $this->errorResponse('You cannot terminate your own session.', 422);
+        }
+
         $result = $this->tokenState->forceTerminateSession($tokenId);
 
         if (!$result) {
@@ -66,9 +75,11 @@ class SessionController extends Controller
     /**
      * Get all active sessions with full metadata (simplified list view).
      */
-    public function active(): JsonResponse
+    public function active(Request $request): JsonResponse
     {
         $sessions = $this->tokenState->getAllSessions();
+
+        $currentTokenId = (string) $request->user()?->currentAccessToken()?->getKey();
 
         return $this->successResponse(
             array_map(fn($s) => [
@@ -78,6 +89,7 @@ class SessionController extends Controller
                 'user_email' => $s['user_email'] ?? null,
                 'device_type' => $s['device_type'] ?? null,
                 'location' => $s['location'] ?? null,
+                'is_current' => $currentTokenId !== null && (string) ($s['id'] ?? '') === $currentTokenId,
             ], $sessions)
         );
     }

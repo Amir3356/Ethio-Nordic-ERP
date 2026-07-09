@@ -128,40 +128,7 @@ class TokenStateService
             return $this->getActiveSessions(User::find($userId));
         }
 
-        $iterator = null;
-        $pattern = str_replace('%s', '*', self::TOKEN_META_KEY);
-        $sessions = [];
-
-        do {
-            $result = $this->redis()->scan($iterator, ['match' => $pattern, 'count' => 100]);
-            if ($result === false) {
-                break;
-            }
-            [$iterator, $keys] = $result;
-            foreach ($keys as $key) {
-                $meta = $this->redis()->hgetall($key);
-                if (!empty($meta)) {
-                    preg_match('/token:(\d+):metadata/', $key, $matches);
-                    $meta['id'] = $matches[1] ?? null;
-
-                    // Enrich with location if missing
-                    if (empty($meta['location']) && !empty($meta['ip_address'])) {
-                        $meta['location'] = $this->getGeoLocation($meta['ip_address']);
-                        if ($meta['location']) {
-                            $this->redis()->hset($key, 'location', $meta['location']);
-                        }
-                    }
-
-                    if ($search) {
-                        $searchLower = strtolower($search);
-                        $match = str_contains(strtolower($meta['user_name'] ?? ''), $searchLower)
-                            || str_contains(strtolower($meta['user_email'] ?? ''), $searchLower);
-                        if (!$match) continue;
-                    }
-                    $sessions[] = $meta;
-                }
-            }
-        } while ($iterator > 0);
+        $sessions = $this->loadSessionsFromRedis($search);
 
         if (empty($sessions)) {
             $sessions = $this->loadAllSessionsFromDatabase($search);
@@ -170,6 +137,50 @@ class TokenStateService
         usort($sessions, fn($a, $b) => strcmp($b['last_used_at'] ?? '', $a['last_used_at'] ?? ''));
 
         return $sessions;
+    }
+
+    private function loadSessionsFromRedis(?string $search): array
+    {
+        try {
+            $pattern = str_replace('%s', '*', self::TOKEN_META_KEY);
+            $sessions = [];
+            $cursor = 0;
+
+            do {
+                $result = $this->redis()->scan($cursor, ['MATCH' => $pattern, 'COUNT' => 100]);
+                if ($result === false) {
+                    break;
+                }
+                [$cursor, $keys] = $result;
+                foreach ($keys as $key) {
+                    $meta = $this->redis()->hgetall($key);
+                    if (!empty($meta)) {
+                        preg_match('/token:(\d+):metadata/', $key, $matches);
+                        $meta['id'] = $matches[1] ?? null;
+
+                        if (empty($meta['location']) && !empty($meta['ip_address'])) {
+                            $meta['location'] = $this->getGeoLocation($meta['ip_address']);
+                            if ($meta['location']) {
+                                $this->redis()->hset($key, 'location', $meta['location']);
+                            }
+                        }
+
+                        if ($search) {
+                            $searchLower = strtolower($search);
+                            $match = str_contains(strtolower($meta['user_name'] ?? ''), $searchLower)
+                                || str_contains(strtolower($meta['user_email'] ?? ''), $searchLower);
+                            if (!$match) continue;
+                        }
+                        $sessions[] = $meta;
+                    }
+                }
+            } while ($cursor > 0);
+
+            return $sessions;
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to load sessions from Redis: ' . $e->getMessage());
+            return [];
+        }
     }
 
     public function isBlacklisted(int|string $tokenId): bool

@@ -31,7 +31,10 @@ export default function SessionTable({ sessions, onTerminate }: SessionTableProp
           {sessions.length > 0 ? (
             sessions.map((session) => (
               <tr key={session.id} className={session.is_current ? 'session-current' : ''}>
-                <td className="content-table-name">{session.user_name || 'Unknown'}</td>
+                <td className="content-table-name">
+                  {session.user_name || 'Unknown'}
+                  {session.is_current && <span className="session-current-badge">(Current)</span>}
+                </td>
                 <td>{session.user_email || 'N/A'}</td>
                 <td>
                   <span className="session-device">
