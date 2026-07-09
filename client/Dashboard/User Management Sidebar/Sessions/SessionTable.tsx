@@ -20,7 +20,7 @@ export default function SessionTable({ sessions, onTerminate }: SessionTableProp
       <table className="content-table">
         <thead>
           <tr>
-            <th>Full Name</th>
+            <th>user</th>
             <th>Email</th>
             <th>Device</th>
             <th>Location</th>
