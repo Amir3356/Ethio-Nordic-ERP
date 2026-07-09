@@ -5,10 +5,6 @@ import type {
   Product,
   Warehouse,
   StockBatch,
-  StockLedgerEntry,
-  StockAdjustment,
-  ReorderRule,
-  DamagedGood,
 } from './types';
 
 export function useInventory() {
@@ -47,52 +43,6 @@ export function useInventory() {
   const getBatchesForProduct = useCallback(
     (productId: string): StockBatch[] =>
       data?.stock_batches.filter((b) => b.product_id === productId) || [],
-    [data]
-  );
-
-  const getBatchesForWarehouse = useCallback(
-    (warehouseId: string): StockBatch[] =>
-      data?.stock_batches.filter((b) => b.warehouse_id === warehouseId) || [],
-    [data]
-  );
-
-  const getLedgerForProduct = useCallback(
-    (productId: string): StockLedgerEntry[] =>
-      data?.stock_ledger.filter((l) => l.product_id === productId) || [],
-    [data]
-  );
-
-  const getAdjustmentsForProduct = useCallback(
-    (productId: string): StockAdjustment[] =>
-      data?.stock_adjustments.filter((a) => a.product_id === productId) || [],
-    [data]
-  );
-
-  const getReorderRulesForProduct = useCallback(
-    (productId: string): ReorderRule[] =>
-      data?.reorder_rules.filter((r) => r.product_id === productId) || [],
-    [data]
-  );
-
-  const getDamagedForProduct = useCallback(
-    (productId: string): DamagedGood[] =>
-      data?.damaged_goods.filter((d) => d.product_id === productId) || [],
-    [data]
-  );
-
-  const getTotalStockForProduct = useCallback(
-    (productId: string): number =>
-      data?.stock_batches
-        .filter((b) => b.product_id === productId && b.status === 'active')
-        .reduce((sum, b) => sum + b.quantity, 0) || 0,
-    [data]
-  );
-
-  const getTotalStockValueForProduct = useCallback(
-    (productId: string): number =>
-      data?.stock_batches
-        .filter((b) => b.product_id === productId && b.status === 'active')
-        .reduce((sum, b) => sum + b.quantity * b.unit_cost, 0) || 0,
     [data]
   );
 
@@ -149,13 +99,6 @@ export function useInventory() {
     getProduct,
     getWarehouse,
     getBatchesForProduct,
-    getBatchesForWarehouse,
-    getLedgerForProduct,
-    getAdjustmentsForProduct,
-    getReorderRulesForProduct,
-    getDamagedForProduct,
-    getTotalStockForProduct,
-    getTotalStockValueForProduct,
     getLowStockProducts,
     getExpiringBatches,
     getInventoryValue,

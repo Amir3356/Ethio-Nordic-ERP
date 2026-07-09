@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\TokenRefreshService;
 use App\Services\TokenStateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,8 +10,7 @@ use Illuminate\Http\Request;
 class SessionController extends Controller
 {
     public function __construct(
-        private readonly TokenStateService $tokenState,
-        private readonly TokenRefreshService $refreshService
+        private readonly TokenStateService $tokenState
     ) {}
 
     /**

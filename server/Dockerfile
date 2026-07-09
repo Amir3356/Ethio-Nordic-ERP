@@ -32,8 +32,10 @@ RUN chmod -R 775 storage bootstrap/cache
 
 RUN echo "opcache.enable=0" > /usr/local/etc/php/conf.d/opcache-off.ini
 
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 9000
 
 
-CMD ["php-fpm"]
+ENTRYPOINT ["docker-entrypoint.sh"]

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { FinanceData, ChartOfAccount, JournalLine, APInvoice, ARInvoice, BankTransaction, Budget, FixedAsset, TaxRecord } from './types';
+import type { FinanceData, ChartOfAccount, ARInvoice, BankTransaction, Budget, FixedAsset, TaxRecord } from './types';
 
 export function useFinance() {
   const [data, setData] = useState<FinanceData | null>(null);
@@ -25,36 +25,8 @@ export function useFinance() {
     fetchData();
   }, [fetchData]);
 
-  const getAccount = useCallback((id: string): ChartOfAccount | undefined => {
-    return data?.chart_of_accounts.find((a) => a.id === id);
-  }, [data]);
-
-  const getAccountByCode = useCallback((code: string): ChartOfAccount | undefined => {
-    return data?.chart_of_accounts.find((a) => a.code === code);
-  }, [data]);
-
   const getChildAccounts = useCallback((parentId: string): ChartOfAccount[] => {
     return data?.chart_of_accounts.filter((a) => a.parent_id === parentId) || [];
-  }, [data]);
-
-  const getRootAccounts = useCallback((): ChartOfAccount[] => {
-    return data?.chart_of_accounts.filter((a) => a.parent_id === null) || [];
-  }, [data]);
-
-  const getJournalLines = useCallback((entryId: string): JournalLine[] => {
-    return data?.journal_lines.filter((l) => l.journal_entry_id === entryId) || [];
-  }, [data]);
-
-  const getAccountTransactions = useCallback((accountId: string): JournalLine[] => {
-    return data?.journal_lines.filter((l) => l.account_id === accountId) || [];
-  }, [data]);
-
-  const getAPInvoicesByStatus = useCallback((status: string): APInvoice[] => {
-    return data?.ap_invoices.filter((i) => i.status === status) || [];
-  }, [data]);
-
-  const getARInvoicesByStatus = useCallback((status: string): ARInvoice[] => {
-    return data?.ar_invoices.filter((i) => i.status === status) || [];
   }, [data]);
 
   const getOverdueARInvoices = useCallback((): ARInvoice[] => {
@@ -110,14 +82,7 @@ export function useFinance() {
     loading,
     error,
     refetch: fetchData,
-    getAccount,
-    getAccountByCode,
     getChildAccounts,
-    getRootAccounts,
-    getJournalLines,
-    getAccountTransactions,
-    getAPInvoicesByStatus,
-    getARInvoicesByStatus,
     getOverdueARInvoices,
     getUnreconciledTransactions,
     getBudgetByPeriod,

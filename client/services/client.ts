@@ -43,6 +43,9 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (originalRequest.url?.includes('/auth/login')) {
+        return Promise.reject(error);
+      }
       const refreshToken = localStorage.getItem('refreshToken');
 
       if (!refreshToken) {
@@ -103,5 +106,3 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-export default api;

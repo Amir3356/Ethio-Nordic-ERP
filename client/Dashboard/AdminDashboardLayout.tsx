@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, LogOut, Package, AlertTriangle, DollarSign, Briefcase } from 'lucide-react';
+import { Users, LogOut, Package, DollarSign, Briefcase } from 'lucide-react';
 import { authAPI } from '../services';
 import UserManagement from './User Management Sidebar/UserManagement/UserManagement';
 import Sessions from './User Management Sidebar/Sessions/Sessions';
@@ -21,7 +21,6 @@ export default function Layout() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('users');
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -119,14 +118,6 @@ export default function Layout() {
       </aside>
 
       <main className="layout-main">
-        {error && (
-          <div className="layout-error">
-            <AlertTriangle size={20} />
-            <p>{error}</p>
-            <button onClick={() => setError('')}>Dismiss</button>
-          </div>
-        )}
-
         {activeSection === 'users' && (
           <>
             <UserManagement />

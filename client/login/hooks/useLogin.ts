@@ -5,7 +5,7 @@ import { storeAuth, getAuthErrorMessage } from '../utils';
 
 export function useLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@ethionordic.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [error, setError] = useState('');
@@ -35,23 +35,46 @@ export function useLogin() {
     try {
       const response = await authAPI.login(email, password, requiresTwoFactor || requiresTwoFactorSetup ? twoFactorCode : null);
       const body = response.data;
-      const payload = body.data;
+      const contentType = response.headers?.['content-type'] || '';
 
-      if (payload?.requires_2fa_setup) {
-        setRequiresTwoFactorSetup(true);
-        setQrCodeUrl(payload.qr_code_url || '');
-        setLoading(false);
-        return;
+      if (!body || typeof body !== 'object') {
+        console.error('Unexpected response:', {
+          status: response.status,
+          contentType,
+          type: typeof body,
+          preview: String(body).slice(0, 200),
+        });
+        throw new TypeError(
+          `Server returned ${response.status} ${response.statusText} (${contentType}). ` +
+          `Expected JSON, got ${typeof body}.`
+        );
       }
 
-      if (payload?.requires_2fa) {
-        setRequiresTwoFactor(true);
-        setLoading(false);
-        return;
+      const payload = (body as Record<string, unknown>).data;
+
+      if (payload && typeof payload === 'object') {
+        const p = payload as Record<string, unknown>;
+
+        if (p.requires_2fa_setup) {
+          setRequiresTwoFactorSetup(true);
+          setQrCodeUrl(typeof p.qr_code_url === 'string' ? p.qr_code_url : '');
+          setLoading(false);
+          return;
+        }
+
+        if (p.requires_2fa) {
+          setRequiresTwoFactor(true);
+          setLoading(false);
+          return;
+        }
       }
 
-      storeAuth(payload);
-      navigate('/dashboard', { replace: true });
+      if (payload && typeof payload === 'object') {
+        storeAuth(payload as { token?: string; refresh_token?: string; user?: Record<string, unknown> });
+        navigate('/dashboard', { replace: true });
+      } else {
+        throw new TypeError('Login succeeded but no user data was returned.');
+      }
     } catch (err: unknown) {
       setError(getAuthErrorMessage(err));
       if (!requiresTwoFactor && !requiresTwoFactorSetup) {
