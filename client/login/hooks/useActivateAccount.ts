@@ -3,12 +3,20 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../../services';
 import { getAuthErrorMessage } from '../utils';
 
+function decodeEmailFromToken(token: string): string {
+  try {
+    return atob(token);
+  } catch {
+    return '';
+  }
+}
+
 export function useActivateAccount() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => (token ? decodeEmailFromToken(token) : ''));
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');

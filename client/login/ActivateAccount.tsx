@@ -1,4 +1,4 @@
-import { Shield } from 'lucide-react';
+import { Mail, Shield } from 'lucide-react';
 import { useActivateAccount } from './hooks/useActivateAccount';
 import AuthCard from './components/AuthCard';
 import AuthError from './components/AuthError';
@@ -52,15 +52,18 @@ export default function ActivateAccount() {
 
         <div className="form-group">
           <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email address"
-            autoFocus
-            required
-          />
+          <div className="input-wrapper">
+            <Mail size={18} className="input-icon" />
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email address"
+              autoFocus
+              required
+            />
+          </div>
         </div>
 
         <div className="form-group">
