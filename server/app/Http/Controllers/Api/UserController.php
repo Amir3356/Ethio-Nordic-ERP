@@ -3,75 +3,39 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\UserActivationMail;
-use App\Mail\PasswordResetMail;
-use App\Models\Permission;
-use App\Models\User;
+use App\Services\User\UserActivationService;
+use App\Services\User\UserBulkActionService;
+use App\Services\User\UserPasswordService;
+use App\Services\User\UserPermissionService;
+use App\Services\User\UserQueryService;
+use App\Services\User\UserReportService;
+use App\Services\User\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly UserQueryService $query,
+        private readonly UserService $userService,
+        private readonly UserActivationService $activation,
+        private readonly UserPasswordService $password,
+        private readonly UserPermissionService $permission,
+        private readonly UserBulkActionService $bulkAction,
+        private readonly UserReportService $report,
+    ) {}
+
     /**
-     * Display a listing of users with filtering and pagination
+     * Display a listing of users with filtering and pagination.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = User::with(['roles']);
-
-        // Search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('full_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('department', 'like', "%{$search}%");
-            });
-        }
-
-        // Role filter
-        if ($request->filled('role')) {
-            $query->whereHas('roles', function ($q) use ($request) {
-                $q->where('slug', $request->role);
-            });
-        }
-
-        // Status filter
-        if ($request->filled('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-
-        // Department filter
-        if ($request->filled('department')) {
-            $query->where('department', $request->department);
-        }
-
-        // Verification status filter
-        if ($request->filled('verified')) {
-            if ($request->boolean('verified')) {
-                $query->verified();
-            } else {
-                $query->unverified();
-            }
-        }
-
-        // Sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
-
-        $perPage = $request->get('per_page', 15);
-        $users = $query->paginate($perPage);
-
-        return $this->successResponse($users);
+        return $this->query->index($request);
     }
 
     /**
-     * Store a newly created user and send activation email
+     * Store a newly created user.
      */
     public function store(Request $request): JsonResponse
     {
@@ -86,93 +50,22 @@ class UserController extends Controller
             'send_email' => 'sometimes|boolean',
         ]);
 
-        DB::beginTransaction();
-        try {
-            // Generate temporary password
-            $tempPassword = Str::random(12);
-
-            $user = User::create([
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'department' => $request->department,
-                'password' => Hash::make($tempPassword),
-                'is_active' => false,
-                'temp_password_expires_at' => now()->addDays(7),
-            ]);
-
-            // Assign roles
-            $user->roles()->sync($request->role_ids);
-
-            // Assign custom permission overrides
-            if ($request->has('permission_ids')) {
-                $user->directPermissions()->sync($request->permission_ids);
-            }
-
-            // Send activation email if requested (default: true)
-            if ($request->get('send_email', true)) {
-                $throttleKey = 'activation_email:' . strtolower($user->email);
-                if (\Cache::has($throttleKey)) {
-                    \Log::warning('Activation email throttled for: ' . $user->email);
-                    $emailSent = false;
-                } else {
-                    try {
-                        $activationUrl = config('app.frontend_url') . '/activate-account?token=' . base64_encode($user->email);
-                        
-                        \Log::info('Sending activation email to: ' . $user->email . ', URL: ' . $activationUrl);
-                        
-                        Mail::to($user->email)->send(
-                            new UserActivationMail($user, $tempPassword, $activationUrl)
-                        );
-                        $emailSent = true;
-                        \Cache::put($throttleKey, true, now()->addMinutes(5));
-                        \Log::info('Activation email sent successfully to: ' . $user->email);
-                    } catch (\Exception $e) {
-                        \Log::error('Failed to send activation email: ' . $e->getMessage());
-                        \Log::error('Stack: ' . $e->getTraceAsString());
-                        $emailSent = false;
-                    }
-                }
-            } else {
-                $emailSent = false;
-            }
-
-            DB::commit();
-
-            return $this->successResponse([
-                'user' => $user->load('roles', 'directPermissions'),
-                'temp_password' => $tempPassword,
-                'email_sent' => $emailSent,
-            ], 'User created successfully.', 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse('Failed to create user: ' . $e->getMessage(), 500);
-        }
+        return $this->userService->create($request);
     }
 
     /**
-     * Display the specified user
+     * Display the specified user.
      */
     public function show($id): JsonResponse
     {
-        $user = User::with(['roles.permissions', 'directPermissions', 'loginActivities' => function($query) {
-            $query->latest()->limit(10);
-        }])->findOrFail($id);
-
-        return $this->successResponse([
-            'user' => $user,
-            'has_2fa_enabled' => $user->hasTwoFactorEnabled(),
-            'last_login' => $user->last_login_at?->diffForHumans(),
-        ]);
+        return $this->query->show($id);
     }
 
     /**
-     * Update the specified user
+     * Update the specified user.
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $user = User::findOrFail($id);
-
         $request->validate([
             'full_name' => 'sometimes|string|max:255',
             'email' => "sometimes|email|unique:users,email,{$id}",
@@ -183,162 +76,59 @@ class UserController extends Controller
             'permission_ids.*' => 'exists:permissions,id',
         ]);
 
-        DB::beginTransaction();
-        try {
-            $user->update($request->only(['full_name', 'email', 'department']));
-
-            if ($request->has('role_ids')) {
-                $user->roles()->sync($request->role_ids);
-            }
-
-            if ($request->has('permission_ids')) {
-                $user->directPermissions()->sync($request->permission_ids);
-            }
-
-            DB::commit();
-
-            return $this->successResponse($user->fresh()->load('roles', 'directPermissions'), 'User updated successfully.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->errorResponse('Failed to update user: ' . $e->getMessage(), 500);
-        }
+        return $this->userService->update($request, $id);
     }
 
     /**
-     * Remove the specified user (soft delete)
+     * Remove the specified user (soft delete).
      */
     public function destroy($id): JsonResponse
     {
-        $user = User::findOrFail($id);
-
-        // Prevent deleting the last admin
-        if ($user->isAdmin()) {
-            $adminCount = User::whereHas('roles', function ($q) {
-                $q->where('slug', 'admin');
-            })->count();
-
-            if ($adminCount <= 1) {
-                return $this->errorResponse('Cannot delete the last admin user.', 422);
-            }
-        }
-
-        // Prevent self-deletion
-        if ($user->id === auth()->id()) {
-            return $this->errorResponse('You cannot delete your own account.', 422);
-        }
-
-        // Revoke all tokens and permanently delete user
-        $user->tokens()->delete();
-        $user->forceDelete();
-
-        return $this->successResponse(null, 'User deleted permanently.');
+        return $this->userService->destroy($id);
     }
 
     /**
-     * Activate a user account
+     * Activate a user account.
      */
     public function activate($id): JsonResponse
     {
-        $user = User::findOrFail($id);
-        $user->activate();
-
-        return $this->successResponse($user, 'User activated successfully.');
+        return $this->activation->activate($id);
     }
 
     /**
-     * Deactivate a user account
+     * Deactivate a user account.
      */
     public function deactivate($id): JsonResponse
     {
-        $user = User::findOrFail($id);
-
-        // Prevent deactivating the last admin
-        if ($user->isAdmin()) {
-            $adminCount = User::active()->whereHas('roles', function ($q) {
-                $q->where('slug', 'admin');
-            })->count();
-
-            if ($adminCount <= 1) {
-                return $this->errorResponse('Cannot deactivate the last admin user.', 422);
-            }
-        }
-
-        // Prevent self-deactivation
-        if ($user->id === auth()->id()) {
-            return $this->errorResponse('You cannot deactivate your own account.', 422);
-        }
-
-        $user->deactivate();
-
-        return $this->successResponse($user, 'User deactivated successfully.');
+        return $this->activation->deactivate($id);
     }
 
     /**
-     * Resend activation email
+     * Resend activation email.
      */
     public function resendActivation($id): JsonResponse
     {
-        $user = User::findOrFail($id);
-
-        if ($user->email_verified_at) {
-            return $this->errorResponse('User email is already verified.', 422);
-        }
-
-        $throttleKey = 'activation_email:' . strtolower($user->email);
-        if (\Cache::has($throttleKey)) {
-            return $this->errorResponse('Please wait before requesting another activation email.', 429);
-        }
-
-        try {
-            // Generate new temporary password
-            $tempPassword = $user->generateTemporaryPassword();
-            
-            $activationUrl = config('app.frontend_url') . '/activate-account?token=' . base64_encode($user->email);
-            
-            Mail::to($user->email)->send(
-                new UserActivationMail($user, $tempPassword, $activationUrl)
-            );
-
-            \Cache::put($throttleKey, true, now()->addMinutes(5));
-
-            return $this->successResponse([
-                'temp_password' => $tempPassword,
-            ], 'Activation email sent successfully.');
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Failed to send activation email: ' . $e->getMessage(), 500);
-        }
+        return $this->activation->resendActivation($id);
     }
 
     /**
-     * Reset user password and send email
+     * Reset user password and send email.
      */
-    public function resetPassword(Request $request, $id): JsonResponse
+    public function resetPassword($id): JsonResponse
     {
-        $user = User::findOrFail($id);
-
-        try {
-            // Generate new temporary password
-            $tempPassword = $user->generateTemporaryPassword();
-            
-            $resetUrl = config('app.frontend_url') . '/reset-password?token=' . base64_encode($user->email);
-            
-            Mail::to($user->email)->send(
-                new PasswordResetMail($user, $resetUrl, $tempPassword)
-            );
-
-            return $this->successResponse([
-                'temp_password' => $tempPassword,
-            ], 'Password reset email sent successfully.');
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Failed to send password reset email: ' . $e->getMessage(), 500);
-        }
+        return $this->password->resetPassword($id);
     }
 
     /**
-     * Bulk actions on users
+     * Get user's permissions.
+     */
+    public function getUserPermissions($id): JsonResponse
+    {
+        return $this->permission->getUserPermissions($id);
+    }
+
+    /**
+     * Bulk actions on users.
      */
     public function bulkAction(Request $request): JsonResponse
     {
@@ -348,119 +138,14 @@ class UserController extends Controller
             'action' => 'required|in:activate,deactivate,delete',
         ]);
 
-        // Prevent actions on self
-        if (in_array(auth()->id(), $request->user_ids)) {
-            return $this->errorResponse('You cannot perform bulk actions on your own account.', 422);
-        }
-
-        $users = User::whereIn('id', $request->user_ids)->get();
-        $action = $request->action;
-        $successCount = 0;
-        $failedCount = 0;
-
-        foreach ($users as $user) {
-            try {
-                switch ($action) {
-                    case 'activate':
-                        $user->activate();
-                        $successCount++;
-                        break;
-
-                    case 'deactivate':
-                        // Skip if last admin
-                        if ($user->isAdmin()) {
-                            $adminCount = User::active()->whereHas('roles', function ($q) {
-                                $q->where('slug', 'admin');
-                            })->count();
-
-                            if ($adminCount <= 1) {
-                                $failedCount++;
-                                continue 2;
-                            }
-                        }
-                        $user->deactivate();
-                        $successCount++;
-                        break;
-
-                    case 'delete':
-                        // Skip if last admin
-                        if ($user->isAdmin()) {
-                            $adminCount = User::whereHas('roles', function ($q) {
-                                $q->where('slug', 'admin');
-                            })->count();
-
-                            if ($adminCount <= 1) {
-                                $failedCount++;
-                                continue 2;
-                            }
-                        }
-                        $user->tokens()->delete();
-                        $user->delete();
-                        $successCount++;
-                        break;
-                }
-            } catch (\Exception $e) {
-                $failedCount++;
-            }
-        }
-
-        return $this->successResponse([
-            'success_count' => $successCount,
-            'failed_count' => $failedCount,
-        ], "Bulk {$action} completed. {$successCount} successful, {$failedCount} failed.");
+        return $this->bulkAction->bulkAction($request);
     }
 
     /**
-     * Get user's permissions
-     */
-    public function getUserPermissions($id): JsonResponse
-    {
-        $user = User::findOrFail($id);
-        $allPermissions = $user->permissions()->get()->groupBy('module');
-        $rolePermissions = Permission::whereHas('roles', function ($query) use ($user) {
-            $query->whereIn('roles.id', $user->roles->pluck('id'));
-        })->get()->pluck('id');
-        $directPermissions = $user->directPermissions->pluck('id');
-
-        return $this->successResponse([
-            'user' => $user->only(['id', 'full_name', 'email']),
-            'roles' => $user->roles,
-            'permissions' => $allPermissions,
-            'role_permission_ids' => $rolePermissions->toArray(),
-            'direct_permission_ids' => $directPermissions->toArray(),
-        ]);
-    }
-
-    /**
-     * Get periodic access review report
+     * Get periodic access review report.
      */
     public function accessReviewReport(Request $request): JsonResponse
     {
-        $inactiveDays = $request->get('inactive_days', 90);
-
-        $users = User::with(['roles'])
-            ->where(function($query) use ($inactiveDays) {
-                $query->whereNull('last_login_at')
-                    ->orWhere('last_login_at', '<', now()->subDays($inactiveDays));
-            })
-            ->get()
-            ->map(function($user) {
-                return [
-                    'id' => $user->id,
-                    'full_name' => $user->full_name,
-                    'email' => $user->email,
-                    'department' => $user->department,
-                    'roles' => $user->roles->pluck('name'),
-                    'last_login' => $user->last_login_at?->format('Y-m-d H:i:s'),
-                    'days_since_login' => $user->last_login_at ? $user->last_login_at->diffInDays(now()) : null,
-                    'is_active' => $user->is_active,
-                ];
-            });
-
-        return $this->successResponse([
-            'inactive_days_threshold' => $inactiveDays,
-            'total_inactive_users' => $users->count(),
-            'users' => $users,
-        ]);
+        return $this->report->accessReviewReport($request);
     }
 }

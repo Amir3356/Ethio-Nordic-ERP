@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Token;
 
 use App\Models\RefreshToken;
 use App\Models\User;

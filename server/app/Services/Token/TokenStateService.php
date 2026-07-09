@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Token;
 
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -47,7 +47,6 @@ class TokenStateService
             'last_activity_at' => now()->toIso8601String(),
         ]);
 
-        // Persist device info to the database so it survives Redis expiry
         PersonalAccessToken::where('id', $token->getKey())->update([
             'ip_address' => $ip,
             'user_agent' => $request->userAgent(),
@@ -118,10 +117,6 @@ class TokenStateService
         return $sessions;
     }
 
-    /**
-     * Get all active sessions system-wide for admin view.
-     * Returns enriched data with fullname, email, device, and location metadata.
-     */
     public function getAllSessions(?string $search = null, ?int $userId = null): array
     {
         if ($userId) {
@@ -226,9 +221,6 @@ class TokenStateService
         }
     }
 
-    /**
-     * Get session summary statistics for admins.
-     */
     public function getSessionStats(): array
     {
         $allSessions = $this->getAllSessions();
@@ -262,10 +254,6 @@ class TokenStateService
         ];
     }
 
-    /**
-     * Revoke a specific session by token ID (admin force terminate).
-     * Blacklists the token, removes metadata, and revokes associated refresh token.
-     */
     public function forceTerminateSession(int|string $tokenId): bool
     {
         $token = PersonalAccessToken::find($tokenId);
@@ -273,25 +261,17 @@ class TokenStateService
             return false;
         }
 
-        // Blacklist the access token
         $this->blacklistToken($tokenId);
-
-        // Remove Redis metadata
         $this->removeTokenMetadata($tokenId);
 
-        // Revoke associated refresh token
         \App\Models\RefreshToken::where('access_token_id', $tokenId)
             ->update(['is_revoked' => true]);
 
-        // Delete the access token
         $token->delete();
 
         return true;
     }
 
-    /**
-     * Force terminate ALL sessions for a user (admin action for compromised/terminated employees).
-     */
     public function forceTerminateAllUserSessions(int $userId): int
     {
         $user = User::find($userId);
@@ -301,35 +281,27 @@ class TokenStateService
 
         $removed = $this->removeAllUserTokens($user);
 
-        // Revoke all refresh tokens
         \App\Models\RefreshToken::where('user_id', $userId)
             ->where('is_revoked', false)
             ->update(['is_revoked' => true]);
 
-        // Delete all access tokens
         $user->tokens()->delete();
 
         return $removed;
     }
 
-    /**
-     * Get geolocation from IP address using multiple services
-     */
     private function getGeoLocation(string $ip): ?string
     {
         if ($ip === '127.0.0.1' || $ip === '::1' || $ip === 'localhost') {
             return null;
         }
 
-        // Handle private/internal IPs (Docker, LAN, etc.) - return null to let client handle geolocation
         if (preg_match('/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/', $ip)) {
             return null;
         }
 
-        // Try ipinfo.io first (reliable, no rate limit issues)
         try {
-            $response = Http::timeout(3)
-                ->get("https://ipinfo.io/{$ip}/json");
+            $response = Http::timeout(3)->get("https://ipinfo.io/{$ip}/json");
 
             if ($response->successful() && $response->json('city')) {
                 $parts = array_filter([
@@ -344,7 +316,6 @@ class TokenStateService
             \Log::debug('ipinfo.io geolocation failed for IP: ' . $ip);
         }
 
-        // Fallback to ip-api.com
         try {
             $response = Http::timeout(3)
                 ->get("https://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
@@ -451,28 +422,18 @@ class TokenStateService
     private function parseDeviceType(?string $userAgent): string
     {
         if (!$userAgent) return 'Unknown';
-
-        // Check for specific mobile devices first
         if (preg_match('/iphone/i', $userAgent)) return 'iPhone';
         if (preg_match('/ipad/i', $userAgent)) return 'iPad';
         if (preg_match('/android/i', $userAgent)) {
-            // Distinguish between Android phone and tablet
             if (preg_match('/tablet|pad/i', $userAgent)) return 'Android Tablet';
             return 'Android Phone';
         }
-
-        // Check for tablets
         if (preg_match('/tablet/i', $userAgent)) return 'Tablet';
-
-        // Desktop devices - be more specific
         if (preg_match('/windows/i', $userAgent)) return 'Windows PC';
         if (preg_match('/macintosh|mac os/i', $userAgent)) return 'Mac';
         if (preg_match('/linux/i', $userAgent)) return 'Linux PC';
         if (preg_match('/chromebook/i', $userAgent)) return 'Chromebook';
-
-        // Generic mobile fallback
         if (preg_match('/mobile/i', $userAgent)) return 'Mobile Device';
-
         return 'Desktop';
     }
 

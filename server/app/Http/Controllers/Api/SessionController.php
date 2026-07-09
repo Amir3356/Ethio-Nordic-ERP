@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\TokenStateService;
+use App\Services\Token\TokenStateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
