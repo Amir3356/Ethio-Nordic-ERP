@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import type { useFinance } from './hooks';
-import { useState } from 'react';
 
 type FinanceHook = ReturnType<typeof useFinance>;
 

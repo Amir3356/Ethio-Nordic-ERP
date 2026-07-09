@@ -120,13 +120,9 @@ class AuthController extends Controller
         // Handle existing 2FA verification
         if ($user->hasTwoFactorEnabled()) {
             if (!$request->two_factor_code) {
-                $twoFactorSecret = $user->twoFactorSecret;
-
                 return $this->successResponse([
-                    'requires_2fa_setup' => true,
-                    'qr_code_url' => $twoFactorSecret ? $this->generateQrCodeUrl($user->email, $twoFactorSecret->getDecryptedSecret()) : null,
-                    'secret' => $twoFactorSecret ? $twoFactorSecret->getDecryptedSecret() : null,
-                ], 'Scan this QR code with your authenticator app, then enter the 6-digit code.', 202);
+                    'requires_2fa' => true,
+                ], 'Please enter your two-factor authentication code.', 202);
             }
 
             if (!$this->verifyTwoFactorCode($user, $request->two_factor_code)) {

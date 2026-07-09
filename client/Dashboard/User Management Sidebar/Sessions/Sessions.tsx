@@ -14,7 +14,8 @@ export default function Sessions() {
   return (
     <section className="content-section" id="sessions">
       <div className="content-section-header content-section-header-center">
-        <h2> Session Monitoring & Management</h2>
+        <h2>Session Monitoring & Management</h2>
+      </div>
 
       {error && (
         <div className="content-error">
