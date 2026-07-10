@@ -13,21 +13,12 @@ use App\Services\Auth\SessionService;
 use App\Services\Auth\TwoFactorService;
 use App\Services\Token\TokenRefreshService;
 use App\Services\Token\TokenStateService;
-use App\Services\User\UserActivationService;
-use App\Services\User\UserBulkActionService;
-use App\Services\User\UserEmailService;
-use App\Services\User\UserPasswordService;
-use App\Services\User\UserPermissionService;
-use App\Services\User\UserQueryService;
-use App\Services\User\UserReportService;
-use App\Services\User\UserService;
 use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Auth services
         $this->app->singleton(DeviceInfoService::class);
         $this->app->singleton(GeoLocationService::class);
         $this->app->singleton(LoginActivityService::class);
@@ -39,15 +30,5 @@ class AuthServiceProvider extends ServiceProvider
         $this->app->singleton(SessionService::class);
         $this->app->singleton(TokenStateService::class);
         $this->app->singleton(TokenRefreshService::class);
-
-        // User services
-        $this->app->singleton(UserEmailService::class);
-        $this->app->singleton(UserQueryService::class);
-        $this->app->singleton(UserService::class);
-        $this->app->singleton(UserActivationService::class);
-        $this->app->singleton(UserPasswordService::class);
-        $this->app->singleton(UserPermissionService::class);
-        $this->app->singleton(UserBulkActionService::class);
-        $this->app->singleton(UserReportService::class);
     }
 }
