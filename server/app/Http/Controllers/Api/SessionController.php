@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Token\TokenStateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class SessionController extends Controller
 {
@@ -15,7 +16,6 @@ class SessionController extends Controller
 
     /**
      * List all active sessions system-wide (admin view).
-     * Returns fullname, email, device, location metadata for each session.
      */
     public function index(Request $request): JsonResponse
     {
@@ -53,7 +53,6 @@ class SessionController extends Controller
 
     /**
      * Force terminate any session including current.
-     * Blacklists the token, removes metadata, revokes refresh tokens, and deletes the access token.
      */
     public function destroy(Request $request, $tokenId): JsonResponse
     {
@@ -67,7 +66,7 @@ class SessionController extends Controller
     }
 
     /**
-     * Get all active sessions with full metadata (simplified list view).
+     * Get all active sessions with full metadata.
      */
     public function active(Request $request): JsonResponse
     {
@@ -90,11 +89,10 @@ class SessionController extends Controller
 
     /**
      * Admin: Force terminate ALL sessions for a specific user.
-     * Used for suspected compromise or employee termination.
      */
     public function destroyAllForUser($userId): JsonResponse
     {
-        $user = \App\Models\User::find($userId);
+        $user = User::find($userId);
         if (!$user) {
             return $this->errorResponse('User not found.', 404);
         }
@@ -104,167 +102,5 @@ class SessionController extends Controller
         return $this->successResponse([
             'revoked_count' => $count,
         ], "{$count} sessions terminated successfully for user {$user->full_name}.");
-    }
-
-    /**
-     * Get the current idle session timeout configuration.
-     */
-    public function getIdleTimeout(): JsonResponse
-    {
-        $timeoutMinutes = \Cache::get('session_idle_timeout_minutes', config('session.idle_timeout', 30));
-
-        return $this->successResponse([
-            'idle_timeout_minutes' => (int) $timeoutMinutes,
-            'default_minutes' => (int) config('session.idle_timeout', 30),
-            'description' => 'Sessions with no activity for this duration will be automatically expired.',
-        ]);
-    }
-
-    /**
-     * Update the idle session timeout (admin only).
-     * Changes take effect immediately for all new requests.
-     */
-    public function updateIdleTimeout(\Illuminate\Http\Request $request): JsonResponse
-    {
-        $request->validate([
-            'idle_timeout_minutes' => 'required|integer|min:5|max:480',
-        ]);
-
-        $minutes = (int) $request->idle_timeout_minutes;
-
-        // Store in cache (Redis) — persists across requests without restart
-        \Cache::put('session_idle_timeout_minutes', $minutes, now()->addYear());
-
-        return $this->successResponse([
-            'idle_timeout_minutes' => $minutes,
-            'message' => "Idle session timeout updated to {$minutes} minutes. Changes take effect immediately.",
-        ]);
-    }
-
-    /**
-     * Update session location (e.g., from browser geolocation).
-     * Allows users to update their own session location when IP-based geolocation fails.
-     */
-    public function updateLocation(Request $request, string $tokenId): JsonResponse
-    {
-        $request->validate([
-            'location' => 'required|string|max:255',
-        ]);
-
-        $token = \Laravel\Sanctum\PersonalAccessToken::find($tokenId);
-        if (!$token) {
-            return $this->errorResponse('Session not found.', 404);
-        }
-
-        // Only allow users to update their own session location
-        if ($token->tokenable_id !== $request->user()->id) {
-            return $this->errorResponse('Unauthorized to update this session.', 403);
-        }
-
-        $this->tokenState->updateSessionLocation($tokenId, $request->location);
-
-        // Also persist to database
-        $token->update(['location' => $request->location]);
-
-        return $this->successResponse(null, 'Session location updated successfully.');
-    }
-
-    /**
-     * Get geolocation from an IP address.
-     * Accepts an optional IP parameter; if not provided, uses the request IP.
-     */
-    public function getGeoLocation(Request $request): JsonResponse
-    {
-        $ip = $request->input('ip', $request->ip());
-
-        // Skip private/local IPs
-        if ($ip === '127.0.0.1' || $ip === '::1' || $ip === 'localhost') {
-            return $this->successResponse(['location' => null]);
-        }
-
-        if (preg_match('/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/', $ip)) {
-            return $this->successResponse(['location' => null]);
-        }
-
-        // Try multiple geolocation services as fallbacks
-        $services = [
-            // ipinfo.io - reliable, no rate limit issues
-            function ($ip) {
-                $response = \Illuminate\Support\Facades\Http::timeout(3)
-                    ->get("https://ipinfo.io/{$ip}/json");
-                if ($response->successful() && $response->json('city')) {
-                    $parts = array_filter([
-                        $response->json('city'),
-                        $response->json('region'),
-                        $response->json('country'),
-                    ]);
-                    return implode(', ', $parts) ?: null;
-                }
-                return null;
-            },
-            // ip-api.com - free tier, may fail for some IPs
-            function ($ip) {
-                $response = \Illuminate\Support\Facades\Http::timeout(3)
-                    ->get("https://ip-api.com/json/{$ip}", ['fields' => 'status,country,regionName,city']);
-                if ($response->successful() && $response->json('status') === 'success') {
-                    $parts = array_filter([
-                        $response->json('city'),
-                        $response->json('regionName'),
-                        $response->json('country'),
-                    ]);
-                    return implode(', ', $parts) ?: null;
-                }
-                return null;
-            },
-        ];
-
-        foreach ($services as $service) {
-            try {
-                $location = $service($ip);
-                if ($location) {
-                    return $this->successResponse(['location' => $location]);
-                }
-            } catch (\Exception $e) {
-                \Log::debug('Geolocation service failed: ' . $e->getMessage());
-            }
-        }
-
-        return $this->successResponse(['location' => null]);
-    }
-
-    /**
-     * Get the client's public IP address.
-     * Used by clients on local networks to discover their public IP.
-     */
-    public function getPublicIp(): JsonResponse
-    {
-        try {
-            // Use multiple services as fallbacks
-            $services = [
-                'https://api.ipify.org?format=json',
-                'https://httpbin.org/ip',
-                'https://ipinfo.io/ip',
-            ];
-
-            foreach ($services as $url) {
-                try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(3)->get($url);
-                    if ($response->successful()) {
-                        $data = $response->json();
-                        // Handle different API response formats
-                        $ip = $data['ip'] ?? $data['origin'] ?? null;
-                        if ($ip) {
-                            return $this->successResponse(['ip' => $ip]);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    continue;
-                }
-            }
-        } catch (\Exception $e) {
-            \Log::debug('Failed to get public IP');
-        }
-
-        return $this->successResponse(['ip' => null]);
     }
 }
