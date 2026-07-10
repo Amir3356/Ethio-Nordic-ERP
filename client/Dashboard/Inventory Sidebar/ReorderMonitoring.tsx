@@ -8,7 +8,7 @@ interface Props {
   inventory: InventoryHook;
 }
 
-export default function ReorderAlerts({ inventory }: Props) {
+export default function ReorderMonitoring({ inventory }: Props) {
   const { data, getProduct, getWarehouse, getLowStockProducts } = inventory;
 
   const lowStockProducts = useMemo(() => getLowStockProducts(), [getLowStockProducts]);
@@ -21,13 +21,16 @@ export default function ReorderAlerts({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <section className="content-section" id="reorder">
+    <section className="content-section" id="reorder-monitoring">
       <div className="content-section-header">
-        <h2>Reorder Alerts</h2>
+        <h2>Step 3: Reorder Level Monitoring</h2>
       </div>
 
       <p className="content-description">
-        Automated low-stock notifications when inventory falls below configured reorder thresholds.
+        A background scheduled job continuously compares current stock levels against configured
+        minimum stock and reorder thresholds per SKU. When stock falls below the reorder point,
+        the system automatically generates a low-stock alert and, where configured, a draft
+        Purchase Request routed to the Procurement module.
       </p>
 
       {lowStockProducts.length > 0 && (
@@ -70,12 +73,13 @@ export default function ReorderAlerts({ inventory }: Props) {
         <table className="inv-table">
           <thead>
             <tr>
+              <th>Rule ID</th>
               <th>Product</th>
               <th>Warehouse</th>
-              <th>Min Stock</th>
+              <th>Min Stock Level</th>
               <th>Reorder Point</th>
-              <th>Reorder Qty</th>
-              <th>Alerts</th>
+              <th>Reorder Quantity</th>
+              <th>Alert Enabled</th>
               <th>Auto Purchase Request</th>
             </tr>
           </thead>
@@ -85,7 +89,8 @@ export default function ReorderAlerts({ inventory }: Props) {
               const warehouse = getWarehouse(String(rule.warehouse_id));
               return (
                 <tr key={rule.reorder_rule_id}>
-                  <td className="inv-table-name">{product?.product_name || rule.product_id}</td>
+                  <td className="inv-table-name">{rule.reorder_rule_id}</td>
+                  <td>{product?.product_name || rule.product_id}</td>
                   <td>{warehouse?.warehouse_name || rule.warehouse_id}</td>
                   <td>{Number(rule.minimum_stock_level).toLocaleString()}</td>
                   <td>{Number(rule.reorder_point).toLocaleString()}</td>
@@ -104,7 +109,7 @@ export default function ReorderAlerts({ inventory }: Props) {
               );
             })}
             {reorderRules.length === 0 && (
-              <tr><td colSpan={7} className="inv-empty">No reorder rules configured</td></tr>
+              <tr><td colSpan={8} className="inv-empty">No reorder rules configured</td></tr>
             )}
           </tbody>
         </table>

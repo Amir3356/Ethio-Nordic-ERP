@@ -32,11 +32,14 @@ export default function ExpiryMonitor({ inventory }: Props) {
   return (
     <section className="content-section" id="expiry">
       <div className="content-section-header">
-        <h2>Expiry Monitor</h2>
+        <h2>Step 4: Expiry Monitoring (FEFO Enforcement)</h2>
       </div>
 
       <p className="content-description">
-        Batch-level expiry tracking with escalating alerts. FEFO enforcement ensures earliest-expiring batches are allocated first.
+        Each batch's expiry date is monitored daily. Batches approaching expiry (configurable thresholds,
+        e.g. 90/60/30 days) trigger escalating alerts to warehouse and regulatory teams. When Sales &amp;
+        Distribution requests stock allocation for an order, the system automatically allocates from the
+        earliest-expiring eligible batch first (FEFO), unless a batch is manually overridden with justification.
       </p>
 
       <div className="inv-expiry-summary">
@@ -74,6 +77,7 @@ export default function ExpiryMonitor({ inventory }: Props) {
                   <th>Product</th>
                   <th>Warehouse</th>
                   <th>Quantity</th>
+                  <th>Unit Cost</th>
                   <th>Expiry Date</th>
                   <th>Days Left</th>
                   <th>Status</th>
@@ -93,6 +97,7 @@ export default function ExpiryMonitor({ inventory }: Props) {
                         <td>{product?.product_name || batch.product_id}</td>
                         <td>{warehouse?.warehouse_name || batch.warehouse_id}</td>
                         <td>{Number(batch.available_quantity).toLocaleString()}</td>
+                        <td>${Number(batch.unit_cost).toFixed(2)}</td>
                         <td>{batch.expiry_date}</td>
                         <td>{daysLeft}</td>
                         <td>{getExpiryBadge(daysLeft)}</td>

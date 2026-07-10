@@ -8,7 +8,7 @@ interface Props {
   inventory: InventoryHook;
 }
 
-export default function StockMovements({ inventory }: Props) {
+export default function StockLedger({ inventory }: Props) {
   const { data, getProduct, getWarehouse } = inventory;
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -41,6 +41,7 @@ export default function StockMovements({ inventory }: Props) {
       type === 'stock-in' ? 'inv-badge-green' :
       type === 'stock-out' ? 'inv-badge-red' :
       type === 'transfer-in' || type === 'transfer-out' ? 'inv-badge-blue' :
+      type === 'write-off' ? 'inv-badge-red' :
       'inv-badge-amber';
     return <span className={`inv-badge ${cls}`}>{type.replace('-', ' ')}</span>;
   };
@@ -48,10 +49,15 @@ export default function StockMovements({ inventory }: Props) {
   if (!data) return null;
 
   return (
-    <section className="content-section" id="movements">
+    <section className="content-section" id="stock-ledger">
       <div className="content-section-header">
-        <h2>Stock Movements</h2>
+        <h2>Step 2: Stock Ledger</h2>
       </div>
+
+      <p className="content-description">
+        Immutable append-only log of every stock movement. The real-time stock ledger for each SKU
+        and warehouse is updated atomically to prevent race conditions during concurrent transactions.
+      </p>
 
       <div className="inv-toolbar">
         <div className="inv-search">
@@ -74,6 +80,7 @@ export default function StockMovements({ inventory }: Props) {
           <option value="transfer-in">Transfer In</option>
           <option value="transfer-out">Transfer Out</option>
           <option value="adjustment">Adjustment</option>
+          <option value="write-off">Write Off</option>
         </select>
       </div>
 
@@ -81,39 +88,44 @@ export default function StockMovements({ inventory }: Props) {
         <table className="inv-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Type</th>
+              <th>Ledger ID</th>
+              <th>Movement Type</th>
               <th>Product</th>
               <th>Warehouse</th>
+              <th>Batch</th>
               <th>Quantity</th>
               <th>Balance After</th>
               <th>Reference Type</th>
-              <th>By</th>
-              <th>Date</th>
+              <th>Reference ID</th>
+              <th>Transaction Date</th>
+              <th>Created By</th>
             </tr>
           </thead>
           <tbody>
             {movements.map((m) => {
               const product = getProduct(String(m.product_id));
               const warehouse = getWarehouse(String(m.warehouse_id));
+              const batch = data.stock_batches.find((b) => String(b.batch_id) === String(m.batch_id));
               return (
                 <tr key={m.ledger_id}>
                   <td className="inv-table-name">{m.ledger_id}</td>
                   <td>{getTypeBadge(m.movement_type)}</td>
                   <td>{product?.product_name || m.product_id}</td>
                   <td>{warehouse?.warehouse_name || m.warehouse_id}</td>
+                  <td>{batch?.batch_number || m.batch_id}</td>
                   <td className={Number(m.quantity) < 0 ? 'inv-text-red' : 'inv-text-green'}>
                     {Number(m.quantity) > 0 ? '+' : ''}{Number(m.quantity).toLocaleString()}
                   </td>
                   <td>{Number(m.balance_after).toLocaleString()}</td>
                   <td>{m.reference_type || '—'}</td>
-                  <td>{m.created_by ?? '—'}</td>
+                  <td>{m.reference_id ?? '—'}</td>
                   <td>{new Date(m.transaction_date).toLocaleDateString()}</td>
+                  <td>{m.created_by ?? '—'}</td>
                 </tr>
               );
             })}
             {movements.length === 0 && (
-              <tr><td colSpan={9} className="inv-empty">No movements found</td></tr>
+              <tr><td colSpan={11} className="inv-empty">No movements found</td></tr>
             )}
           </tbody>
         </table>

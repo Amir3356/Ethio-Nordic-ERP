@@ -34,6 +34,10 @@ export default function InventoryOverview({ inventory }: Props) {
         <h2>Inventory Overview</h2>
       </div>
 
+      <p className="content-description">
+        Real-time, always-current stock-on-hand per SKU, per warehouse, per batch.
+      </p>
+
       <div className="inv-stats-grid">
         <div className="inv-stat-card">
           <div className="inv-stat-icon inv-stat-icon-blue"><Package size={20} /></div>
