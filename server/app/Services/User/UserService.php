@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class UserService
@@ -28,7 +27,7 @@ class UserService
                 'full_name' => $request->full_name,
                 'email' => $request->email,
                 'department' => $request->department,
-                'password' => Hash::make($tempPassword),
+                'password' => $tempPassword,
                 'is_active' => false,
                 'temp_password_expires_at' => now()->addDays(7),
             ]);

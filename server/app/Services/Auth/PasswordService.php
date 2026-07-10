@@ -26,7 +26,7 @@ class PasswordService
         }
 
         $user->update([
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
             'temp_password_expires_at' => null,
         ]);
 

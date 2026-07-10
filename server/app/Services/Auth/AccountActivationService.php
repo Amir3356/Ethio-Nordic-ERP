@@ -5,7 +5,6 @@ namespace App\Services\Auth;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AccountActivationService
 {
@@ -34,7 +33,7 @@ class AccountActivationService
         }
 
         $user->update([
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
             'is_active' => true,
             'temp_password_expires_at' => null,
             'email_verified_at' => now(),

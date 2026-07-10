@@ -151,7 +151,7 @@ class AuthenticationService
             'full_name' => $request->full_name,
             'email' => $request->email,
             'department' => $request->department,
-            'password' => bcrypt($tempPassword),
+            'password' => $tempPassword,
             'is_active' => false,
             'temp_password_expires_at' => now()->addDays(7),
         ]);

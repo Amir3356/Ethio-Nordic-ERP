@@ -170,7 +170,7 @@ class User extends Authenticatable
     {
         $tempPassword = Str::random(12);
         $this->update([
-            'password' => bcrypt($tempPassword),
+            'password' => $tempPassword,
             'temp_password_expires_at' => now()->addDays(7),
         ]);
         return $tempPassword;
