@@ -40,5 +40,30 @@ Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
 
         // Valuation
         Route::get('/valuation', [InventoryController::class, 'valuation']);
+
+        // Warehouses - update
+        Route::put('/warehouses/{id}', [InventoryController::class, 'updateWarehouse']);
+
+        // Cycle Counts
+        Route::get('/cycle-counts', [InventoryController::class, 'cycleCounts']);
+        Route::post('/cycle-counts', [InventoryController::class, 'storeCycleCount']);
+        Route::post('/cycle-counts/{id}/approve', [InventoryController::class, 'approveCycleCount']);
+
+        // Stock Transfers
+        Route::get('/transfers', [InventoryController::class, 'transfers']);
+        Route::post('/transfers', [InventoryController::class, 'storeTransfer']);
+        Route::post('/transfers/{id}/approve', [InventoryController::class, 'approveTransfer']);
+        Route::post('/transfers/{id}/complete', [InventoryController::class, 'completeTransfer']);
+
+        // Damaged Goods - approve/reject
+        Route::post('/damaged-goods/{id}/approve', [InventoryController::class, 'approveDamagedGood']);
+        Route::post('/damaged-goods/{id}/reject', [InventoryController::class, 'rejectDamagedGood']);
+
+        // FEFO Override
+        Route::post('/fefo-overrides', [InventoryController::class, 'storeFefoOverride']);
+
+        // Reports
+        Route::get('/reports/stock', [InventoryController::class, 'stockReport']);
+        Route::get('/reports/stock/export', [InventoryController::class, 'exportStockReport']);
     });
 });

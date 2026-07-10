@@ -52,4 +52,49 @@ export const inventoryAPI = {
 
   getValuation: () =>
     api.get('/inventory/valuation'),
+
+  // Warehouses - update
+  updateWarehouse: (id: string, data: Record<string, unknown>) =>
+    api.put(`/inventory/warehouses/${id}`, data),
+
+  // Cycle Counts
+  getCycleCounts: (params?: PaginationParams & { warehouse_id?: string; status?: string }) =>
+    api.get('/inventory/cycle-counts', { params }),
+
+  createCycleCount: (data: Record<string, unknown>) =>
+    api.post('/inventory/cycle-counts', data),
+
+  approveCycleCount: (id: string) =>
+    api.post(`/inventory/cycle-counts/${id}/approve`),
+
+  // Stock Transfers
+  getTransfers: (params?: PaginationParams & { status?: string }) =>
+    api.get('/inventory/transfers', { params }),
+
+  createTransfer: (data: Record<string, unknown>) =>
+    api.post('/inventory/transfers', data),
+
+  approveTransfer: (id: string) =>
+    api.post(`/inventory/transfers/${id}/approve`),
+
+  completeTransfer: (id: string) =>
+    api.post(`/inventory/transfers/${id}/complete`),
+
+  // Damaged Goods - approve/reject
+  approveDamagedGood: (id: string) =>
+    api.post(`/inventory/damaged-goods/${id}/approve`),
+
+  rejectDamagedGood: (id: string) =>
+    api.post(`/inventory/damaged-goods/${id}/reject`),
+
+  // FEFO Override
+  createFefoOverride: (data: Record<string, unknown>) =>
+    api.post('/inventory/fefo-overrides', data),
+
+  // Reports
+  getStockReport: (params?: { warehouse_id?: string; product_id?: string }) =>
+    api.get('/inventory/reports/stock', { params }),
+
+  exportStockReport: (params?: { warehouse_id?: string; format?: string }) =>
+    api.get('/inventory/reports/stock/export', { params, responseType: 'blob' }),
 };

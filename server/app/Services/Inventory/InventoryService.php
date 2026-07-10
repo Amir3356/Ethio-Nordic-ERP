@@ -481,4 +481,384 @@ class InventoryService
             ],
         ]);
     }
+
+    public function updateWarehouse(Request $request, int $id): JsonResponse
+    {
+        $warehouse = Warehouse::findOrFail($id);
+
+        $validated = $request->validate([
+            'warehouse_name' => 'sometimes|string|max:255',
+            'location' => 'sometimes|string|max:255',
+            'warehouse_type' => 'sometimes|string|max:100',
+            'capacity' => 'sometimes|numeric|min:0',
+            'status' => 'sometimes|string|in:active,inactive,maintenance',
+        ]);
+
+        $warehouse->update($validated);
+
+        return response()->json(['success' => true, 'data' => $warehouse->fresh()]);
+    }
+
+    public function cycleCounts(Request $request): JsonResponse
+    {
+        $query = \App\Models\CycleCount::with(['product', 'warehouse', 'batch']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('warehouse_id')) {
+            $query->where('warehouse_id', $request->warehouse_id);
+        }
+
+        $counts = $query->latest('created_at')->paginate($request->get('per_page', 25));
+
+        return response()->json(['success' => true, 'data' => $counts]);
+    }
+
+    public function storeCycleCount(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,product_id',
+            'warehouse_id' => 'required|exists:warehouses,warehouse_id',
+            'batch_id' => 'required|exists:stock_batches,batch_id',
+            'counted_quantity' => 'required|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $batch = StockBatch::findOrFail($validated['batch_id']);
+        $variance = $validated['counted_quantity'] - $batch->available_quantity;
+
+        $count = \App\Models\CycleCount::create([
+            ...$validated,
+            'system_quantity' => $batch->available_quantity,
+            'variance' => $variance,
+            'counted_by' => $request->user()?->id,
+            'count_date' => now(),
+            'status' => $variance == 0 ? 'approved' : 'pending',
+        ]);
+
+        if ($variance == 0) {
+            $count->update(['status' => 'approved']);
+        }
+
+        return response()->json(['success' => true, 'data' => $count], 201);
+    }
+
+    public function approveCycleCount(int $id, Request $request): JsonResponse
+    {
+        $count = \App\Models\CycleCount::findOrFail($id);
+
+        if ($count->status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Cycle count is not pending.'], 422);
+        }
+
+        $batch = StockBatch::findOrFail($count->batch_id);
+        $newQuantity = $count->counted_quantity;
+
+        $batch->update(['available_quantity' => $newQuantity]);
+
+        StockLedger::create([
+            'product_id' => $count->product_id,
+            'warehouse_id' => $count->warehouse_id,
+            'batch_id' => $count->batch_id,
+            'movement_type' => 'adjustment',
+            'quantity' => $count->variance,
+            'balance_after' => $newQuantity,
+            'reference_type' => 'cycle_count',
+            'reference_id' => $count->cycle_count_id,
+            'transaction_date' => now(),
+            'created_by' => $request->user()?->id,
+        ]);
+
+        $count->update(['status' => 'approved']);
+
+        return response()->json(['success' => true, 'data' => $count->fresh()]);
+    }
+
+    public function transfers(Request $request): JsonResponse
+    {
+        $query = \App\Models\StockTransfer::with(['product', 'fromWarehouse', 'toWarehouse', 'batch']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $transfers = $query->latest('created_at')->paginate($request->get('per_page', 25));
+
+        return response()->json(['success' => true, 'data' => $transfers]);
+    }
+
+    public function storeTransfer(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,product_id',
+            'batch_id' => 'required|exists:stock_batches,batch_id',
+            'from_warehouse_id' => 'required|exists:warehouses,warehouse_id',
+            'to_warehouse_id' => 'required|exists:warehouses,warehouse_id|different:from_warehouse_id',
+            'quantity' => 'required|numeric|min:0.01',
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $batch = StockBatch::findOrFail($validated['batch_id']);
+
+        if ((float) $batch->available_quantity < (float) $validated['quantity']) {
+            return response()->json(['success' => false, 'message' => 'Insufficient stock available for transfer.'], 422);
+        }
+
+        if ((float) $batch->warehouse_id !== (float) $validated['from_warehouse_id']) {
+            return response()->json(['success' => false, 'message' => 'Batch does not belong to the source warehouse.'], 422);
+        }
+
+        $transfer = \App\Models\StockTransfer::create([
+            ...$validated,
+            'status' => 'pending',
+            'requested_by' => $request->user()?->id,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $transfer], 201);
+    }
+
+    public function approveTransfer(int $id, Request $request): JsonResponse
+    {
+        $transfer = \App\Models\StockTransfer::findOrFail($id);
+
+        if ($transfer->status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Transfer is not pending.'], 422);
+        }
+
+        $transfer->update([
+            'status' => 'approved',
+            'approved_by' => $request->user()?->id,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $transfer->fresh()]);
+    }
+
+    public function completeTransfer(int $id, Request $request): JsonResponse
+    {
+        $transfer = \App\Models\StockTransfer::findOrFail($id);
+
+        if ($transfer->status !== 'approved') {
+            return response()->json(['success' => false, 'message' => 'Transfer is not approved.'], 422);
+        }
+
+        $sourceBatch = StockBatch::findOrFail($transfer->batch_id);
+
+        if ((float) $sourceBatch->available_quantity < (float) $transfer->quantity) {
+            return response()->json(['success' => false, 'message' => 'Insufficient stock.'], 422);
+        }
+
+        $sourceBatch->update([
+            'available_quantity' => (float) $sourceBatch->available_quantity - (float) $transfer->quantity,
+        ]);
+
+        StockLedger::create([
+            'product_id' => $transfer->product_id,
+            'warehouse_id' => $transfer->from_warehouse_id,
+            'batch_id' => $transfer->batch_id,
+            'movement_type' => 'transfer-out',
+            'quantity' => -$transfer->quantity,
+            'balance_after' => $sourceBatch->available_quantity,
+            'reference_type' => 'stock_transfer',
+            'reference_id' => $transfer->transfer_id,
+            'transaction_date' => now(),
+            'created_by' => $request->user()?->id,
+        ]);
+
+        $destBatch = StockBatch::where('product_id', $transfer->product_id)
+            ->where('warehouse_id', $transfer->to_warehouse_id)
+            ->where('batch_id', '!=', $transfer->batch_id)
+            ->first();
+
+        if (!$destBatch) {
+            $destBatch = StockBatch::create([
+                'product_id' => $transfer->product_id,
+                'warehouse_id' => $transfer->to_warehouse_id,
+                'batch_number' => $sourceBatch->batch_number . '-T',
+                'quantity_received' => $transfer->quantity,
+                'available_quantity' => $transfer->quantity,
+                'unit_cost' => $sourceBatch->unit_cost,
+                'manufacture_date' => $sourceBatch->manufacture_date,
+                'expiry_date' => $sourceBatch->expiry_date,
+                'batch_status' => 'available',
+            ]);
+        } else {
+            $destBatch->update([
+                'available_quantity' => (float) $destBatch->available_quantity + (float) $transfer->quantity,
+            ]);
+        }
+
+        StockLedger::create([
+            'product_id' => $transfer->product_id,
+            'warehouse_id' => $transfer->to_warehouse_id,
+            'batch_id' => $destBatch->batch_id,
+            'movement_type' => 'transfer-in',
+            'quantity' => $transfer->quantity,
+            'balance_after' => $destBatch->available_quantity,
+            'reference_type' => 'stock_transfer',
+            'reference_id' => $transfer->transfer_id,
+            'transaction_date' => now(),
+            'created_by' => $request->user()?->id,
+        ]);
+
+        $transfer->update([
+            'status' => 'completed',
+            'transferred_by' => $request->user()?->id,
+            'transfer_date' => now(),
+        ]);
+
+        return response()->json(['success' => true, 'data' => $transfer->fresh()]);
+    }
+
+    public function approveDamagedGood(int $id, Request $request): JsonResponse
+    {
+        $damaged = DamagedGood::findOrFail($id);
+
+        if ($damaged->disposition_status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Record is not pending.'], 422);
+        }
+
+        $batch = StockBatch::findOrFail($damaged->batch_id);
+        $newQuantity = (float) $batch->available_quantity - (float) $damaged->quantity;
+
+        if ($newQuantity < 0) {
+            return response()->json(['success' => false, 'message' => 'Insufficient stock to write off.'], 422);
+        }
+
+        $batch->update(['available_quantity' => $newQuantity]);
+
+        StockLedger::create([
+            'product_id' => $damaged->product_id,
+            'warehouse_id' => $damaged->warehouse_id,
+            'batch_id' => $damaged->batch_id,
+            'movement_type' => 'write-off',
+            'quantity' => -$damaged->quantity,
+            'balance_after' => $newQuantity,
+            'reference_type' => 'damaged_goods',
+            'reference_id' => $damaged->damaged_goods_id,
+            'transaction_date' => now(),
+            'created_by' => $request->user()?->id,
+        ]);
+
+        $damaged->update([
+            'disposition_status' => 'approved',
+            'approved_by' => $request->user()?->id,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $damaged->fresh()]);
+    }
+
+    public function rejectDamagedGood(int $id, Request $request): JsonResponse
+    {
+        $damaged = DamagedGood::findOrFail($id);
+
+        if ($damaged->disposition_status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Record is not pending.'], 422);
+        }
+
+        $damaged->update([
+            'disposition_status' => 'rejected',
+            'approved_by' => $request->user()?->id,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $damaged->fresh()]);
+    }
+
+    public function storeFefoOverride(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'batch_id' => 'required|exists:stock_batches,batch_id',
+            'product_id' => 'required|exists:products,product_id',
+            'warehouse_id' => 'required|exists:warehouses,warehouse_id',
+            'original_batch_id' => 'required|exists:stock_batches,batch_id',
+            'overridden_batch_id' => 'required|exists:stock_batches,batch_id|different:original_batch_id',
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $override = \App\Models\FefoOverride::create([
+            ...$validated,
+            'overridden_by' => $request->user()?->id,
+        ]);
+
+        return response()->json(['success' => true, 'data' => $override], 201);
+    }
+
+    public function stockReport(Request $request): JsonResponse
+    {
+        $query = StockBatch::with(['product', 'warehouse']);
+
+        if ($request->filled('warehouse_id')) {
+            $query->where('warehouse_id', $request->warehouse_id);
+        }
+
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->product_id);
+        }
+
+        $batches = $query->get();
+
+        $grouped = $batches->groupBy(fn ($b) => $b->product_id . '-' . $b->warehouse_id)
+            ->map(function ($productBatches) {
+                $product = $productBatches->first()->product;
+                $warehouse = $productBatches->first()->warehouse;
+                $totalQty = $productBatches->sum('available_quantity');
+                $totalValue = $productBatches->sum(fn ($b) => $b->available_quantity * $b->unit_cost);
+
+                return [
+                    'product_id' => $product->product_id ?? $productBatches->first()->product_id,
+                    'product_name' => $product->product_name ?? 'Unknown',
+                    'warehouse_id' => $warehouse->warehouse_id ?? $productBatches->first()->warehouse_id,
+                    'warehouse_name' => $warehouse->warehouse_name ?? 'Unknown',
+                    'total_quantity' => $totalQty,
+                    'total_value' => $totalValue,
+                    'batch_count' => $productBatches->count(),
+                ];
+            })->values();
+
+        return response()->json(['success' => true, 'data' => $grouped]);
+    }
+
+    public function exportStockReport(Request $request): JsonResponse
+    {
+        $format = $request->get('format', 'csv');
+
+        $query = StockBatch::with(['product', 'warehouse']);
+
+        if ($request->filled('warehouse_id')) {
+            $query->where('warehouse_id', $request->warehouse_id);
+        }
+
+        $batches = $query->get();
+
+        if ($format === 'csv') {
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="stock-report.csv"',
+            ];
+
+            $callback = function () use ($batches) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['Product', 'Warehouse', 'Batch', 'Qty', 'Unit Cost', 'Total Value', 'Expiry']);
+
+                foreach ($batches as $batch) {
+                    fputcsv($file, [
+                        $batch->product->product_name ?? '',
+                        $batch->warehouse->warehouse_name ?? '',
+                        $batch->batch_number,
+                        $batch->available_quantity,
+                        $batch->unit_cost,
+                        $batch->available_quantity * $batch->unit_cost,
+                        $batch->expiry_date?->format('Y-m-d') ?? '',
+                    ]);
+                }
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
+        return response()->json(['success' => true, 'data' => $batches]);
+    }
 }

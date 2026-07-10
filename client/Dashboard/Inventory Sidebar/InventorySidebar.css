@@ -515,6 +515,101 @@
   margin-top: 8px;
 }
 
+/* ===== Button Group ===== */
+.inv-btn-group {
+  display: flex;
+  gap: 6px;
+}
+
+.inv-btn-sm {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.inv-btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.inv-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.inv-btn-green {
+  background: #059669;
+  color: #ffffff;
+}
+
+.inv-btn-green:hover:not(:disabled) {
+  background: #047857;
+}
+
+.inv-btn-icon {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inv-btn-icon:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* ===== Transfer Arrow ===== */
+.inv-transfer-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4f46e5;
+  font-weight: 500;
+}
+
+/* ===== Report Summary ===== */
+.inv-report-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.inv-report-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.inv-report-icon {
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+
+.inv-report-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.inv-report-label {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 1200px) {
   .inv-stats-grid {
@@ -523,10 +618,16 @@
   .inv-expiry-summary {
     grid-template-columns: 1fr;
   }
+  .inv-report-summary {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
   .inv-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .inv-report-summary {
     grid-template-columns: 1fr;
   }
 }
