@@ -2,7 +2,10 @@
 
 namespace App\Services\Inventory;
 
+use App\Models\DamagedGood;
 use App\Models\Product;
+use App\Models\ReorderRule;
+use App\Models\StockAdjustment;
 use App\Models\StockBatch;
 use App\Models\StockLedger;
 use App\Models\Warehouse;
@@ -13,10 +16,13 @@ class InventoryService
 {
     public function overview(): JsonResponse
     {
-        $products = Product::where('is_active', true)->get();
-        $warehouses = Warehouse::where('is_active', true)->get();
+        $products = Product::where('status', 'active')->get();
+        $warehouses = Warehouse::where('status', 'active')->get();
         $batches = StockBatch::with(['product', 'warehouse'])->get();
-        $ledger = StockLedger::with(['product', 'warehouse'])->latest()->limit(100)->get();
+        $ledger = StockLedger::with(['product', 'warehouse'])
+            ->orderByDesc('transaction_date')
+            ->limit(100)
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -36,17 +42,21 @@ class InventoryService
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%");
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('product_code', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
         }
 
-        $products = $query->orderBy('name')->paginate($request->get('per_page', 25));
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $products = $query->orderBy('product_name')->paginate($request->get('per_page', 25));
 
         return response()->json(['success' => true, 'data' => $products]);
     }
@@ -54,13 +64,14 @@ class InventoryService
     public function storeProduct(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'sku' => 'required|string|unique:products,sku',
-            'name' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'unit' => 'required|string|max:50',
-            'min_stock' => 'required|numeric|min:0',
-            'reorder_level' => 'required|numeric|min:0',
-            'fifo_fefo' => 'required|in:FIFO,FEFO',
+            'product_code' => 'required|string|unique:products,product_code',
+            'product_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|integer',
+            'unit_of_measure' => 'required|string|max:50',
+            'requires_batch_tracking' => 'sometimes|boolean',
+            'requires_expiry_tracking' => 'sometimes|boolean',
+            'status' => 'sometimes|string|in:active,inactive',
         ]);
 
         $product = Product::create($validated);
@@ -73,13 +84,13 @@ class InventoryService
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'category' => 'sometimes|string|max:255',
-            'unit' => 'sometimes|string|max:50',
-            'min_stock' => 'sometimes|numeric|min:0',
-            'reorder_level' => 'sometimes|numeric|min:0',
-            'fifo_fefo' => 'sometimes|in:FIFO,FEFO',
-            'is_active' => 'sometimes|boolean',
+            'product_name' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|integer',
+            'unit_of_measure' => 'sometimes|string|max:50',
+            'requires_batch_tracking' => 'sometimes|boolean',
+            'requires_expiry_tracking' => 'sometimes|boolean',
+            'status' => 'sometimes|string|in:active,inactive',
         ]);
 
         $product->update($validated);
@@ -89,18 +100,20 @@ class InventoryService
 
     public function warehouses(): JsonResponse
     {
-        $warehouses = Warehouse::where('is_active', true)->get();
+        $warehouses = Warehouse::where('status', 'active')->get();
+
         return response()->json(['success' => true, 'data' => $warehouses]);
     }
 
     public function storeWarehouse(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|unique:warehouses,code',
-            'city' => 'required|string|max:255',
-            'capacity_sqm' => 'required|numeric|min:0',
-            'manager' => 'nullable|string|max:255',
+            'warehouse_code' => 'required|string|unique:warehouses,warehouse_code',
+            'warehouse_name' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'warehouse_type' => 'required|string|max:100',
+            'capacity' => 'required|numeric|min:0',
+            'status' => 'sometimes|string|in:active,inactive',
         ]);
 
         $warehouse = Warehouse::create($validated);
@@ -120,19 +133,19 @@ class InventoryService
             $query->where('warehouse_id', $request->warehouse_id);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('batch_no', 'like', "%{$search}%")
-                  ->orWhereHas('product', fn($pq) => $pq->where('name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
+                $q->where('batch_number', 'like', "%{$search}%")
+                  ->orWhere('receipt_reference', 'like', "%{$search}%")
+                  ->orWhereHas('product', function ($pq) use ($search) {
+                      $pq->where('product_name', 'like', "%{$search}%")
+                        ->orWhere('product_code', 'like', "%{$search}%");
+                  });
             });
         }
 
-        $batches = $query->orderBy('received_date', 'desc')->paginate($request->get('per_page', 25));
+        $batches = $query->orderBy('created_at', 'desc')->paginate($request->get('per_page', 25));
 
         return response()->json(['success' => true, 'data' => $batches]);
     }
@@ -140,29 +153,67 @@ class InventoryService
     public function storeBatch(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
-            'batch_no' => 'required|string',
-            'quantity' => 'required|numeric|min:0.01',
+            'product_id' => 'required',
+            'warehouse_id' => 'required',
+            'batch_number' => 'required|string',
+            'quantity_received' => 'required|numeric|min:0.01',
             'unit_cost' => 'required|numeric|min:0',
             'manufacture_date' => 'nullable|date',
             'expiry_date' => 'nullable|date|after:manufacture_date',
-            'received_date' => 'required|date',
+            'supplier_id' => 'nullable|integer',
+            'receipt_reference' => 'nullable|string|max:255',
+            'batch_status' => 'sometimes|string|in:available,expired,quarantined,consumed',
         ]);
 
-        $batch = StockBatch::create($validated);
+        $productId = $validated['product_id'];
+        if (!is_numeric($productId)) {
+            $product = Product::where('product_name', $productId)
+                ->orWhere('product_code', $productId)
+                ->first();
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'Product not found'], 422);
+            }
+            $productId = $product->product_id;
+        }
+
+        $warehouseId = $validated['warehouse_id'];
+        if (!is_numeric($warehouseId)) {
+            $warehouse = Warehouse::where('warehouse_name', $warehouseId)
+                ->orWhere('warehouse_code', $warehouseId)
+                ->first();
+            if (!$warehouse) {
+                return response()->json(['success' => false, 'message' => 'Warehouse not found'], 422);
+            }
+            $warehouseId = $warehouse->warehouse_id;
+        }
+
+        $quantity = $validated['quantity_received'];
+
+        $batch = StockBatch::create([
+            'product_id' => $productId,
+            'warehouse_id' => $warehouseId,
+            'batch_number' => $validated['batch_number'],
+            'quantity_received' => $quantity,
+            'available_quantity' => $quantity,
+            'unit_cost' => $validated['unit_cost'],
+            'manufacture_date' => $validated['manufacture_date'] ?? null,
+            'expiry_date' => $validated['expiry_date'] ?? null,
+            'supplier_id' => $validated['supplier_id'] ?? null,
+            'receipt_reference' => $validated['receipt_reference'] ?? null,
+            'batch_status' => $validated['batch_status'] ?? 'available',
+        ]);
 
         StockLedger::create([
             'product_id' => $batch->product_id,
             'warehouse_id' => $batch->warehouse_id,
-            'batch_id' => $batch->id,
-            'type' => 'stock-in',
-            'quantity' => $batch->quantity,
-            'unit_cost' => $batch->unit_cost,
-            'reference' => 'GRN-' . $batch->batch_no,
+            'batch_id' => $batch->batch_id,
+            'movement_type' => 'stock-in',
+            'quantity' => $batch->available_quantity,
+            'balance_after' => $batch->available_quantity,
             'reference_type' => 'goods_receipt',
-            'created_by' => $request->user()->full_name ?? 'System',
-            'notes' => 'Initial stock receipt',
+            'reference_id' => null,
+            'transaction_date' => now(),
+            'created_by' => $request->user()?->id,
         ]);
 
         return response()->json(['success' => true, 'data' => $batch], 201);
@@ -172,8 +223,8 @@ class InventoryService
     {
         $query = StockLedger::with(['product', 'warehouse', 'batch']);
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        if ($request->filled('type') || $request->filled('movement_type')) {
+            $query->where('movement_type', $request->input('movement_type', $request->input('type')));
         }
 
         if ($request->filled('product_id')) {
@@ -187,13 +238,15 @@ class InventoryService
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('reference', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhereHas('product', fn($pq) => $pq->where('name', 'like', "%{$search}%"));
+                $q->where('reference_type', 'like', "%{$search}%")
+                  ->orWhere('movement_type', 'like', "%{$search}%")
+                  ->orWhereHas('product', function ($pq) use ($search) {
+                      $pq->where('product_name', 'like', "%{$search}%");
+                  });
             });
         }
 
-        $movements = $query->latest('created_at')->paginate($request->get('per_page', 25));
+        $movements = $query->orderByDesc('transaction_date')->paginate($request->get('per_page', 25));
 
         return response()->json(['success' => true, 'data' => $movements]);
     }
@@ -206,7 +259,7 @@ class InventoryService
             $query->where('status', $request->status);
         }
 
-        $adjustments = $query->latest('requested_at')->paginate($request->get('per_page', 25));
+        $adjustments = $query->latest('created_at')->paginate($request->get('per_page', 25));
 
         return response()->json(['success' => true, 'data' => $adjustments]);
     }
@@ -214,29 +267,37 @@ class InventoryService
     public function storeAdjustment(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
-            'batch_id' => 'required|exists:stock_batches,id',
-            'adjustment_qty' => 'required|numeric',
-            'reason' => 'required|string|max:500',
-            'reason_code' => 'nullable|string',
+            'product_id' => 'required|exists:products,product_id',
+            'warehouse_id' => 'required|exists:warehouses,warehouse_id',
+            'batch_id' => 'required|exists:stock_batches,batch_id',
+            'adjustment_type' => 'required|string|in:increase,decrease',
+            'quantity' => 'required|numeric|min:0.01',
+            'reason_code' => 'nullable|string|max:100',
+            'description' => 'nullable|string',
+            'supporting_document' => 'nullable|string|max:500',
         ]);
 
         $batch = StockBatch::findOrFail($validated['batch_id']);
-        $quantityBefore = $batch->quantity;
-        $quantityAfter = $quantityBefore + $validated['adjustment_qty'];
+        $signedQty = $validated['adjustment_type'] === 'decrease'
+            ? -abs($validated['quantity'])
+            : abs($validated['quantity']);
+        $quantityAfter = (float) $batch->available_quantity + $signedQty;
 
         if ($quantityAfter < 0) {
             return response()->json(['success' => false, 'message' => 'Adjustment would result in negative stock.'], 422);
         }
 
-        $adjustment = \App\Models\StockAdjustment::create([
-            ...$validated,
-            'quantity_before' => $quantityBefore,
-            'quantity_after' => $quantityAfter,
+        $adjustment = StockAdjustment::create([
+            'product_id' => $validated['product_id'],
+            'warehouse_id' => $validated['warehouse_id'],
+            'batch_id' => $validated['batch_id'],
+            'adjustment_type' => $validated['adjustment_type'],
+            'quantity' => abs($validated['quantity']),
+            'reason_code' => $validated['reason_code'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'supporting_document' => $validated['supporting_document'] ?? null,
             'status' => 'pending',
-            'requested_by' => $request->user()->full_name ?? 'Unknown',
-            'requested_at' => now(),
+            'requested_by' => $request->user()?->id,
         ]);
 
         return response()->json(['success' => true, 'data' => $adjustment], 201);
@@ -244,68 +305,72 @@ class InventoryService
 
     public function approveAdjustment(int $id, Request $request): JsonResponse
     {
-        $adjustment = \App\Models\StockAdjustment::findOrFail($id);
+        $adjustment = StockAdjustment::findOrFail($id);
 
         if ($adjustment->status !== 'pending') {
             return response()->json(['success' => false, 'message' => 'Adjustment is not pending.'], 422);
         }
 
+        $batch = StockBatch::findOrFail($adjustment->batch_id);
+        $signedQty = $adjustment->adjustment_type === 'decrease'
+            ? -abs((float) $adjustment->quantity)
+            : abs((float) $adjustment->quantity);
+        $quantityAfter = (float) $batch->available_quantity + $signedQty;
+
+        if ($quantityAfter < 0) {
+            return response()->json(['success' => false, 'message' => 'Adjustment would result in negative stock.'], 422);
+        }
+
         $adjustment->update([
             'status' => 'approved',
-            'approved_by' => $request->user()->full_name ?? 'Unknown',
+            'approved_by' => $request->user()?->id,
             'approved_at' => now(),
         ]);
 
-        $batch = StockBatch::findOrFail($adjustment->batch_id);
-        $batch->update(['quantity' => $adjustment->quantity_after]);
+        $batch->update(['available_quantity' => $quantityAfter]);
 
         StockLedger::create([
             'product_id' => $adjustment->product_id,
             'warehouse_id' => $adjustment->warehouse_id,
             'batch_id' => $adjustment->batch_id,
-            'type' => 'adjustment',
-            'quantity' => $adjustment->adjustment_qty,
-            'unit_cost' => $batch->unit_cost,
-            'reference' => 'ADJ-' . $adjustment->id,
+            'movement_type' => 'adjustment',
+            'quantity' => $signedQty,
+            'balance_after' => $quantityAfter,
             'reference_type' => 'stock_adjustment',
-            'created_by' => $request->user()->full_name ?? 'System',
-            'notes' => $adjustment->reason,
+            'reference_id' => $adjustment->adjustment_id,
+            'transaction_date' => now(),
+            'created_by' => $request->user()?->id,
         ]);
-
-        if ($batch->quantity <= 0) {
-            $batch->update(['status' => 'depleted']);
-        }
 
         return response()->json(['success' => true, 'data' => $adjustment->fresh()]);
     }
 
     public function reorderAlerts(): JsonResponse
     {
-        $products = Product::where('is_active', true)->get();
-        $batches = StockBatch::where('status', 'active')->get();
+        $rules = ReorderRule::with(['product', 'warehouse'])
+            ->where('alert_enabled', true)
+            ->get();
+        $batches = StockBatch::all();
 
-        $alerts = $products->map(function ($product) use ($batches) {
-            $productBatches = $batches->where('product_id', $product->id);
-            $totalStock = $productBatches->sum('quantity');
+        $alerts = $rules->map(function ($rule) use ($batches) {
+            $productBatches = $batches
+                ->where('product_id', $rule->product_id)
+                ->where('warehouse_id', $rule->warehouse_id);
+            $totalStock = $productBatches->sum('available_quantity');
 
-            if ($totalStock <= $product->reorder_level) {
-                $warehouseStocks = $productBatches->groupBy('warehouse_id')->map(function ($whBatches, $whId) {
-                    return ['warehouse_id' => $whId, 'quantity' => $whBatches->sum('quantity')];
-                })->values();
-
+            if ($totalStock <= (float) $rule->reorder_point) {
                 return [
-                    'product' => $product,
+                    'product' => $rule->product,
+                    'warehouse' => $rule->warehouse,
                     'total_stock' => $totalStock,
-                    'reorder_level' => $product->reorder_level,
-                    'min_stock' => $product->min_stock,
-                    'warehouse_stocks' => $warehouseStocks,
+                    'reorder_point' => $rule->reorder_point,
+                    'minimum_stock_level' => $rule->minimum_stock_level,
+                    'reorder_quantity' => $rule->reorder_quantity,
                 ];
             }
 
             return null;
         })->filter()->values();
-
-        $rules = \App\Models\ReorderRule::with(['product', 'warehouse'])->get();
 
         return response()->json([
             'success' => true,
@@ -318,13 +383,16 @@ class InventoryService
 
     public function damagedGoods(Request $request): JsonResponse
     {
-        $query = \App\Models\DamagedGood::with(['product', 'warehouse', 'batch']);
+        $query = DamagedGood::with(['product', 'warehouse', 'batch']);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($request->filled('status') || $request->filled('disposition_status')) {
+            $query->where(
+                'disposition_status',
+                $request->input('disposition_status', $request->input('status'))
+            );
         }
 
-        $goods = $query->latest('reported_at')->paginate($request->get('per_page', 25));
+        $goods = $query->latest('created_at')->paginate($request->get('per_page', 25));
 
         return response()->json(['success' => true, 'data' => $goods]);
     }
@@ -332,20 +400,18 @@ class InventoryService
     public function storeDamagedGood(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
-            'batch_id' => 'required|exists:stock_batches,id',
+            'product_id' => 'required|exists:products,product_id',
+            'warehouse_id' => 'required|exists:warehouses,warehouse_id',
+            'batch_id' => 'required|exists:stock_batches,batch_id',
             'quantity' => 'required|numeric|min:0.01',
-            'damage_type' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'photos' => 'nullable|array',
+            'damage_reason' => 'required|string|max:255',
+            'supporting_photos' => 'nullable|string|max:1000',
         ]);
 
-        $record = \App\Models\DamagedGood::create([
+        $record = DamagedGood::create([
             ...$validated,
-            'status' => 'pending_review',
-            'reported_by' => $request->user()->full_name ?? 'Unknown',
-            'reported_at' => now(),
+            'disposition_status' => 'pending',
+            'reported_by' => $request->user()?->id,
         ]);
 
         return response()->json(['success' => true, 'data' => $record], 201);
@@ -354,14 +420,15 @@ class InventoryService
     public function expiryMonitor(): JsonResponse
     {
         $batches = StockBatch::with(['product', 'warehouse'])
-            ->where('status', 'active')
+            ->whereNotNull('expiry_date')
             ->where('expiry_date', '>=', now())
+            ->where('available_quantity', '>', 0)
             ->orderBy('expiry_date')
             ->get();
 
-        $expiring90 = $batches->filter(fn($b) => $b->expiry_date->diffInDays(now()) <= 90);
-        $expiring60 = $batches->filter(fn($b) => $b->expiry_date->diffInDays(now()) <= 60);
-        $expiring30 = $batches->filter(fn($b) => $b->expiry_date->diffInDays(now()) <= 30);
+        $expiring90 = $batches->filter(fn ($b) => $b->expiry_date->diffInDays(now()) <= 90);
+        $expiring60 = $batches->filter(fn ($b) => $b->expiry_date->diffInDays(now()) <= 60);
+        $expiring30 = $batches->filter(fn ($b) => $b->expiry_date->diffInDays(now()) <= 30);
 
         return response()->json([
             'success' => true,
@@ -376,34 +443,34 @@ class InventoryService
 
     public function valuation(): JsonResponse
     {
-        $batches = StockBatch::with(['product', 'warehouse'])
-            ->where('status', 'active')
-            ->get();
+        $batches = StockBatch::with(['product', 'warehouse'])->get();
 
-        $byProduct = $batches->groupBy('product_id')->map(function ($whBatches, $productId) {
+        $byProduct = $batches->groupBy('product_id')->map(function ($productBatches, $productId) {
             $product = Product::find($productId);
-            $totalQty = $whBatches->sum('quantity');
-            $totalValue = $whBatches->sum(fn($b) => $b->quantity * $b->unit_cost);
+            $totalQty = $productBatches->sum('available_quantity');
+            $totalValue = $productBatches->sum(fn ($b) => $b->available_quantity * $b->unit_cost);
+
             return [
                 'product' => $product,
                 'total_quantity' => $totalQty,
                 'total_value' => $totalValue,
                 'avg_cost' => $totalQty > 0 ? $totalValue / $totalQty : 0,
-                'batch_count' => $whBatches->count(),
+                'batch_count' => $productBatches->count(),
             ];
         })->filter()->values();
 
         $byWarehouse = $batches->groupBy('warehouse_id')->map(function ($whBatches, $whId) {
             $warehouse = Warehouse::find($whId);
+
             return [
                 'warehouse' => $warehouse,
-                'total_quantity' => $whBatches->sum('quantity'),
-                'total_value' => $whBatches->sum(fn($b) => $b->quantity * $b->unit_cost),
+                'total_quantity' => $whBatches->sum('available_quantity'),
+                'total_value' => $whBatches->sum(fn ($b) => $b->available_quantity * $b->unit_cost),
                 'batch_count' => $whBatches->count(),
             ];
         })->filter()->values();
 
-        $totalValue = $batches->sum(fn($b) => $b->quantity * $b->unit_cost);
+        $totalValue = $batches->sum(fn ($b) => $b->available_quantity * $b->unit_cost);
 
         return response()->json([
             'success' => true,

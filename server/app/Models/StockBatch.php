@@ -4,45 +4,51 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StockBatch extends Model
 {
+    protected $primaryKey = 'batch_id';
+
     protected $fillable = [
         'product_id',
         'warehouse_id',
-        'batch_no',
-        'quantity',
+        'batch_number',
+        'quantity_received',
+        'available_quantity',
         'unit_cost',
         'manufacture_date',
         'expiry_date',
-        'received_date',
-        'status',
+        'supplier_id',
+        'receipt_reference',
+        'batch_status',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity' => 'decimal:2',
+            'quantity_received' => 'decimal:2',
+            'available_quantity' => 'decimal:2',
             'unit_cost' => 'decimal:2',
             'manufacture_date' => 'date',
             'expiry_date' => 'date',
-            'received_date' => 'date',
+            'supplier_id' => 'integer',
         ];
     }
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id', 'product_id');
     }
 
     public function warehouse(): BelongsTo
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse_id', 'warehouse_id');
     }
 
-    public function stockLedger(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function stockLedger(): HasMany
     {
-        return $this->hasMany(StockLedger::class);
+        return $this->hasMany(StockLedger::class, 'batch_id', 'batch_id');
     }
 
     public function isExpired(): bool
@@ -52,7 +58,10 @@ class StockBatch extends Model
 
     public function daysUntilExpiry(): ?int
     {
-        if (!$this->expiry_date) return null;
+        if (!$this->expiry_date) {
+            return null;
+        }
+
         return (int) now()->diffInDays($this->expiry_date, false);
     }
 }

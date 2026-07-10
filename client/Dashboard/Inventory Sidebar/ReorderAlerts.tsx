@@ -37,21 +37,19 @@ export default function ReorderAlerts({ inventory }: Props) {
           </h3>
           <div className="inv-alert-list">
             {lowStockProducts.map(({ product, totalStock, warehouseStocks }) => (
-              <div key={product.id} className="inv-alert-card">
+              <div key={product.product_id} className="inv-alert-card">
                 <div className="inv-alert-header">
-                  <span className="inv-alert-product">{product.name}</span>
+                  <span className="inv-alert-product">{product.product_name}</span>
                   <span className="inv-badge inv-badge-red">Low Stock</span>
                 </div>
                 <div className="inv-alert-details">
-                  <span>SKU: {product.sku}</span>
-                  <span>Current: {totalStock.toLocaleString()} {product.unit}</span>
-                  <span>Reorder at: {product.reorder_level.toLocaleString()}</span>
-                  <span>Min: {product.min_stock.toLocaleString()}</span>
+                  <span>Code: {product.product_code}</span>
+                  <span>Current: {totalStock.toLocaleString()} {product.unit_of_measure}</span>
                 </div>
                 <div className="inv-alert-warehouses">
                   {warehouseStocks.map(({ warehouse, quantity }) => (
-                    <span key={warehouse.id} className="inv-alert-wh">
-                      {warehouse.name}: {quantity.toLocaleString()}
+                    <span key={warehouse.warehouse_id} className="inv-alert-wh">
+                      {warehouse.warehouse_name}: {quantity.toLocaleString()}
                     </span>
                   ))}
                 </div>
@@ -75,32 +73,39 @@ export default function ReorderAlerts({ inventory }: Props) {
               <th>Product</th>
               <th>Warehouse</th>
               <th>Min Stock</th>
-              <th>Reorder Level</th>
-              <th>Auto Reorder</th>
-              <th>Supplier</th>
-              <th>Lead Time</th>
+              <th>Reorder Point</th>
+              <th>Reorder Qty</th>
+              <th>Alerts</th>
+              <th>Auto Purchase Request</th>
             </tr>
           </thead>
           <tbody>
             {reorderRules.map((rule) => {
-              const product = getProduct(rule.product_id);
-              const warehouse = getWarehouse(rule.warehouse_id);
+              const product = getProduct(String(rule.product_id));
+              const warehouse = getWarehouse(String(rule.warehouse_id));
               return (
-                <tr key={rule.id}>
-                  <td className="inv-table-name">{product?.name || rule.product_id}</td>
-                  <td>{warehouse?.name || rule.warehouse_id}</td>
-                  <td>{rule.min_stock.toLocaleString()}</td>
-                  <td>{rule.reorder_level.toLocaleString()}</td>
+                <tr key={rule.reorder_rule_id}>
+                  <td className="inv-table-name">{product?.product_name || rule.product_id}</td>
+                  <td>{warehouse?.warehouse_name || rule.warehouse_id}</td>
+                  <td>{Number(rule.minimum_stock_level).toLocaleString()}</td>
+                  <td>{Number(rule.reorder_point).toLocaleString()}</td>
+                  <td>{Number(rule.reorder_quantity).toLocaleString()}</td>
                   <td>
-                    <span className={`inv-badge ${rule.auto_reorder ? 'inv-badge-green' : 'inv-badge-gray'}`}>
-                      {rule.auto_reorder ? 'Enabled' : 'Disabled'}
+                    <span className={`inv-badge ${rule.alert_enabled ? 'inv-badge-green' : 'inv-badge-gray'}`}>
+                      {rule.alert_enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </td>
-                  <td>{rule.preferred_supplier}</td>
-                  <td>{rule.lead_time_days} days</td>
+                  <td>
+                    <span className={`inv-badge ${rule.auto_purchase_request ? 'inv-badge-green' : 'inv-badge-gray'}`}>
+                      {rule.auto_purchase_request ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </td>
                 </tr>
               );
             })}
+            {reorderRules.length === 0 && (
+              <tr><td colSpan={7} className="inv-empty">No reorder rules configured</td></tr>
+            )}
           </tbody>
         </table>
       </div>

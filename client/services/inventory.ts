@@ -5,7 +5,7 @@ export const inventoryAPI = {
   getOverview: () =>
     api.get('/inventory'),
 
-  getProducts: (params?: PaginationParams & { search?: string; category?: string }) =>
+  getProducts: (params?: PaginationParams & { search?: string; category_id?: string; status?: string }) =>
     api.get('/inventory/products', { params }),
 
   createProduct: (data: Record<string, unknown>) =>

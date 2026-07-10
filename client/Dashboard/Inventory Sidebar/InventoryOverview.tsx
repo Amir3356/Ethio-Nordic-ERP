@@ -14,10 +14,9 @@ export default function InventoryOverview({ inventory }: Props) {
   const stats = useMemo(() => {
     if (!data) return null;
     const totalProducts = data.products.length;
-    const totalBatches = data.stock_batches.filter((b) => b.status === 'active').length;
+    const totalBatches = data.stock_batches.length;
     const totalUnits = data.stock_batches
-      .filter((b) => b.status === 'active')
-      .reduce((sum, b) => sum + b.quantity, 0);
+      .reduce((sum, b) => sum + Number(b.available_quantity), 0);
     const totalValue = getInventoryValue();
     const lowStockCount = getLowStockProducts().length;
     const expiringCount = getExpiringBatches(90).length;
@@ -100,23 +99,25 @@ export default function InventoryOverview({ inventory }: Props) {
           <thead>
             <tr>
               <th>Warehouse</th>
-              <th>City</th>
-              <th>Manager</th>
-              <th>Capacity (sqm)</th>
+              <th>Code</th>
+              <th>Location</th>
+              <th>Type</th>
+              <th>Capacity</th>
               <th>Active Batches</th>
             </tr>
           </thead>
           <tbody>
             {data!.warehouses.map((wh) => {
               const batchCount = data!.stock_batches.filter(
-                (b) => b.warehouse_id === wh.id && b.status === 'active'
+                (b) => String(b.warehouse_id) === String(wh.warehouse_id)
               ).length;
               return (
-                <tr key={wh.id}>
-                  <td className="inv-table-name">{wh.name}</td>
-                  <td>{wh.city}</td>
-                  <td>{wh.manager}</td>
-                  <td>{wh.capacity_sqm.toLocaleString()}</td>
+                <tr key={wh.warehouse_id}>
+                  <td className="inv-table-name">{wh.warehouse_name}</td>
+                  <td>{wh.warehouse_code}</td>
+                  <td>{wh.location}</td>
+                  <td>{wh.warehouse_type}</td>
+                  <td>{Number(wh.capacity).toLocaleString()}</td>
                   <td>{batchCount}</td>
                 </tr>
               );

@@ -1,5 +1,4 @@
 import { useInventory } from './hooks';
-import InventoryOverview from './InventoryOverview';
 import StockBatches from './StockBatches';
 import StockMovements from './StockMovements';
 import StockAdjustments from './StockAdjustments';
@@ -27,7 +26,6 @@ export default function InventorySidebar() {
 
   return (
     <>
-      <InventoryOverview inventory={inventory} />
       <StockBatches inventory={inventory} />
       <StockMovements inventory={inventory} />
       <StockAdjustments inventory={inventory} />

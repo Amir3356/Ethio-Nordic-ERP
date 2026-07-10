@@ -7,47 +7,47 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockAdjustment extends Model
 {
+    protected $primaryKey = 'adjustment_id';
+
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'product_id',
         'warehouse_id',
         'batch_id',
-        'quantity_before',
-        'quantity_after',
-        'adjustment_qty',
-        'reason',
+        'adjustment_type',
+        'quantity',
         'reason_code',
+        'description',
+        'supporting_document',
         'status',
         'requested_by',
         'approved_by',
-        'requested_at',
         'approved_at',
-        'financial_impact',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity_before' => 'decimal:2',
-            'quantity_after' => 'decimal:2',
-            'adjustment_qty' => 'decimal:2',
-            'requested_at' => 'datetime',
+            'quantity' => 'decimal:2',
+            'requested_by' => 'integer',
+            'approved_by' => 'integer',
             'approved_at' => 'datetime',
-            'financial_impact' => 'decimal:2',
         ];
     }
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id', 'product_id');
     }
 
     public function warehouse(): BelongsTo
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse_id', 'warehouse_id');
     }
 
     public function batch(): BelongsTo
     {
-        return $this->belongsTo(StockBatch::class);
+        return $this->belongsTo(StockBatch::class, 'batch_id', 'batch_id');
     }
 }

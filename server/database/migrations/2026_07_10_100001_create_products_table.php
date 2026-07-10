@@ -9,16 +9,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->id();
-            $table->string('sku')->unique();
-            $table->string('name');
-            $table->string('category');
-            $table->string('unit')->default('pcs');
-            $table->decimal('min_stock', 12, 2)->default(0);
-            $table->decimal('reorder_level', 12, 2)->default(0);
-            $table->enum('fifo_fefo', ['FIFO', 'FEFO'])->default('FIFO');
-            $table->boolean('is_active')->default(true);
+            $table->id('product_id');
+            $table->string('product_code')->unique();
+            $table->string('product_name');
+            $table->text('description')->nullable();
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->string('unit_of_measure')->default('piece');
+            $table->boolean('requires_batch_tracking')->default(true);
+            $table->boolean('requires_expiry_tracking')->default(false);
+            $table->string('status')->default('active');
             $table->timestamps();
+
+            $table->index('category_id');
+            $table->index('status');
         });
     }
 

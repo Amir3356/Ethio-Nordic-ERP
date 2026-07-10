@@ -9,24 +9,29 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('damaged_goods', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('warehouse_id')->constrained()->onDelete('cascade');
-            $table->foreignId('batch_id')->constrained('stock_batches')->onDelete('cascade');
+            $table->id('damaged_goods_id');
+            $table->foreignId('product_id')
+                ->constrained('products', 'product_id')
+                ->onDelete('cascade');
+            $table->foreignId('warehouse_id')
+                ->constrained('warehouses', 'warehouse_id')
+                ->onDelete('cascade');
+            $table->foreignId('batch_id')
+                ->constrained('stock_batches', 'batch_id')
+                ->onDelete('cascade');
             $table->decimal('quantity', 12, 2);
-            $table->string('damage_type');
-            $table->text('description')->nullable();
-            $table->json('photos')->nullable();
-            $table->enum('status', ['pending_review', 'approved', 'disposed'])->default('pending_review');
-            $table->string('reported_by');
-            $table->timestamp('reported_at');
-            $table->string('reviewed_by')->nullable();
-            $table->timestamp('reviewed_at')->nullable();
-            $table->decimal('write_off_amount', 12, 2)->nullable();
-            $table->timestamps();
+            $table->string('damage_reason');
+            $table->unsignedBigInteger('reported_by')->nullable();
+            $table->string('supporting_photos')->nullable();
+            $table->string('disposition_status')->default('pending');
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->date('disposal_date')->nullable();
+            $table->timestamp('created_at')->useCurrent();
 
-            $table->index('status');
+            $table->index('disposition_status');
             $table->index(['product_id', 'warehouse_id']);
+            $table->index('reported_by');
+            $table->index('approved_by');
         });
     }
 

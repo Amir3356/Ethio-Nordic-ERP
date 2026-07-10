@@ -14,13 +14,15 @@ export default function DamagedGoods({ inventory }: Props) {
   const damaged = useMemo(() => {
     if (!data) return [];
     return [...data.damaged_goods].sort(
-      (a, b) => new Date(b.reported_at).getTime() - new Date(a.reported_at).getTime()
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   }, [data]);
 
   const getStatusBadge = (status: string) => {
     if (status === 'disposed') return <span className="inv-badge inv-badge-gray">Disposed</span>;
-    if (status === 'pending_review') return <span className="inv-badge inv-badge-amber">Pending Review</span>;
+    if (status === 'pending') return <span className="inv-badge inv-badge-amber">Pending</span>;
+    if (status === 'approved') return <span className="inv-badge inv-badge-green">Approved</span>;
+    if (status === 'returned') return <span className="inv-badge inv-badge-blue">Returned</span>;
     return <span className="inv-badge inv-badge-blue">{status}</span>;
   };
 
@@ -44,45 +46,41 @@ export default function DamagedGoods({ inventory }: Props) {
               <th>Product</th>
               <th>Warehouse</th>
               <th>Qty</th>
-              <th>Damage Type</th>
-              <th>Description</th>
+              <th>Damage Reason</th>
               <th>Photos</th>
-              <th>Status</th>
+              <th>Disposition</th>
               <th>Reported By</th>
-              <th>Write-off</th>
+              <th>Disposal Date</th>
             </tr>
           </thead>
           <tbody>
             {damaged.map((dg) => {
-              const product = getProduct(dg.product_id);
-              const warehouse = getWarehouse(dg.warehouse_id);
+              const product = getProduct(String(dg.product_id));
+              const warehouse = getWarehouse(String(dg.warehouse_id));
               return (
-                <tr key={dg.id}>
-                  <td className="inv-table-name">{dg.id}</td>
-                  <td>{product?.name || dg.product_id}</td>
-                  <td>{warehouse?.name || dg.warehouse_id}</td>
-                  <td>{dg.quantity.toLocaleString()}</td>
-                  <td>{dg.damage_type}</td>
-                  <td className="inv-text-truncate" title={dg.description}>{dg.description}</td>
+                <tr key={dg.damaged_goods_id}>
+                  <td className="inv-table-name">{dg.damaged_goods_id}</td>
+                  <td>{product?.product_name || dg.product_id}</td>
+                  <td>{warehouse?.warehouse_name || dg.warehouse_id}</td>
+                  <td>{Number(dg.quantity).toLocaleString()}</td>
+                  <td>{dg.damage_reason}</td>
                   <td>
-                    <span className="inv-photo-count">
-                      <Camera size={14} /> {dg.photos.length}
-                    </span>
-                  </td>
-                  <td>{getStatusBadge(dg.status)}</td>
-                  <td>{dg.reported_by}</td>
-                  <td>
-                    {dg.write_off_amount !== null ? (
-                      <span className="inv-text-red">${dg.write_off_amount.toFixed(2)}</span>
+                    {dg.supporting_photos ? (
+                      <span className="inv-photo-count">
+                        <Camera size={14} /> Available
+                      </span>
                     ) : (
                       <span className="inv-text-muted">—</span>
                     )}
                   </td>
+                  <td>{getStatusBadge(dg.disposition_status)}</td>
+                  <td>{dg.reported_by ?? '—'}</td>
+                  <td>{dg.disposal_date || '—'}</td>
                 </tr>
               );
             })}
             {damaged.length === 0 && (
-              <tr><td colSpan={10} className="inv-empty">No damaged goods records</td></tr>
+              <tr><td colSpan={9} className="inv-empty">No damaged goods records</td></tr>
             )}
           </tbody>
         </table>

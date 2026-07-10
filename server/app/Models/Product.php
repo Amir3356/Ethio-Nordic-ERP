@@ -7,38 +7,40 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    protected $primaryKey = 'product_id';
+
     protected $fillable = [
-        'sku',
-        'name',
-        'category',
-        'unit',
-        'min_stock',
-        'reorder_level',
-        'fifo_fefo',
-        'is_active',
+        'product_code',
+        'product_name',
+        'description',
+        'category_id',
+        'unit_of_measure',
+        'requires_batch_tracking',
+        'requires_expiry_tracking',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'min_stock' => 'decimal:2',
-            'reorder_level' => 'decimal:2',
-            'is_active' => 'boolean',
+            'category_id' => 'integer',
+            'requires_batch_tracking' => 'boolean',
+            'requires_expiry_tracking' => 'boolean',
         ];
     }
 
     public function stockBatches(): HasMany
     {
-        return $this->hasMany(StockBatch::class);
+        return $this->hasMany(StockBatch::class, 'product_id', 'product_id');
     }
 
     public function stockLedger(): HasMany
     {
-        return $this->hasMany(StockLedger::class);
+        return $this->hasMany(StockLedger::class, 'product_id', 'product_id');
     }
 
     public function reorderRules(): HasMany
     {
-        return $this->hasMany(ReorderRule::class);
+        return $this->hasMany(ReorderRule::class, 'product_id', 'product_id');
     }
 }

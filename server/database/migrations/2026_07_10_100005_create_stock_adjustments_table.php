@@ -9,25 +9,31 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_adjustments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('warehouse_id')->constrained()->onDelete('cascade');
-            $table->foreignId('batch_id')->constrained('stock_batches')->onDelete('cascade');
-            $table->decimal('quantity_before', 12, 2);
-            $table->decimal('quantity_after', 12, 2);
-            $table->decimal('adjustment_qty', 12, 2);
-            $table->string('reason');
+            $table->id('adjustment_id');
+            $table->foreignId('product_id')
+                ->constrained('products', 'product_id')
+                ->onDelete('cascade');
+            $table->foreignId('warehouse_id')
+                ->constrained('warehouses', 'warehouse_id')
+                ->onDelete('cascade');
+            $table->foreignId('batch_id')
+                ->constrained('stock_batches', 'batch_id')
+                ->onDelete('cascade');
+            $table->string('adjustment_type');
+            $table->decimal('quantity', 12, 2);
             $table->string('reason_code')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->string('requested_by');
-            $table->string('approved_by')->nullable();
-            $table->timestamp('requested_at');
+            $table->text('description')->nullable();
+            $table->string('supporting_document')->nullable();
+            $table->string('status')->default('pending');
+            $table->unsignedBigInteger('requested_by')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
-            $table->decimal('financial_impact', 12, 2)->nullable();
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
 
             $table->index('status');
             $table->index(['product_id', 'warehouse_id']);
+            $table->index('requested_by');
+            $table->index('approved_by');
         });
     }
 

@@ -15,10 +15,13 @@ export default function InventoryValuation({ inventory }: Props) {
     if (!data) return [];
     return data.products.map((product) => {
       const batches = data.stock_batches.filter(
-        (b) => b.product_id === product.id && b.status === 'active'
+        (b) => String(b.product_id) === String(product.product_id)
       );
-      const totalQuantity = batches.reduce((sum, b) => sum + b.quantity, 0);
-      const totalValue = batches.reduce((sum, b) => sum + b.quantity * b.unit_cost, 0);
+      const totalQuantity = batches.reduce((sum, b) => sum + Number(b.available_quantity), 0);
+      const totalValue = batches.reduce(
+        (sum, b) => sum + Number(b.available_quantity) * Number(b.unit_cost),
+        0
+      );
       const avgCost = totalQuantity > 0 ? totalValue / totalQuantity : 0;
       return { product, totalQuantity, totalValue, avgCost, batchCount: batches.length };
     }).filter((v) => v.totalQuantity > 0);
@@ -28,10 +31,13 @@ export default function InventoryValuation({ inventory }: Props) {
     if (!data) return [];
     return data.warehouses.map((warehouse) => {
       const batches = data.stock_batches.filter(
-        (b) => b.warehouse_id === warehouse.id && b.status === 'active'
+        (b) => String(b.warehouse_id) === String(warehouse.warehouse_id)
       );
-      const totalQuantity = batches.reduce((sum, b) => sum + b.quantity, 0);
-      const totalValue = batches.reduce((sum, b) => sum + b.quantity * b.unit_cost, 0);
+      const totalQuantity = batches.reduce((sum, b) => sum + Number(b.available_quantity), 0);
+      const totalValue = batches.reduce(
+        (sum, b) => sum + Number(b.available_quantity) * Number(b.unit_cost),
+        0
+      );
       return { warehouse, totalQuantity, totalValue, batchCount: batches.length };
     });
   }, [data]);
@@ -66,9 +72,9 @@ export default function InventoryValuation({ inventory }: Props) {
           <thead>
             <tr>
               <th>Product</th>
-              <th>SKU</th>
-              <th>Category</th>
-              <th>Method</th>
+              <th>Code</th>
+              <th>UoM</th>
+              <th>Batch Tracking</th>
               <th>Batches</th>
               <th>Total Qty</th>
               <th>Avg Unit Cost</th>
@@ -79,13 +85,13 @@ export default function InventoryValuation({ inventory }: Props) {
             {valuationByProduct
               .sort((a, b) => b.totalValue - a.totalValue)
               .map(({ product, totalQuantity, totalValue, avgCost, batchCount }) => (
-                <tr key={product.id}>
-                  <td className="inv-table-name">{product.name}</td>
-                  <td>{product.sku}</td>
-                  <td>{product.category}</td>
+                <tr key={product.product_id}>
+                  <td className="inv-table-name">{product.product_name}</td>
+                  <td>{product.product_code}</td>
+                  <td>{product.unit_of_measure}</td>
                   <td>
-                    <span className={`inv-badge ${product.fifo_fefo === 'FEFO' ? 'inv-badge-green' : 'inv-badge-blue'}`}>
-                      {product.fifo_fefo}
+                    <span className={`inv-badge ${product.requires_batch_tracking ? 'inv-badge-green' : 'inv-badge-gray'}`}>
+                      {product.requires_batch_tracking ? 'Yes' : 'No'}
                     </span>
                   </td>
                   <td>{batchCount}</td>
@@ -106,7 +112,8 @@ export default function InventoryValuation({ inventory }: Props) {
           <thead>
             <tr>
               <th>Warehouse</th>
-              <th>City</th>
+              <th>Location</th>
+              <th>Type</th>
               <th>Batches</th>
               <th>Total Qty</th>
               <th>Total Value</th>
@@ -116,9 +123,10 @@ export default function InventoryValuation({ inventory }: Props) {
             {valuationByWarehouse
               .sort((a, b) => b.totalValue - a.totalValue)
               .map(({ warehouse, totalQuantity, totalValue, batchCount }) => (
-                <tr key={warehouse.id}>
-                  <td className="inv-table-name">{warehouse.name}</td>
-                  <td>{warehouse.city}</td>
+                <tr key={warehouse.warehouse_id}>
+                  <td className="inv-table-name">{warehouse.warehouse_name}</td>
+                  <td>{warehouse.location}</td>
+                  <td>{warehouse.warehouse_type}</td>
                   <td>{batchCount}</td>
                   <td>{totalQuantity.toLocaleString()}</td>
                   <td className="inv-text-bold">

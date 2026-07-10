@@ -81,17 +81,18 @@ export default function ExpiryMonitor({ inventory }: Props) {
               </thead>
               <tbody>
                 {expiring90
-                  .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime())
+                  .filter((b) => b.expiry_date)
+                  .sort((a, b) => new Date(a.expiry_date!).getTime() - new Date(b.expiry_date!).getTime())
                   .map((batch) => {
-                    const product = getProduct(batch.product_id);
-                    const warehouse = getWarehouse(batch.warehouse_id);
-                    const daysLeft = getDaysUntilExpiry(batch.expiry_date);
+                    const product = getProduct(String(batch.product_id));
+                    const warehouse = getWarehouse(String(batch.warehouse_id));
+                    const daysLeft = getDaysUntilExpiry(batch.expiry_date!);
                     return (
-                      <tr key={batch.id}>
-                        <td className="inv-table-name">{batch.batch_no}</td>
-                        <td>{product?.name || batch.product_id}</td>
-                        <td>{warehouse?.name || batch.warehouse_id}</td>
-                        <td>{batch.quantity.toLocaleString()}</td>
+                      <tr key={batch.batch_id}>
+                        <td className="inv-table-name">{batch.batch_number}</td>
+                        <td>{product?.product_name || batch.product_id}</td>
+                        <td>{warehouse?.warehouse_name || batch.warehouse_id}</td>
+                        <td>{Number(batch.available_quantity).toLocaleString()}</td>
                         <td>{batch.expiry_date}</td>
                         <td>{daysLeft}</td>
                         <td>{getExpiryBadge(daysLeft)}</td>

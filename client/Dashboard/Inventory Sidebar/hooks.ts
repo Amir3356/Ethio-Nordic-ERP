@@ -40,12 +40,14 @@ export function useInventory() {
   }, [fetchData]);
 
   const getProduct = useCallback(
-    (id: string): Product | undefined => data?.products.find((p) => String(p.id) === String(id)),
+    (id: string): Product | undefined =>
+      data?.products.find((p) => String(p.product_id) === String(id)),
     [data]
   );
 
   const getWarehouse = useCallback(
-    (id: string): Warehouse | undefined => data?.warehouses.find((w) => String(w.id) === String(id)),
+    (id: string): Warehouse | undefined =>
+      data?.warehouses.find((w) => String(w.warehouse_id) === String(id)),
     [data]
   );
 
@@ -55,27 +57,43 @@ export function useInventory() {
     [data]
   );
 
-  const getLowStockProducts = useCallback((): Array<{ product: Product; totalStock: number; warehouseStocks: Array<{ warehouse: Warehouse; quantity: number }> }> => {
+  const getLowStockProducts = useCallback((): Array<{
+    product: Product;
+    totalStock: number;
+    warehouseStocks: Array<{ warehouse: Warehouse; quantity: number }>;
+  }> => {
     if (!data) return [];
+
+    const rulesByProduct = new Map<string, number>();
+    data.reorder_rules.forEach((rule) => {
+      const key = String(rule.product_id);
+      const current = rulesByProduct.get(key);
+      if (current === undefined || Number(rule.reorder_point) < current) {
+        rulesByProduct.set(key, Number(rule.reorder_point));
+      }
+    });
+
     return data.products
       .map((product) => {
         const batches = data.stock_batches.filter(
-          (b) => String(b.product_id) === String(product.id) && b.status === 'active'
+          (b) => String(b.product_id) === String(product.product_id)
         );
-        const totalStock = batches.reduce((sum, b) => sum + Number(b.quantity), 0);
-        if (totalStock <= Number(product.reorder_level)) {
-          const warehouseMap = new Map<string, number>();
-          batches.forEach((b) => {
-            const wid = String(b.warehouse_id);
-            warehouseMap.set(wid, (warehouseMap.get(wid) || 0) + Number(b.quantity));
-          });
-          const warehouseStocks = Array.from(warehouseMap.entries()).map(([wid, qty]) => ({
-            warehouse: data.warehouses.find((w) => String(w.id) === wid)!,
-            quantity: qty,
-          }));
-          return { product, totalStock, warehouseStocks };
+        const totalStock = batches.reduce((sum, b) => sum + Number(b.available_quantity), 0);
+        const reorderPoint = rulesByProduct.get(String(product.product_id));
+        if (reorderPoint === undefined || totalStock > reorderPoint) {
+          return null;
         }
-        return null;
+
+        const warehouseMap = new Map<string, number>();
+        batches.forEach((b) => {
+          const wid = String(b.warehouse_id);
+          warehouseMap.set(wid, (warehouseMap.get(wid) || 0) + Number(b.available_quantity));
+        });
+        const warehouseStocks = Array.from(warehouseMap.entries()).map(([wid, qty]) => ({
+          warehouse: data.warehouses.find((w) => String(w.warehouse_id) === wid)!,
+          quantity: qty,
+        }));
+        return { product, totalStock, warehouseStocks };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
   }, [data]);
@@ -85,21 +103,21 @@ export function useInventory() {
       if (!data) return [];
       const now = new Date();
       const threshold = new Date(now.getTime() + daysThreshold * 24 * 60 * 60 * 1000);
-      return data.stock_batches.filter(
-        (b) =>
-          b.status === 'active' &&
-          new Date(b.expiry_date) <= threshold &&
-          new Date(b.expiry_date) >= now
-      );
+      return data.stock_batches.filter((b) => {
+        if (!b.expiry_date) return false;
+        const expiry = new Date(b.expiry_date);
+        return expiry <= threshold && expiry >= now && Number(b.available_quantity) > 0;
+      });
     },
     [data]
   );
 
   const getInventoryValue = useCallback((): number => {
     if (!data) return 0;
-    return data.stock_batches
-      .filter((b) => b.status === 'active')
-      .reduce((sum, b) => sum + Number(b.quantity) * Number(b.unit_cost), 0);
+    return data.stock_batches.reduce(
+      (sum, b) => sum + Number(b.available_quantity) * Number(b.unit_cost),
+      0
+    );
   }, [data]);
 
   return {

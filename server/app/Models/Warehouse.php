@@ -7,25 +7,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Warehouse extends Model
 {
+    protected $primaryKey = 'warehouse_id';
+
     protected $fillable = [
-        'name',
-        'code',
-        'city',
-        'capacity_sqm',
-        'manager',
-        'is_active',
+        'warehouse_code',
+        'warehouse_name',
+        'location',
+        'warehouse_type',
+        'capacity',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'capacity_sqm' => 'decimal:2',
-            'is_active' => 'boolean',
+            'capacity' => 'decimal:2',
         ];
     }
 
     public function stockBatches(): HasMany
     {
-        return $this->hasMany(StockBatch::class);
+        return $this->hasMany(StockBatch::class, 'warehouse_id', 'warehouse_id');
     }
 }

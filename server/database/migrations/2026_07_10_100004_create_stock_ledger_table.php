@@ -9,23 +9,30 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_ledger', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('warehouse_id')->constrained()->onDelete('cascade');
-            $table->foreignId('batch_id')->constrained('stock_batches')->onDelete('cascade');
-            $table->enum('type', ['stock-in', 'stock-out', 'transfer-in', 'transfer-out', 'adjustment']);
+            $table->id('ledger_id');
+            $table->foreignId('product_id')
+                ->constrained('products', 'product_id')
+                ->onDelete('cascade');
+            $table->foreignId('warehouse_id')
+                ->constrained('warehouses', 'warehouse_id')
+                ->onDelete('cascade');
+            $table->foreignId('batch_id')
+                ->constrained('stock_batches', 'batch_id')
+                ->onDelete('cascade');
+            $table->string('movement_type');
             $table->decimal('quantity', 12, 2);
-            $table->decimal('unit_cost', 12, 2)->default(0);
-            $table->string('reference')->nullable();
+            $table->decimal('balance_after', 12, 2)->default(0);
             $table->string('reference_type')->nullable();
-            $table->string('created_by')->nullable();
-            $table->text('notes')->nullable();
-            $table->timestamps();
+            $table->unsignedBigInteger('reference_id')->nullable();
+            $table->timestamp('transaction_date')->useCurrent();
+            $table->unsignedBigInteger('created_by')->nullable();
 
             $table->index(['product_id', 'warehouse_id']);
             $table->index('batch_id');
-            $table->index('type');
-            $table->index('created_at');
+            $table->index('movement_type');
+            $table->index('transaction_date');
+            $table->index('reference_id');
+            $table->index('created_by');
         });
     }
 

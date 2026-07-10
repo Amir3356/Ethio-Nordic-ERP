@@ -17,21 +17,23 @@ export default function StockMovements({ inventory }: Props) {
     if (!data) return [];
     let filtered = [...data.stock_ledger];
     if (typeFilter !== 'all') {
-      filtered = filtered.filter((m) => m.type === typeFilter);
+      filtered = filtered.filter((m) => m.movement_type === typeFilter);
     }
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter((m) => {
-        const product = getProduct(m.product_id);
+        const product = getProduct(String(m.product_id));
         return (
-          m.reference.toLowerCase().includes(q) ||
-          m.notes.toLowerCase().includes(q) ||
-          (product?.name || '').toLowerCase().includes(q) ||
-          (product?.sku || '').toLowerCase().includes(q)
+          (m.reference_type || '').toLowerCase().includes(q) ||
+          m.movement_type.toLowerCase().includes(q) ||
+          (product?.product_name || '').toLowerCase().includes(q) ||
+          (product?.product_code || '').toLowerCase().includes(q)
         );
       });
     }
-    return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return filtered.sort(
+      (a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+    );
   }, [data, search, typeFilter, getProduct]);
 
   const getTypeBadge = (type: string) => {
@@ -56,7 +58,7 @@ export default function StockMovements({ inventory }: Props) {
           <Search size={16} />
           <input
             type="text"
-            placeholder="Search by reference, product, notes..."
+            placeholder="Search by reference type, product, movement..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -84,29 +86,29 @@ export default function StockMovements({ inventory }: Props) {
               <th>Product</th>
               <th>Warehouse</th>
               <th>Quantity</th>
-              <th>Unit Cost</th>
-              <th>Reference</th>
+              <th>Balance After</th>
+              <th>Reference Type</th>
               <th>By</th>
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
             {movements.map((m) => {
-              const product = getProduct(m.product_id);
-              const warehouse = getWarehouse(m.warehouse_id);
+              const product = getProduct(String(m.product_id));
+              const warehouse = getWarehouse(String(m.warehouse_id));
               return (
-                <tr key={m.id}>
-                  <td className="inv-table-name">{m.id}</td>
-                  <td>{getTypeBadge(m.type)}</td>
-                  <td>{product?.name || m.product_id}</td>
-                  <td>{warehouse?.name || m.warehouse_id}</td>
-                  <td className={m.quantity < 0 ? 'inv-text-red' : 'inv-text-green'}>
-                    {m.quantity > 0 ? '+' : ''}{m.quantity.toLocaleString()}
+                <tr key={m.ledger_id}>
+                  <td className="inv-table-name">{m.ledger_id}</td>
+                  <td>{getTypeBadge(m.movement_type)}</td>
+                  <td>{product?.product_name || m.product_id}</td>
+                  <td>{warehouse?.warehouse_name || m.warehouse_id}</td>
+                  <td className={Number(m.quantity) < 0 ? 'inv-text-red' : 'inv-text-green'}>
+                    {Number(m.quantity) > 0 ? '+' : ''}{Number(m.quantity).toLocaleString()}
                   </td>
-                  <td>${Number(m.unit_cost).toFixed(2)}</td>
-                  <td>{m.reference}</td>
-                  <td>{m.created_by}</td>
-                  <td>{new Date(m.created_at).toLocaleDateString()}</td>
+                  <td>{Number(m.balance_after).toLocaleString()}</td>
+                  <td>{m.reference_type || '—'}</td>
+                  <td>{m.created_by ?? '—'}</td>
+                  <td>{new Date(m.transaction_date).toLocaleDateString()}</td>
                 </tr>
               );
             })}
