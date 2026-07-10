@@ -1,0 +1,100 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\Inventory\InventoryService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class InventoryController extends Controller
+{
+    public function __construct(
+        private readonly InventoryService $inventory
+    ) {}
+
+    public function overview(): JsonResponse
+    {
+        return $this->inventory->overview();
+    }
+
+    public function products(Request $request): JsonResponse
+    {
+        return $this->inventory->products($request);
+    }
+
+    public function storeProduct(Request $request): JsonResponse
+    {
+        return $this->inventory->storeProduct($request);
+    }
+
+    public function updateProduct(Request $request, int $id): JsonResponse
+    {
+        return $this->inventory->updateProduct($request, $id);
+    }
+
+    public function warehouses(): JsonResponse
+    {
+        return $this->inventory->warehouses();
+    }
+
+    public function storeWarehouse(Request $request): JsonResponse
+    {
+        return $this->inventory->storeWarehouse($request);
+    }
+
+    public function batches(Request $request): JsonResponse
+    {
+        return $this->inventory->batches($request);
+    }
+
+    public function storeBatch(Request $request): JsonResponse
+    {
+        return $this->inventory->storeBatch($request);
+    }
+
+    public function movements(Request $request): JsonResponse
+    {
+        return $this->inventory->movements($request);
+    }
+
+    public function adjustments(Request $request): JsonResponse
+    {
+        return $this->inventory->adjustments($request);
+    }
+
+    public function storeAdjustment(Request $request): JsonResponse
+    {
+        return $this->inventory->storeAdjustment($request);
+    }
+
+    public function approveAdjustment(int $id, Request $request): JsonResponse
+    {
+        return $this->inventory->approveAdjustment($id, $request);
+    }
+
+    public function reorderAlerts(): JsonResponse
+    {
+        return $this->inventory->reorderAlerts();
+    }
+
+    public function damagedGoods(Request $request): JsonResponse
+    {
+        return $this->inventory->damagedGoods($request);
+    }
+
+    public function storeDamagedGood(Request $request): JsonResponse
+    {
+        return $this->inventory->storeDamagedGood($request);
+    }
+
+    public function expiryMonitor(): JsonResponse
+    {
+        return $this->inventory->expiryMonitor();
+    }
+
+    public function valuation(): JsonResponse
+    {
+        return $this->inventory->valuation();
+    }
+}

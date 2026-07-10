@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { inventoryAPI } from '../../services/inventory';
 import type {
   InventoryData,
   Product,
@@ -15,8 +15,17 @@ export function useInventory() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get<InventoryData>('/inventory.json');
-      setData(response.data);
+      const response = await inventoryAPI.getOverview();
+      const payload = response.data?.data ?? response.data;
+      setData({
+        products: payload.products ?? [],
+        warehouses: payload.warehouses ?? [],
+        stock_batches: payload.stock_batches ?? [],
+        stock_ledger: payload.stock_ledger ?? [],
+        stock_adjustments: payload.stock_adjustments ?? [],
+        reorder_rules: payload.reorder_rules ?? [],
+        damaged_goods: payload.damaged_goods ?? [],
+      });
       setError('');
     } catch (err) {
       setError('Failed to load inventory data');
@@ -31,18 +40,18 @@ export function useInventory() {
   }, [fetchData]);
 
   const getProduct = useCallback(
-    (id: string): Product | undefined => data?.products.find((p) => p.id === id),
+    (id: string): Product | undefined => data?.products.find((p) => String(p.id) === String(id)),
     [data]
   );
 
   const getWarehouse = useCallback(
-    (id: string): Warehouse | undefined => data?.warehouses.find((w) => w.id === id),
+    (id: string): Warehouse | undefined => data?.warehouses.find((w) => String(w.id) === String(id)),
     [data]
   );
 
   const getBatchesForProduct = useCallback(
     (productId: string): StockBatch[] =>
-      data?.stock_batches.filter((b) => b.product_id === productId) || [],
+      data?.stock_batches.filter((b) => String(b.product_id) === String(productId)) || [],
     [data]
   );
 
@@ -51,16 +60,17 @@ export function useInventory() {
     return data.products
       .map((product) => {
         const batches = data.stock_batches.filter(
-          (b) => b.product_id === product.id && b.status === 'active'
+          (b) => String(b.product_id) === String(product.id) && b.status === 'active'
         );
-        const totalStock = batches.reduce((sum, b) => sum + b.quantity, 0);
-        if (totalStock <= product.reorder_level) {
+        const totalStock = batches.reduce((sum, b) => sum + Number(b.quantity), 0);
+        if (totalStock <= Number(product.reorder_level)) {
           const warehouseMap = new Map<string, number>();
           batches.forEach((b) => {
-            warehouseMap.set(b.warehouse_id, (warehouseMap.get(b.warehouse_id) || 0) + b.quantity);
+            const wid = String(b.warehouse_id);
+            warehouseMap.set(wid, (warehouseMap.get(wid) || 0) + Number(b.quantity));
           });
           const warehouseStocks = Array.from(warehouseMap.entries()).map(([wid, qty]) => ({
-            warehouse: data.warehouses.find((w) => w.id === wid)!,
+            warehouse: data.warehouses.find((w) => String(w.id) === wid)!,
             quantity: qty,
           }));
           return { product, totalStock, warehouseStocks };
@@ -89,7 +99,7 @@ export function useInventory() {
     if (!data) return 0;
     return data.stock_batches
       .filter((b) => b.status === 'active')
-      .reduce((sum, b) => sum + b.quantity * b.unit_cost, 0);
+      .reduce((sum, b) => sum + Number(b.quantity) * Number(b.unit_cost), 0);
   }, [data]);
 
   return {
