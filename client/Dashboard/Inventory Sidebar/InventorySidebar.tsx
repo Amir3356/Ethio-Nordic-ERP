@@ -8,6 +8,7 @@ import StockIssuance from './StockIssuance';
 import DamagedGoodsAdjustments from './DamagedGoodsAdjustments';
 import CycleCounting from './CycleCounting';
 import InventoryValuation from './InventoryValuation';
+import AIForecasting from './AIForecasting';
 import './InventorySidebar.css';
 
 export default function InventorySidebar() {
@@ -37,6 +38,7 @@ export default function InventorySidebar() {
       <DamagedGoodsAdjustments inventory={inventory} />
       <CycleCounting inventory={inventory} />
       <InventoryValuation inventory={inventory} />
+      <AIForecasting />
     </>
   );
 }

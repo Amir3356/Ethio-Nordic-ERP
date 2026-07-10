@@ -18,3 +18,4 @@ require __DIR__ . '/api/permissions.php';
 require __DIR__ . '/api/sessions.php';
 require __DIR__ . '/api/login-activity.php';
 require __DIR__ . '/api/inventory.php';
+require __DIR__ . '/api/ai-forecasting.php';
