@@ -41,6 +41,17 @@ class AuthenticationService
             return response()->json(['success' => false, 'message' => 'Your temporary password has expired. Please contact administrator for a new one.'], 403);
         }
 
+        // Invalidate 2FA secret if it can't be decrypted (wrong APP_KEY)
+        if ($user->hasTwoFactorEnabled()) {
+            try {
+                $user->twoFactorSecret->getDecryptedSecret();
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                \Log::warning('2FA secret decryption failed for user ' . $user->id . ', resetting 2FA. Error: ' . $e->getMessage());
+                \App\Models\TwoFactorSecret::where('user_id', $user->id)->delete();
+                $user->unsetRelation('twoFactorSecret');
+            }
+        }
+
         // Force 2FA setup for new users
         if (!$user->hasTwoFactorEnabled()) {
             if (!$request->two_factor_code) {
@@ -231,7 +242,7 @@ class AuthenticationService
     /**
      * Complete the login process: create tokens, log activity, return response data.
      */
-    protected function completeLogin(User $user, Request $request): array
+    public function completeLogin(User $user, Request $request): array
     {
         $token = $user->createToken('auth-token', ['*'], now()->addHours(12));
 

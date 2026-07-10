@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Mail\TwoFactorSetupMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Services\Auth\AuthenticationService;
 use Illuminate\Support\Facades\Mail;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -14,7 +15,6 @@ class TwoFactorService
 {
     public function __construct(
         protected AccountActivationService $activation,
-        protected AuthenticationService $auth,
     ) {}
 
     /**
@@ -162,7 +162,7 @@ class TwoFactorService
 
         return response()->json([
             'success' => true,
-            'data' => $this->auth->completeLogin($user, $request),
+            'data' => app(AuthenticationService::class)->completeLogin($user, $request),
             'message' => 'Login successful.',
         ]);
     }
