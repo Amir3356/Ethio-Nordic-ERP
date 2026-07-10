@@ -103,7 +103,7 @@ export default function StockMovements({ inventory }: Props) {
                   <td className={m.quantity < 0 ? 'inv-text-red' : 'inv-text-green'}>
                     {m.quantity > 0 ? '+' : ''}{m.quantity.toLocaleString()}
                   </td>
-                  <td>${m.unit_cost.toFixed(2)}</td>
+                  <td>${Number(m.unit_cost).toFixed(2)}</td>
                   <td>{m.reference}</td>
                   <td>{m.created_by}</td>
                   <td>{new Date(m.created_at).toLocaleDateString()}</td>

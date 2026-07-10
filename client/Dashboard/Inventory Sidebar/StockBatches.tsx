@@ -89,8 +89,8 @@ export default function StockBatches({ inventory }: Props) {
                   <td>{product?.name || batch.product_id}</td>
                   <td>{warehouse?.name || batch.warehouse_id}</td>
                   <td>{batch.quantity.toLocaleString()}</td>
-                  <td>${batch.unit_cost.toFixed(2)}</td>
-                  <td>${(batch.quantity * batch.unit_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td>${Number(batch.unit_cost).toFixed(2)}</td>
+                  <td>${(batch.quantity * Number(batch.unit_cost)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                   <td>{batch.manufacture_date}</td>
                   <td>{batch.expiry_date}</td>
                 </tr>
