@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
+    use \App\Traits\Auditable;
+
     use SoftDeletes;
 
     protected $primaryKey = 'employee_id';

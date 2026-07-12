@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { inventoryAPI } from '../../services/inventory';
 import type { useInventory } from './hooks';
+import type { StockBatch } from './types';
 
 type InventoryHook = ReturnType<typeof useInventory>;
 
@@ -25,33 +26,93 @@ export default function GoodsReceipt({ inventory }: Props) {
   const { data, refetch } = inventory;
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const [editingBatch, setEditingBatch] = useState<StockBatch | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState<string | number | null>(null);
+
+  const openCreate = () => {
+    setEditingBatch(null);
+    setForm(initialForm);
+    setError('');
+    setShowForm(true);
+  };
+
+  const openEdit = (batch: StockBatch) => {
+    setEditingBatch(batch);
+    setForm({
+      batch_number: batch.batch_number,
+      product_id: String(batch.product_id),
+      warehouse_id: String(batch.warehouse_id),
+      quantity_received: String(batch.quantity_received),
+      unit_cost: String(batch.unit_cost),
+      manufacture_date: batch.manufacture_date || '',
+      expiry_date: batch.expiry_date || '',
+      supplier_id: batch.supplier_id != null ? String(batch.supplier_id) : '',
+      receipt_reference: batch.receipt_reference || '',
+    });
+    setError('');
+    setShowForm(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSubmitting(true);
     try {
-      await inventoryAPI.createBatch({
-        batch_number: form.batch_number,
-        product_id: form.product_id,
-        warehouse_id: form.warehouse_id,
-        quantity_received: form.quantity_received,
-        unit_cost: form.unit_cost,
-        manufacture_date: form.manufacture_date || null,
-        expiry_date: form.expiry_date || null,
-        supplier_id: form.supplier_id ? Number(form.supplier_id) : null,
-        receipt_reference: form.receipt_reference || null,
-      });
-      setShowForm(false);
-      setForm(initialForm);
+      if (editingBatch) {
+        await inventoryAPI.updateBatch(editingBatch.batch_id, {
+          batch_number: form.batch_number,
+          quantity_received: form.quantity_received,
+          unit_cost: form.unit_cost,
+          manufacture_date: form.manufacture_date || null,
+          expiry_date: form.expiry_date || null,
+          supplier_id: form.supplier_id ? Number(form.supplier_id) : null,
+          receipt_reference: form.receipt_reference || null,
+        });
+        setShowForm(false);
+        setEditingBatch(null);
+        setForm(initialForm);
+        refetch();
+      } else {
+        await inventoryAPI.createBatch({
+          batch_number: form.batch_number,
+          product_id: form.product_id,
+          warehouse_id: form.warehouse_id,
+          quantity_received: form.quantity_received,
+          unit_cost: form.unit_cost,
+          manufacture_date: form.manufacture_date || null,
+          expiry_date: form.expiry_date || null,
+          supplier_id: form.supplier_id ? Number(form.supplier_id) : null,
+          receipt_reference: form.receipt_reference || null,
+        });
+        setShowForm(false);
+        setForm(initialForm);
+        // The stock-in event is processed asynchronously by the queue worker;
+        // give it a moment before refreshing the ledger.
+        setTimeout(() => refetch(), 1200);
+      }
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setError(axiosErr?.response?.data?.message || (editingBatch ? 'Failed to update batch' : 'Failed to receive stock'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (batch: StockBatch) => {
+    if (!window.confirm(`Delete batch ${batch.batch_number}? Its ledger entries will also be removed.`)) {
+      return;
+    }
+    setDeletingId(batch.batch_id);
+    try {
+      await inventoryAPI.deleteBatch(batch.batch_id);
       refetch();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
-      setError(axiosErr?.response?.data?.message || 'Failed to receive stock');
+      window.alert(axiosErr?.response?.data?.message || 'Failed to delete batch');
     } finally {
-      setSubmitting(false);
+      setDeletingId(null);
     }
   };
 
@@ -70,7 +131,7 @@ export default function GoodsReceipt({ inventory }: Props) {
       </p>
 
       <div className="inv-toolbar">
-        <button className="inv-btn inv-btn-primary" onClick={() => setShowForm(true)}>
+        <button className="inv-btn inv-btn-primary" onClick={openCreate}>
           <Plus size={16} /> Record Goods Receipt
         </button>
       </div>
@@ -90,6 +151,7 @@ export default function GoodsReceipt({ inventory }: Props) {
               <th>Supplier ID</th>
               <th>Receipt Ref</th>
               <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -115,11 +177,34 @@ export default function GoodsReceipt({ inventory }: Props) {
                         {batch.batch_status}
                       </span>
                     </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          className="inv-btn inv-btn-secondary"
+                          style={{ padding: '4px 8px' }}
+                          title="Edit batch"
+                          onClick={() => openEdit(batch)}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="inv-btn inv-btn-secondary"
+                          style={{ padding: '4px 8px', color: '#dc2626' }}
+                          title="Delete batch"
+                          disabled={deletingId === batch.batch_id}
+                          onClick={() => handleDelete(batch)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
             {data.stock_batches.length === 0 && (
-              <tr><td colSpan={11} className="inv-empty">No goods receipts recorded</td></tr>
+              <tr><td colSpan={12} className="inv-empty">No goods receipts recorded</td></tr>
             )}
           </tbody>
         </table>
@@ -129,7 +214,7 @@ export default function GoodsReceipt({ inventory }: Props) {
         <div className="inv-modal-overlay" onClick={() => setShowForm(false)}>
           <div className="inv-modal" onClick={(e) => e.stopPropagation()}>
             <div className="inv-modal-header">
-              <h3>Record Goods Receipt</h3>
+              <h3>{editingBatch ? `Edit Batch ${editingBatch.batch_number}` : 'Record Goods Receipt'}</h3>
               <button className="inv-modal-close" onClick={() => setShowForm(false)}>
                 <X size={18} />
               </button>
@@ -142,8 +227,13 @@ export default function GoodsReceipt({ inventory }: Props) {
                   <input
                     type="text"
                     required
-                    placeholder="Enter product name or ID"
-                    value={form.product_id}
+                    placeholder="Product name or code"
+                    disabled={!!editingBatch}
+                    value={
+                      editingBatch
+                        ? data.products.find((p) => String(p.product_id) === form.product_id)?.product_name ?? form.product_id
+                        : form.product_id
+                    }
                     onChange={(e) => setForm({ ...form, product_id: e.target.value })}
                   />
                 </div>
@@ -152,8 +242,13 @@ export default function GoodsReceipt({ inventory }: Props) {
                   <input
                     type="text"
                     required
-                    placeholder="Enter warehouse name or ID"
-                    value={form.warehouse_id}
+                    placeholder="Warehouse name, code, or location"
+                    disabled={!!editingBatch}
+                    value={
+                      editingBatch
+                        ? data.warehouses.find((w) => String(w.warehouse_id) === form.warehouse_id)?.warehouse_name ?? form.warehouse_id
+                        : form.warehouse_id
+                    }
                     onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
                   />
                 </div>
@@ -233,7 +328,7 @@ export default function GoodsReceipt({ inventory }: Props) {
                   Cancel
                 </button>
                 <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting}>
-                  Record Receipt
+                  {editingBatch ? 'Save Changes' : 'Record Receipt'}
                 </button>
               </div>
             </form>

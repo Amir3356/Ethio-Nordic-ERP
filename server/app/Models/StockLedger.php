@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockLedger extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $table = 'stock_ledger';
 
     protected $primaryKey = 'ledger_id';

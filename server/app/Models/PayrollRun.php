@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PayrollRun extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'payroll_run_id';
 
     protected $fillable = [

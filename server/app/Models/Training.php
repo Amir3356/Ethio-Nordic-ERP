@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Training extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'training_id';
 
     protected $fillable = [

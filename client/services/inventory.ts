@@ -29,6 +29,12 @@ export const inventoryAPI = {
   createBatch: (data: Record<string, unknown>) =>
     api.post('/inventory/batches', data),
 
+  updateBatch: (id: string | number, data: Record<string, unknown>) =>
+    api.put(`/inventory/batches/${id}`, data),
+
+  deleteBatch: (id: string | number) =>
+    api.delete(`/inventory/batches/${id}`),
+
   getMovements: (params?: PaginationParams & { search?: string; type?: string; product_id?: string; warehouse_id?: string }) =>
     api.get('/inventory/movements', { params }),
 

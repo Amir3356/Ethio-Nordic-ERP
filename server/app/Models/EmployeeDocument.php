@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmployeeDocument extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'document_id';
 
     protected $fillable = [

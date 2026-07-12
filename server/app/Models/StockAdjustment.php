@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockAdjustment extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'adjustment_id';
 
     public const UPDATED_AT = null;

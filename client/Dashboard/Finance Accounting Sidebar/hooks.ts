@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { financeAPI } from '../../services/finance';
 import type { FinanceData, ChartOfAccount, ARInvoice, BankTransaction, Budget, FixedAsset, TaxRecord } from './types';
 
 export function useFinance() {
@@ -9,9 +10,8 @@ export function useFinance() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/finance-accounting.json');
-      if (!response.ok) throw new Error('Failed to load finance data');
-      const json = await response.json();
+      const response = await financeAPI.getOverview();
+      const json = response.data?.data ?? response.data;
       setData(json);
       setError('');
     } catch (err) {

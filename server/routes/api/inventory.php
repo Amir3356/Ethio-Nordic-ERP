@@ -20,6 +20,8 @@ Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
         // Stock Batches
         Route::get('/batches', [InventoryController::class, 'batches']);
         Route::post('/batches', [InventoryController::class, 'storeBatch']);
+        Route::put('/batches/{id}', [InventoryController::class, 'updateBatch']);
+        Route::delete('/batches/{id}', [InventoryController::class, 'deleteBatch']);
 
         // Stock Movements (Ledger)
         Route::get('/movements', [InventoryController::class, 'movements']);

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Warehouse extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'warehouse_id';
 
     protected $fillable = [

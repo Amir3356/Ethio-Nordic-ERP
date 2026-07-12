@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payslip extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'payslip_id';
 
     protected $fillable = [

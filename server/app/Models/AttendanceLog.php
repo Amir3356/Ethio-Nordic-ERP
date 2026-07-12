@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AttendanceLog extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'attendance_id';
 
     protected $fillable = [

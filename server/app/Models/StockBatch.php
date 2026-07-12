@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StockBatch extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'batch_id';
 
     protected $fillable = [

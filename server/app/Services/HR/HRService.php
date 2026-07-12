@@ -101,6 +101,14 @@ class HRService
 
         $employee = Employee::create($validated);
 
+        // Step 1: onboarding triggers a provisioning request to User & Access Management.
+        \App\Events\EmployeeOnboarded::dispatch(
+            $employee->employee_id,
+            $employee->first_name . ' ' . $employee->last_name,
+            $employee->email,
+            $employee->department,
+        );
+
         return response()->json(['success' => true, 'data' => $employee], 201);
     }
 
@@ -152,9 +160,37 @@ class HRService
 
         $employee->update(['employment_status' => 'terminated']);
 
+        // Step 9: Final Settlement = pro-rated unpaid salary + accrued unused
+        // leave payout − outstanding deductions.
+        $baseSalary = (float) $employee->base_salary_etb;
+        $dailyRate = $baseSalary / self::WORKING_DAYS_PER_MONTH;
+        $daysWorkedThisMonth = AttendanceLog::where('employee_id', $employee->employee_id)
+            ->whereBetween('date', [now()->startOfMonth(), now()])
+            ->whereIn('status', ['present', 'late', 'early_departure', 'half_day'])
+            ->count();
+        $proRatedSalary = round($dailyRate * $daysWorkedThisMonth, 2);
+        $remainingLeave = max(0, $this->accruedLeaveBalance($employee->employee_id, 'annual'));
+        $leavePayout = round($dailyRate * $remainingLeave, 2);
+        $finalSettlement = [
+            'pro_rated_salary' => $proRatedSalary,
+            'days_worked_this_month' => $daysWorkedThisMonth,
+            'accrued_unused_leave_days' => $remainingLeave,
+            'leave_payout' => $leavePayout,
+            'outstanding_deductions' => 0,
+            'total_settlement' => round($proRatedSalary + $leavePayout, 2),
+        ];
+
+        // Automatic deactivation request to User & Access Management.
+        \App\Events\EmployeeTerminated::dispatch(
+            $employee->employee_id,
+            $employee->email,
+            $validated['reason'] ?? null,
+        );
+
         return response()->json([
             'success' => true,
-            'message' => 'Employee terminated. System access deactivation requested.',
+            'message' => 'Employee terminated. Final settlement calculated and system access deactivation requested.',
+            'final_settlement' => $finalSettlement,
             'data' => $employee->fresh(),
         ]);
     }
@@ -191,6 +227,11 @@ class HRService
         return response()->json(['success' => true, 'data' => $logs]);
     }
 
+    /** Standard work schedule used for exception detection (Step 2). */
+    private const SCHEDULED_START = '08:30';
+    private const SCHEDULED_END = '17:30';
+    private const GRACE_MINUTES = 15;
+
     public function storeAttendance(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -198,19 +239,51 @@ class HRService
             'date' => 'required|date',
             'check_in' => 'nullable|date_format:H:i',
             'check_out' => 'nullable|date_format:H:i',
-            'status' => 'required|string|in:present,late,absent,half_day,on_leave',
+            'break_minutes' => 'sometimes|integer|min:0|max:480',
+            'status' => 'sometimes|string|in:present,late,early_departure,absent,half_day,on_leave',
             'notes' => 'nullable|string|max:500',
         ]);
 
         $hoursWorked = 0;
         $overtime = 0;
+        $breakMinutes = (int) ($validated['break_minutes'] ?? 60); // default 1h unpaid break
+        unset($validated['break_minutes']);
 
-        if ($validated['check_in'] && $validated['check_out']) {
+        // Worked Hours = Time Out − Time In − Unpaid Break Duration
+        if (!empty($validated['check_in']) && !empty($validated['check_out'])) {
             $in = \Carbon\Carbon::parse($validated['date'] . ' ' . $validated['check_in']);
             $out = \Carbon\Carbon::parse($validated['date'] . ' ' . $validated['check_out']);
-            $diff = $in->diffInHours($out);
-            $hoursWorked = max(0, $diff);
-            $overtime = max(0, $hoursWorked - 8);
+            $hoursWorked = round(max(0, $in->diffInMinutes($out) - $breakMinutes) / 60, 2);
+            $overtime = round(max(0, $hoursWorked - 8), 2);
+        }
+
+        // Exception flags are derived automatically unless a status is supplied:
+        //   time in > scheduled start + grace  -> late arrival
+        //   time out < scheduled end           -> early departure
+        //   no clock-in recorded               -> unexcused absence
+        if (empty($validated['status'])) {
+            if (empty($validated['check_in'])) {
+                $validated['status'] = 'absent';
+                $validated['exception_reason'] = 'Unexcused absence: no clock-in recorded';
+            } else {
+                $lateCutoff = \Carbon\Carbon::parse($validated['date'] . ' ' . self::SCHEDULED_START)
+                    ->addMinutes(self::GRACE_MINUTES);
+                $scheduledEnd = \Carbon\Carbon::parse($validated['date'] . ' ' . self::SCHEDULED_END);
+                $in = \Carbon\Carbon::parse($validated['date'] . ' ' . $validated['check_in']);
+                $out = !empty($validated['check_out'])
+                    ? \Carbon\Carbon::parse($validated['date'] . ' ' . $validated['check_out'])
+                    : null;
+
+                if ($in->gt($lateCutoff)) {
+                    $validated['status'] = 'late';
+                    $validated['exception_reason'] = 'Late arrival: clocked in at ' . $in->format('H:i');
+                } elseif ($out && $out->lt($scheduledEnd)) {
+                    $validated['status'] = 'early_departure';
+                    $validated['exception_reason'] = 'Early departure: clocked out at ' . $out->format('H:i');
+                } else {
+                    $validated['status'] = 'present';
+                }
+            }
         }
 
         $validated['hours_worked'] = $hoursWorked;
@@ -245,10 +318,7 @@ class HRService
     {
         $exceptions = AttendanceLog::with(['employee'])
             ->where('exception_resolved', false)
-            ->where(function ($q) {
-                $q->where('status', 'late')
-                  ->orWhere('status', 'absent');
-            })
+            ->whereIn('status', ['late', 'early_departure', 'absent'])
             ->orderByDesc('date')
             ->get();
 
@@ -293,9 +363,46 @@ class HRService
         $validated['days'] = $start->diffInDays($end) + 1;
         $validated['status'] = 'pending';
 
+        // Step 3: real-time check — Requested Days ≤ Accrued Balance − Pending Requests,
+        // where Accrued Balance(t) = Monthly Accrual × months elapsed − Days Taken.
+        if (array_key_exists($validated['leave_type'], self::LEAVE_ENTITLEMENTS)) {
+            $accrued = $this->accruedLeaveBalance($validated['employee_id'], $validated['leave_type']);
+            $pending = (float) LeaveRequest::where('employee_id', $validated['employee_id'])
+                ->where('leave_type', $validated['leave_type'])
+                ->where('status', 'pending')
+                ->whereYear('start_date', $start->year)
+                ->sum('days');
+            $available = $accrued - $pending;
+            if ($validated['days'] > $available) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient {$validated['leave_type']} leave balance: {$available} day(s) available (accrued {$accrued} minus pending {$pending}), {$validated['days']} requested.",
+                ], 422);
+            }
+        }
+
         $leave = LeaveRequest::create($validated);
 
         return response()->json(['success' => true, 'data' => $leave], 201);
+    }
+
+    /** Annual entitlements per leave type (days). Monthly accrual = entitlement ÷ 12. */
+    private const LEAVE_ENTITLEMENTS = ['annual' => 24, 'sick' => 12, 'maternity' => 120, 'bereavement' => 5];
+
+    /** Accrued Balance(t) = (Annual Entitlement ÷ 12) × months elapsed − Days Taken. */
+    private function accruedLeaveBalance(int $employeeId, string $leaveType): float
+    {
+        $entitlement = self::LEAVE_ENTITLEMENTS[$leaveType] ?? 0;
+        $monthsElapsed = min(12, now()->month);
+        $accruedToDate = round($entitlement / 12 * $monthsElapsed, 1);
+
+        $taken = (float) LeaveRequest::where('employee_id', $employeeId)
+            ->where('leave_type', $leaveType)
+            ->where('status', 'approved')
+            ->whereYear('start_date', now()->year)
+            ->sum('days');
+
+        return round($accruedToDate - $taken, 1);
     }
 
     public function approveLeave(int $id, Request $request): JsonResponse
@@ -306,15 +413,8 @@ class HRService
             return response()->json(['success' => false, 'message' => 'Leave request is not pending.'], 422);
         }
 
-        // Calculate current balance from approved leave history
-        $year = now()->year;
-        $approvedDays = LeaveRequest::where('employee_id', $leave->employee_id)
-            ->where('leave_type', $leave->leave_type)
-            ->where('status', 'approved')
-            ->whereYear('start_date', $year)
-            ->sum('days');
-        $entitled = 24; // Default annual entitlement, can be customized per leave_type
-        $balanceBefore = $entitled - $approvedDays;
+        // Balance updates only on final approval (Step 3).
+        $balanceBefore = $this->accruedLeaveBalance($leave->employee_id, $leave->leave_type);
         $balanceAfter = $balanceBefore - $leave->days;
 
         $leave->update([
@@ -351,6 +451,35 @@ class HRService
     }
 
     // ─── Payroll ────────────────────────────────────────────────
+
+    private const OVERTIME_MULTIPLIER = 1.5;
+    private const WORKING_DAYS_PER_MONTH = 22;
+
+    /**
+     * Ethiopian monthly PAYE brackets (Ministry of Revenue tables):
+     * Tax = Taxable Income × Bracket Rate − Deduction Constant.
+     * Update these at each fiscal change.
+     */
+    private const TAX_BRACKETS = [
+        // [upper bound, rate, deduction constant]
+        [600, 0.00, 0],
+        [1650, 0.10, 60],
+        [3200, 0.15, 142.50],
+        [5250, 0.20, 302.50],
+        [7800, 0.25, 565],
+        [10900, 0.30, 955],
+        [PHP_FLOAT_MAX, 0.35, 1500],
+    ];
+
+    private function progressiveIncomeTax(float $taxableIncome): float
+    {
+        foreach (self::TAX_BRACKETS as [$upper, $rate, $constant]) {
+            if ($taxableIncome <= $upper) {
+                return round(max(0, $taxableIncome * $rate - $constant), 2);
+            }
+        }
+        return 0;
+    }
 
     public function payrollRuns(Request $request): JsonResponse
     {
@@ -393,34 +522,51 @@ class HRService
             foreach ($activeEmployees as $emp) {
                 $baseSalary = (float) $emp->base_salary_etb;
 
-                // Calculate overtime from attendance
                 $monthStart = \Carbon\Carbon::parse($validated['pay_period'] . '-01');
                 $monthEnd = $monthStart->copy()->endOfMonth();
+
+                // Overtime Pay = OT Hours × (Hourly Rate × 1.5), Hourly Rate = Base ÷ 208
                 $overtimeHours = AttendanceLog::where('employee_id', $emp->employee_id)
                     ->whereBetween('date', [$monthStart, $monthEnd])
                     ->sum('overtime_hours');
                 $hourlyRate = $baseSalary / 208; // 26 days * 8 hours
-                $overtimePay = round((float) $overtimeHours * $hourlyRate * 1.5, 2);
+                $overtimePay = round((float) $overtimeHours * $hourlyRate * self::OVERTIME_MULTIPLIER, 2);
 
-                $grossSalary = $baseSalary + $overtimePay;
-                $incomeTax = round($grossSalary * 0.15, 2); // 15% income tax
-                $pensionEmployee = round($grossSalary * 0.07, 2); // 7% employee pension
-                $pensionEmployer = round($grossSalary * 0.11, 2); // 11% employer pension
+                // Absence Deduction = (Base ÷ Working Days) × Unexcused Absence Days
+                $absenceDays = AttendanceLog::where('employee_id', $emp->employee_id)
+                    ->whereBetween('date', [$monthStart, $monthEnd])
+                    ->where('status', 'absent')
+                    ->where('exception_resolved', false)
+                    ->count();
+                $absenceDeduction = round($baseSalary / self::WORKING_DAYS_PER_MONTH * $absenceDays, 2);
+
+                // Gross = Base + Allowances + Overtime − Absence Deduction
+                $allowances = 0.0; // per-employee allowances configurable in a future iteration
+                $grossSalary = round($baseSalary + $allowances + $overtimePay - $absenceDeduction, 2);
+
+                // Statutory deductions: pension on basic salary (7% / 11%).
+                $pensionEmployee = round($baseSalary * 0.07, 2);
+                $pensionEmployer = round($baseSalary * 0.11, 2);
+
+                // Income Tax: progressive brackets on Taxable Income = Gross − Pension(Employee).
+                $taxableIncome = max(0, $grossSalary - $pensionEmployee);
+                $incomeTax = $this->progressiveIncomeTax($taxableIncome);
+
                 $totalDeductionsEmp = $incomeTax + $pensionEmployee;
-                $netSalary = $grossSalary - $totalDeductionsEmp;
+                $netSalary = round($grossSalary - $totalDeductionsEmp, 2);
 
                 Payslip::create([
                     'payroll_run_id' => $run->payroll_run_id,
                     'employee_id' => $emp->employee_id,
                     'base_salary' => $baseSalary,
                     'overtime_pay' => $overtimePay,
-                    'allowances' => 0,
+                    'allowances' => $allowances,
                     'bonus' => 0,
                     'gross_salary' => $grossSalary,
                     'income_tax' => $incomeTax,
                     'pension_employee' => $pensionEmployee,
                     'pension_employer' => $pensionEmployer,
-                    'other_deductions' => 0,
+                    'other_deductions' => $absenceDeduction,
                     'net_salary' => $netSalary,
                     'status' => 'draft',
                 ]);
@@ -477,6 +623,17 @@ class HRService
 
         $run->payslips()->update(['status' => 'paid']);
 
+        // Module 4, Step 5: post the consolidated payroll journal to Finance.
+        $payslips = $run->payslips()->get();
+        \App\Events\PayrollDisbursed::dispatch(
+            $run->payroll_run_id,
+            $run->pay_period,
+            (float) $payslips->sum('gross_salary'),
+            (float) $payslips->sum('income_tax'),
+            (float) $payslips->sum('pension_employee'),
+            (float) $payslips->sum('net_salary'),
+        );
+
         return response()->json(['success' => true, 'data' => $run->fresh()]);
     }
 
@@ -498,6 +655,10 @@ class HRService
     }
 
     // ─── Performance Reviews ────────────────────────────────────
+
+    /** Assessment weights — configurable per company policy (Step 6). */
+    private const WEIGHT_SELF = 0.30;
+    private const WEIGHT_MANAGER = 0.70;
 
     public function performanceReviews(Request $request): JsonResponse
     {
@@ -560,9 +721,10 @@ class HRService
             'rating' => 'required|string|in:exceeds_expectations,meets_expectations,needs_improvement,unsatisfactory',
         ]);
 
+        // Consolidated Score = Self × Weight_self + Manager × Weight_manager (Step 6).
         $selfScore = (float) ($review->self_assessment_score ?? 0);
         $managerScore = (float) $validated['manager_score'];
-        $finalScore = round(($selfScore * 0.4) + ($managerScore * 0.6), 2);
+        $finalScore = round(($selfScore * self::WEIGHT_SELF) + ($managerScore * self::WEIGHT_MANAGER), 2);
 
         $review->update($validated + [
             'final_score' => $finalScore,

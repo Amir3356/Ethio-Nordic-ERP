@@ -58,6 +58,16 @@ class InventoryController extends Controller
         return $this->inventory->storeBatch($request);
     }
 
+    public function updateBatch(Request $request, int $id): JsonResponse
+    {
+        return $this->inventory->updateBatch($request, $id);
+    }
+
+    public function deleteBatch(int $id): JsonResponse
+    {
+        return $this->inventory->deleteBatch($id);
+    }
+
     public function movements(Request $request): JsonResponse
     {
         return $this->inventory->movements($request);

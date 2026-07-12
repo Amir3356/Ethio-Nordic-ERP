@@ -36,6 +36,48 @@ services:
     networks:
       - ethio-nordic-network
 
+  queue-worker:
+    build:
+      context: ./server
+
+    container_name: ethio-nordic-queue-worker
+
+    entrypoint: ["sh", "-c", "composer install --no-interaction --prefer-dist && php artisan queue:work redis --tries=3 --sleep=1"]
+
+    volumes:
+      - ./server:/var/www
+      - /var/www/vendor
+      - /var/www/storage
+      - /var/www/bootstrap/cache
+
+    depends_on:
+      - postgres
+      - redis
+
+    networks:
+      - ethio-nordic-network
+
+  scheduler:
+    build:
+      context: ./server
+
+    container_name: ethio-nordic-scheduler
+
+    entrypoint: ["sh", "-c", "composer install --no-interaction --prefer-dist && php artisan schedule:work"]
+
+    volumes:
+      - ./server:/var/www
+      - /var/www/vendor
+      - /var/www/storage
+      - /var/www/bootstrap/cache
+
+    depends_on:
+      - postgres
+      - redis
+
+    networks:
+      - ethio-nordic-network
+
   nginx:
     image: nginx:latest
 

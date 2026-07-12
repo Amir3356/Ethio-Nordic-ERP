@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DamagedGood extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'damaged_goods_id';
 
     public const UPDATED_AT = null;

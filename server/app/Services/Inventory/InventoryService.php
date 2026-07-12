@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use App\Events\StockInReceived;
 use App\Models\DamagedGood;
 use App\Models\Product;
 use App\Models\ReorderRule;
@@ -211,11 +212,16 @@ class InventoryService
                 ->orWhereRaw('LOWER(product_code) LIKE ?', ['%' . strtolower($search) . '%'])
                 ->first();
             if (!$product) {
-                $available = Product::pluck('product_name')->implode(', ');
-                return response()->json([
-                    'success' => false,
-                    'message' => "Product \"{$search}\" not found. Available products: {$available}",
-                ], 422);
+                // New product arriving for the first time: register it in the
+                // master catalog as part of the goods receipt.
+                $product = Product::create([
+                    'product_code' => $this->generateProductCode(),
+                    'product_name' => $search,
+                    'unit_of_measure' => 'piece',
+                    'requires_batch_tracking' => true,
+                    'requires_expiry_tracking' => !empty($validated['expiry_date']),
+                    'status' => 'active',
+                ]);
             }
             $productId = $product->product_id;
         }
@@ -228,45 +234,115 @@ class InventoryService
                 ->orWhereRaw('LOWER(location) LIKE ?', ['%' . strtolower($search) . '%'])
                 ->first();
             if (!$warehouse) {
-                $available = Warehouse::pluck('warehouse_name')->implode(', ');
-                return response()->json([
-                    'success' => false,
-                    'message' => "Warehouse \"{$search}\" not found. Available warehouses: {$available}",
-                ], 422);
+                // Unknown warehouse: register it in the warehouse master data.
+                $warehouse = Warehouse::create([
+                    'warehouse_code' => $this->generateWarehouseCode(),
+                    'warehouse_name' => $search,
+                    'location' => $search,
+                    'warehouse_type' => 'main',
+                    'status' => 'active',
+                ]);
             }
             $warehouseId = $warehouse->warehouse_id;
         }
 
-        $quantity = $validated['quantity_received'];
+        // Step 1: the Goods Receipt Note publishes a 'stock-in' event to the
+        // internal queue; the ProcessStockIn listener consumes it (Step 2) and
+        // creates or increments the batch + ledger atomically.
+        StockInReceived::dispatch(
+            (int) $productId,
+            (int) $warehouseId,
+            $validated['batch_number'],
+            (float) $validated['quantity_received'],
+            (float) $validated['unit_cost'],
+            $validated['manufacture_date'] ?? null,
+            $validated['expiry_date'] ?? null,
+            isset($validated['supplier_id']) ? (int) $validated['supplier_id'] : null,
+            $validated['receipt_reference'] ?? null,
+            $request->user()?->id,
+        );
 
-        $batch = StockBatch::create([
-            'product_id' => $productId,
-            'warehouse_id' => $warehouseId,
-            'batch_number' => $validated['batch_number'],
-            'quantity_received' => $quantity,
-            'available_quantity' => $quantity,
-            'unit_cost' => $validated['unit_cost'],
-            'manufacture_date' => $validated['manufacture_date'] ?? null,
-            'expiry_date' => $validated['expiry_date'] ?? null,
-            'supplier_id' => $validated['supplier_id'] ?? null,
-            'receipt_reference' => $validated['receipt_reference'] ?? null,
-            'batch_status' => $validated['batch_status'] ?? 'available',
+        return response()->json([
+            'success' => true,
+            'message' => 'Goods receipt recorded. Stock-in event published to the inventory queue.',
+        ], 202);
+    }
+
+    public function updateBatch(Request $request, int $id): JsonResponse
+    {
+        $batch = StockBatch::findOrFail($id);
+
+        $validated = $request->validate([
+            'batch_number' => 'sometimes|string',
+            'quantity_received' => 'sometimes|numeric|min:0',
+            'available_quantity' => 'sometimes|numeric|min:0',
+            'unit_cost' => 'sometimes|numeric|min:0',
+            'manufacture_date' => 'nullable|date',
+            'expiry_date' => 'nullable|date',
+            'supplier_id' => 'nullable|integer',
+            'receipt_reference' => 'nullable|string|max:255',
+            'batch_status' => 'sometimes|string|in:available,expired,quarantined,consumed',
         ]);
 
-        StockLedger::create([
-            'product_id' => $batch->product_id,
-            'warehouse_id' => $batch->warehouse_id,
-            'batch_id' => $batch->batch_id,
-            'movement_type' => 'stock-in',
-            'quantity' => $batch->available_quantity,
-            'balance_after' => $batch->available_quantity,
-            'reference_type' => 'goods_receipt',
-            'reference_id' => null,
-            'transaction_date' => now(),
-            'created_by' => $request->user()?->id,
-        ]);
+        if (
+            ($validated['expiry_date'] ?? $batch->expiry_date?->toDateString())
+            && ($validated['manufacture_date'] ?? $batch->manufacture_date?->toDateString())
+            && ($validated['expiry_date'] ?? $batch->expiry_date->toDateString())
+                <= ($validated['manufacture_date'] ?? $batch->manufacture_date->toDateString())
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Expiry date must be after manufacture date.',
+            ], 422);
+        }
 
-        return response()->json(['success' => true, 'data' => $batch], 201);
+        $batch->update($validated);
+
+        return response()->json(['success' => true, 'data' => $batch->fresh(['product', 'warehouse'])]);
+    }
+
+    public function deleteBatch(int $id): JsonResponse
+    {
+        $batch = StockBatch::findOrFail($id);
+
+        $hasAdjustments = StockAdjustment::where('batch_id', $id)->exists();
+        $hasDamageRecords = DamagedGood::where('batch_id', $id)->exists();
+
+        if ($hasAdjustments || $hasDamageRecords) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete this batch: it is referenced by adjustment or damaged-goods records.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($batch) {
+            StockLedger::where('batch_id', $batch->batch_id)->delete();
+            $batch->delete();
+
+            return response()->json(['success' => true, 'message' => 'Batch and its ledger entries deleted.']);
+        });
+    }
+
+    private function generateProductCode(): string
+    {
+        $last = Product::where('product_code', 'like', 'PRD-%')
+            ->orderByDesc('product_id')
+            ->value('product_code');
+        if ($last && preg_match('/PRD-(\d+)/', $last, $m)) {
+            return 'PRD-' . str_pad((int) $m[1] + 1, 4, '0', STR_PAD_LEFT);
+        }
+        return 'PRD-0001';
+    }
+
+    private function generateWarehouseCode(): string
+    {
+        $last = Warehouse::where('warehouse_code', 'like', 'WH-N-%')
+            ->orderByDesc('warehouse_id')
+            ->value('warehouse_code');
+        if ($last && preg_match('/WH-N-(\d+)/', $last, $m)) {
+            return 'WH-N-' . str_pad((int) $m[1] + 1, 3, '0', STR_PAD_LEFT);
+        }
+        return 'WH-N-001';
     }
 
     public function movements(Request $request): JsonResponse
@@ -572,6 +648,14 @@ class InventoryService
             'disposition_status' => 'approved',
             'approved_by' => $request->user()?->id,
         ]);
+
+        // Module 2, Step 6: post the write-off's financial impact to Finance.
+        \App\Events\StockWrittenOff::dispatch(
+            $damaged->damaged_goods_id,
+            $damaged->product?->product_name ?? 'Unknown product',
+            (float) $damaged->quantity,
+            round((float) $damaged->quantity * (float) $batch->unit_cost, 2),
+        );
 
         return response()->json(['success' => true, 'data' => $damaged->fresh()]);
     }

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReorderRule extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $primaryKey = 'reorder_rule_id';
 
     protected $fillable = [
