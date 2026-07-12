@@ -34,6 +34,30 @@ export default function LeaveManagement({ hr }: Props) {
 
   const pendingCount = getPendingLeaveRequests().length;
 
+  const ANNUAL_ENTITLEMENT = 24;
+  const SICK_ENTITLEMENT = 12;
+
+  const leaveBalances = useMemo(() => {
+    const approved = data.leave_requests.filter((l) => l.status === 'Approved');
+    return data.employees.map((emp) => {
+      const takenFor = (type: string) =>
+        approved
+          .filter((l) => l.employee_id === emp.employee_id && l.leave_type === type)
+          .reduce((sum, l) => sum + l.days, 0);
+      const annualTaken = takenFor('Annual');
+      const sickTaken = takenFor('Sick');
+      return {
+        employee_id: emp.employee_id,
+        annual_entitled: ANNUAL_ENTITLEMENT,
+        annual_taken: annualTaken,
+        annual_remaining: ANNUAL_ENTITLEMENT - annualTaken,
+        sick_entitled: SICK_ENTITLEMENT,
+        sick_taken: sickTaken,
+        sick_remaining: SICK_ENTITLEMENT - sickTaken,
+      };
+    });
+  }, [data]);
+
   const getStatusBadge = (status: string) => {
     const cls =
       status === 'Approved' ? 'hr-badge-green' :
@@ -202,7 +226,7 @@ export default function LeaveManagement({ hr }: Props) {
               </tr>
             </thead>
             <tbody>
-              {data.leave_balances.map((lb) => {
+              {leaveBalances.map((lb) => {
                 const emp = getEmployee(lb.employee_id);
                 return (
                   <tr key={lb.employee_id}>
