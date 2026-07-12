@@ -4,7 +4,47 @@
   min-width: 0;
 }
 
-.inv-loading,
+/* Remove borders from inventory sidebar content sections */
+#inventory #goods-receipt,
+#inventory #stock-ledger,
+#inventory #reorder-monitoring,
+#inventory #expiry,
+#inventory #stock-issuance,
+#inventory #damaged-adjustments,
+#inventory #cycle-counting {
+  border: none;
+  box-shadow: none;
+  animation: none;
+}
+
+#inventory #goods-receipt:hover,
+#inventory #stock-ledger:hover,
+#inventory #reorder-monitoring:hover,
+#inventory #expiry:hover,
+#inventory #stock-issuance:hover,
+#inventory #damaged-adjustments:hover,
+#inventory #cycle-counting:hover {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+#inventory #goods-receipt .content-section-header,
+#inventory #stock-ledger .content-section-header,
+#inventory #reorder-monitoring .content-section-header,
+#inventory #expiry .content-section-header,
+#inventory #stock-issuance .content-section-header,
+#inventory #damaged-adjustments .content-section-header,
+#inventory #cycle-counting .content-section-header {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Ensure modal escapes any parent stacking context */
+#inventory .inv-modal-overlay {
+  position: fixed;
+  z-index: 99999;
+}
+
 .inv-error {
   text-align: center;
   padding: 40px 20px;
@@ -730,41 +770,6 @@
 
 .inv-ai-content-wrapper {
   min-height: 200px;
-}
-
-.inv-ai-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-}
-
-.inv-ai-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #4f46e5;
-  border-radius: 50%;
-  animation: ai-spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes ai-spin {
-  to { transform: rotate(360deg); }
-}
-
-.inv-ai-loading p {
-  margin: 0;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.inv-ai-loading-hint {
-  font-size: 12px !important;
-  color: #9ca3af !important;
-  margin-top: 4px !important;
 }
 
 .inv-ai-empty {

@@ -1,15 +1,5 @@
 @import './Login.css';
 
-/* ── Loading State ── */
-.tfa-loading-card {
-  text-align: center;
-  padding: 3rem;
-}
-
-.tfa-loading-text {
-  color: #6b7280;
-}
-
 /* ── Already Setup State ── */
 .tfa-already-setup {
   text-align: center;
@@ -52,28 +42,6 @@
   color: #6b7280;
   margin-bottom: 1.5rem;
   font-size: 14px;
-}
-
-/* ── Loading Bar ── */
-.tfa-loading-bar {
-  width: 100%;
-  height: 4px;
-  background: #e5e7eb;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.tfa-loading-bar-fill {
-  width: 100%;
-  height: 100%;
-  background: #4f46e5;
-  border-radius: 2px;
-  animation: tfaProgress 2.5s ease-in-out forwards;
-}
-
-@keyframes tfaProgress {
-  from { width: 0%; }
-  to { width: 100%; }
 }
 
 /* ── Scan Step ── */

@@ -51,6 +51,7 @@ export interface StockLedgerEntry {
   balance_after: number;
   reference_type: string | null;
   reference_id: number | string | null;
+  notes?: string | null;
   transaction_date: string;
   created_by: number | string | null;
 }

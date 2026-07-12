@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\NetworkController;
 use App\Http\Controllers\Api\SessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,10 +18,10 @@ Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
         Route::get('/stats', [AuthController::class, 'sessionStats']);
 
         // Get client's public IP address
-        Route::get('/public-ip', [SessionController::class, 'getPublicIp']);
+        Route::get('/public-ip', [NetworkController::class, 'getPublicIp']);
 
         // Get geolocation from an IP address
-        Route::post('/geo-location', [SessionController::class, 'getGeoLocation']);
+        Route::post('/geo-location', [NetworkController::class, 'getGeoLocation']);
 
         // Idle timeout configuration (admin only)
         Route::get('/idle-timeout', [SessionController::class, 'getIdleTimeout']);

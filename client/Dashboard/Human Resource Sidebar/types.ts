@@ -45,21 +45,9 @@ export interface LeaveRequest {
   status: string;
   approved_by: string | null;
   approved_date: string | null;
-  balance_before: number;
-  balance_after: number;
-}
-
-export interface LeaveBalance {
-  employee_id: string;
-  annual_entitled: number;
-  annual_taken: number;
-  annual_remaining: number;
-  sick_entitled: number;
-  sick_taken: number;
-  sick_remaining: number;
-  maternity_entitled: number;
-  maternity_taken: number;
-  maternity_remaining: number;
+  rejection_reason: string | null;
+  balance_before: number | null;
+  balance_after: number | null;
 }
 
 export interface PayrollRecord {
@@ -134,7 +122,6 @@ export interface HRData {
   employees: Employee[];
   attendance: Attendance[];
   leave_requests: LeaveRequest[];
-  leave_balances: LeaveBalance[];
   payroll: PayrollRecord[];
   performance_reviews: PerformanceReview[];
   training_records: TrainingRecord[];

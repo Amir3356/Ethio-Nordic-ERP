@@ -14,10 +14,6 @@ import './FinanceSidebar.css';
 export default function FinanceSidebar() {
   const finance = useFinance();
 
-  if (finance.loading) {
-    return <p className="content-loading">Loading finance data...</p>;
-  }
-
   if (finance.error) {
     return (
       <div className="content-error">

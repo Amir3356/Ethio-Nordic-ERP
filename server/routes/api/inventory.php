@@ -24,6 +24,9 @@ Route::middleware(['auth:sanctum', 'idle.session'])->group(function () {
         // Stock Movements (Ledger)
         Route::get('/movements', [InventoryController::class, 'movements']);
 
+        // Stock Issuance (FEFO-enforced stock-out)
+        Route::post('/issue', [InventoryController::class, 'issueStock']);
+
         // Stock Adjustments
         Route::get('/adjustments', [InventoryController::class, 'adjustments']);
         Route::post('/adjustments', [InventoryController::class, 'storeAdjustment']);

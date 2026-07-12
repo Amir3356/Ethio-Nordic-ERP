@@ -63,6 +63,11 @@ class InventoryController extends Controller
         return $this->inventory->movements($request);
     }
 
+    public function issueStock(Request $request): JsonResponse
+    {
+        return $this->inventory->issueStock($request);
+    }
+
     public function adjustments(Request $request): JsonResponse
     {
         return $this->inventory->adjustments($request);

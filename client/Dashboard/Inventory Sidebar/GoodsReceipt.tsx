@@ -35,13 +35,13 @@ export default function GoodsReceipt({ inventory }: Props) {
     try {
       await inventoryAPI.createBatch({
         batch_number: form.batch_number,
-        product_id: Number(form.product_id),
-        warehouse_id: Number(form.warehouse_id),
-        quantity_received: Number(form.quantity_received),
-        unit_cost: Number(form.unit_cost),
+        product_id: form.product_id,
+        warehouse_id: form.warehouse_id,
+        quantity_received: form.quantity_received,
+        unit_cost: form.unit_cost,
         manufacture_date: form.manufacture_date || null,
         expiry_date: form.expiry_date || null,
-        supplier_id: form.supplier_id || null,
+        supplier_id: form.supplier_id ? Number(form.supplier_id) : null,
         receipt_reference: form.receipt_reference || null,
       });
       setShowForm(false);
@@ -139,33 +139,23 @@ export default function GoodsReceipt({ inventory }: Props) {
               <div className="inv-form-row">
                 <div className="inv-form-group">
                   <label>Product</label>
-                  <select
+                  <input
+                    type="text"
                     required
+                    placeholder="Enter product name or ID"
                     value={form.product_id}
                     onChange={(e) => setForm({ ...form, product_id: e.target.value })}
-                  >
-                    <option value="">Select product</option>
-                    {data.products.map((p) => (
-                      <option key={p.product_id} value={String(p.product_id)}>
-                        {p.product_name} ({p.product_code})
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div className="inv-form-group">
                   <label>Warehouse</label>
-                  <select
+                  <input
+                    type="text"
                     required
+                    placeholder="Enter warehouse name or ID"
                     value={form.warehouse_id}
                     onChange={(e) => setForm({ ...form, warehouse_id: e.target.value })}
-                  >
-                    <option value="">Select warehouse</option>
-                    {data.warehouses.map((w) => (
-                      <option key={w.warehouse_id} value={String(w.warehouse_id)}>
-                        {w.warehouse_name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
               <div className="inv-form-row">
@@ -193,9 +183,8 @@ export default function GoodsReceipt({ inventory }: Props) {
                 <div className="inv-form-group">
                   <label>Quantity Received</label>
                   <input
-                    type="number"
+                    type="text"
                     required
-                    min="1"
                     placeholder="Enter quantity"
                     value={form.quantity_received}
                     onChange={(e) => setForm({ ...form, quantity_received: e.target.value })}
@@ -204,11 +193,9 @@ export default function GoodsReceipt({ inventory }: Props) {
                 <div className="inv-form-group">
                   <label>Unit Cost</label>
                   <input
-                    type="number"
+                    type="text"
                     required
-                    min="0"
-                    step="0.01"
-                    placeholder="Cost per unit"
+                    placeholder="Enter cost per unit"
                     value={form.unit_cost}
                     onChange={(e) => setForm({ ...form, unit_cost: e.target.value })}
                   />

@@ -16,8 +16,6 @@ services:
     networks:
       - ethio-nordic-network
 
-
-
   server:
     build:
       context: ./server
@@ -26,15 +24,17 @@ services:
 
     volumes:
       - ./server:/var/www
-
-    networks:
-      - ethio-nordic-network
+      - /var/www/vendor
+      - /var/www/storage
+      - /var/www/bootstrap/cache
 
     depends_on:
       - postgres
       - redis
+      - minio
 
-
+    networks:
+      - ethio-nordic-network
 
   nginx:
     image: nginx:latest
@@ -50,68 +50,66 @@ services:
       - ./server:/var/www
 
     depends_on:
-      - server
       - client
+      - server
 
     networks:
       - ethio-nordic-network
 
-
-
   postgres:
-
     image: postgres:17
 
     container_name: ethio-nordic-postgres
 
     environment:
-
       POSTGRES_DB: Ethio_Nordic
-
       POSTGRES_USER: postgres
-
       POSTGRES_PASSWORD: AEHJSS36
-
 
     ports:
       - "5432:5432"
 
-
     volumes:
-
       - postgres-data:/var/lib/postgresql/data
 
-
     networks:
-
       - ethio-nordic-network
 
-
-
   redis:
-
     image: redis:7-alpine
 
     container_name: ethio-nordic-redis
 
-
     ports:
-
       - "6379:6379"
 
-
     networks:
-
       - ethio-nordic-network
 
+  minio:
+    image: minio/minio
 
+    container_name: ethio-nordic-minio
+
+    command: server /data --console-address ":9001"
+
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    volumes:
+      - minio-data:/data
+
+    networks:
+      - ethio-nordic-network
 
 networks:
-
   ethio-nordic-network:
 
-
-
 volumes:
-
   postgres-data:
+  minio-data:

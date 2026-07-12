@@ -24,6 +24,7 @@ return new class extends Migration
             $table->decimal('balance_after', 12, 2)->default(0);
             $table->string('reference_type')->nullable();
             $table->unsignedBigInteger('reference_id')->nullable();
+            $table->string('notes', 500)->nullable();
             $table->timestamp('transaction_date')->useCurrent();
             $table->unsignedBigInteger('created_by')->nullable();
 

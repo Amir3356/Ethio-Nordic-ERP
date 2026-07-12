@@ -14,10 +14,6 @@ import './InventorySidebar.css';
 export default function InventorySidebar() {
   const inventory = useInventory();
 
-  if (inventory.loading) {
-    return <p className="content-loading">Loading inventory data...</p>;
-  }
-
   if (inventory.error) {
     return (
       <div className="content-error">

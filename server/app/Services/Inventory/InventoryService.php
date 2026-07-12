@@ -11,6 +11,7 @@ use App\Models\StockLedger;
 use App\Models\Warehouse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InventoryService
 {
@@ -188,30 +189,50 @@ class InventoryService
             'quantity_received' => 'required|numeric|min:0.01',
             'unit_cost' => 'required|numeric|min:0',
             'manufacture_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date|after:manufacture_date',
+            'expiry_date' => 'nullable|date',
             'supplier_id' => 'nullable|integer',
             'receipt_reference' => 'nullable|string|max:255',
             'batch_status' => 'sometimes|string|in:available,expired,quarantined,consumed',
         ]);
 
+        if (!empty($validated['expiry_date']) && !empty($validated['manufacture_date'])) {
+            if ($validated['expiry_date'] <= $validated['manufacture_date']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Expiry date must be after manufacture date.',
+                ], 422);
+            }
+        }
+
         $productId = $validated['product_id'];
         if (!is_numeric($productId)) {
-            $product = Product::where('product_name', $productId)
-                ->orWhere('product_code', $productId)
+            $search = trim($productId);
+            $product = Product::whereRaw('LOWER(product_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                ->orWhereRaw('LOWER(product_code) LIKE ?', ['%' . strtolower($search) . '%'])
                 ->first();
             if (!$product) {
-                return response()->json(['success' => false, 'message' => 'Product not found'], 422);
+                $available = Product::pluck('product_name')->implode(', ');
+                return response()->json([
+                    'success' => false,
+                    'message' => "Product \"{$search}\" not found. Available products: {$available}",
+                ], 422);
             }
             $productId = $product->product_id;
         }
 
         $warehouseId = $validated['warehouse_id'];
         if (!is_numeric($warehouseId)) {
-            $warehouse = Warehouse::where('warehouse_name', $warehouseId)
-                ->orWhere('warehouse_code', $warehouseId)
+            $search = trim($warehouseId);
+            $warehouse = Warehouse::whereRaw('LOWER(warehouse_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                ->orWhereRaw('LOWER(warehouse_code) LIKE ?', ['%' . strtolower($search) . '%'])
+                ->orWhereRaw('LOWER(location) LIKE ?', ['%' . strtolower($search) . '%'])
                 ->first();
             if (!$warehouse) {
-                return response()->json(['success' => false, 'message' => 'Warehouse not found'], 422);
+                $available = Warehouse::pluck('warehouse_name')->implode(', ');
+                return response()->json([
+                    'success' => false,
+                    'message' => "Warehouse \"{$search}\" not found. Available warehouses: {$available}",
+                ], 422);
             }
             $warehouseId = $warehouse->warehouse_id;
         }
@@ -278,6 +299,77 @@ class InventoryService
         $movements = $query->orderByDesc('transaction_date')->paginate($request->get('per_page', 25));
 
         return response()->json(['success' => true, 'data' => $movements]);
+    }
+
+    public function issueStock(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,product_id',
+            'warehouse_id' => 'required|exists:warehouses,warehouse_id',
+            'batch_id' => 'required|exists:stock_batches,batch_id',
+            'quantity' => 'required|numeric|min:0.01',
+            'reference_type' => 'required|string|in:sales_order,internal_transfer',
+            'reference_id' => 'nullable|integer',
+            'override_justification' => 'nullable|string|max:500',
+        ]);
+
+        return DB::transaction(function () use ($validated, $request) {
+            $eligibleBatches = StockBatch::where('product_id', $validated['product_id'])
+                ->where('warehouse_id', $validated['warehouse_id'])
+                ->where('available_quantity', '>', 0)
+                ->where('batch_status', 'available')
+                ->lockForUpdate()
+                ->get()
+                ->sortBy(fn ($b) => $b->expiry_date?->getTimestamp() ?? PHP_INT_MAX)
+                ->values();
+
+            $batch = $eligibleBatches->firstWhere('batch_id', (int) $validated['batch_id']);
+
+            if (!$batch) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected batch is not eligible for issuance.',
+                ], 422);
+            }
+
+            $fefoBatch = $eligibleBatches->first();
+            $isOverride = $fefoBatch->batch_id !== $batch->batch_id;
+
+            if ($isOverride && empty($validated['override_justification'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "FEFO override requires a justification: the earliest-expiring batch is {$fefoBatch->batch_number}.",
+                ], 422);
+            }
+
+            $quantity = (float) $validated['quantity'];
+            $balanceAfter = (float) $batch->available_quantity - $quantity;
+
+            if ($balanceAfter < 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient stock in the selected batch.',
+                ], 422);
+            }
+
+            $batch->update(['available_quantity' => $balanceAfter]);
+
+            $ledger = StockLedger::create([
+                'product_id' => $batch->product_id,
+                'warehouse_id' => $batch->warehouse_id,
+                'batch_id' => $batch->batch_id,
+                'movement_type' => 'stock-out',
+                'quantity' => -$quantity,
+                'balance_after' => $balanceAfter,
+                'reference_type' => $validated['reference_type'],
+                'reference_id' => $validated['reference_id'] ?? null,
+                'notes' => $isOverride ? 'FEFO override: ' . $validated['override_justification'] : null,
+                'transaction_date' => now(),
+                'created_by' => $request->user()?->id,
+            ]);
+
+            return response()->json(['success' => true, 'data' => $ledger], 201);
+        });
     }
 
     public function adjustments(Request $request): JsonResponse

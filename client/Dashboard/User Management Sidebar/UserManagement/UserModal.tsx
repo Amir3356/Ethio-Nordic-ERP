@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface UserModalProps {
   title: string;
@@ -7,7 +8,7 @@ interface UserModalProps {
 }
 
 export default function UserModal({ title, onClose, children }: UserModalProps) {
-  return (
+  return createPortal(
     <div className="content-modal-backdrop" onClick={onClose}>
       <div className="content-modal" onClick={(e) => e.stopPropagation()}>
         <div className="content-modal-header">
@@ -18,6 +19,7 @@ export default function UserModal({ title, onClose, children }: UserModalProps) 
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

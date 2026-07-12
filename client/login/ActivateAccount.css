@@ -23,28 +23,6 @@
   font-size: 14px;
 }
 
-/* ── Loading Bar ── */
-.activate-loading-bar {
-  width: 100%;
-  height: 4px;
-  background: #e5e7eb;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.activate-loading-bar-fill {
-  width: 100%;
-  height: 100%;
-  background: #4f46e5;
-  border-radius: 2px;
-  animation: activateProgress 2s ease-in-out forwards;
-}
-
-@keyframes activateProgress {
-  from { width: 0%; }
-  to { width: 100%; }
-}
-
 /* ── Header Subtitle ── */
 .activate-subtitle {
   color: #6b7280;

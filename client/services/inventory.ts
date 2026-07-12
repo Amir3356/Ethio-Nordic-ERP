@@ -32,6 +32,9 @@ export const inventoryAPI = {
   getMovements: (params?: PaginationParams & { search?: string; type?: string; product_id?: string; warehouse_id?: string }) =>
     api.get('/inventory/movements', { params }),
 
+  issueStock: (data: Record<string, unknown>) =>
+    api.post('/inventory/issue', data),
+
   getAdjustments: (params?: PaginationParams & { status?: string }) =>
     api.get('/inventory/adjustments', { params }),
 

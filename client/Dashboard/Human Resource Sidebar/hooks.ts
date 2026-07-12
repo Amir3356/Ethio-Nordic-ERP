@@ -1,61 +1,86 @@
-import { useMemo, useCallback } from 'react';
-import hrData from '../data/human-resource.json';
-import type { HRData, Employee, LeaveRequest, PayrollRecord, EmployeeDocument, TrainingRecord } from './types';
+import { useState, useEffect, useCallback } from 'react';
+import { hrAPI } from '../../services/hr';
+import type { HRData } from './types';
 
 export function useHR() {
-  const data = hrData as HRData;
+  const [data, setData] = useState<HRData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const getEmployee = useCallback((id: string): Employee | undefined => {
-    return data.employees.find((e) => e.id === id);
-  }, [data]);
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await hrAPI.getOverview();
+      const payload = response.data?.data ?? response.data;
+      setData({
+        employees: payload.employees ?? [],
+        attendance: payload.attendance ?? [],
+        leave_requests: payload.leave_requests ?? [],
+        payroll: payload.payroll ?? [],
+        performance_reviews: payload.performance_reviews ?? [],
+        training_records: payload.training_records ?? [],
+        employee_documents: payload.employee_documents ?? [],
+        departments: payload.departments ?? [],
+      });
+      setError('');
+    } catch (err) {
+      setError('Failed to load HR data');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const getActiveEmployees = useCallback((): Employee[] => {
-    return data.employees.filter((e) => e.employment_status === 'Active');
-  }, [data]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const getPendingLeaveRequests = useCallback((): LeaveRequest[] => {
-    return data.leave_requests.filter((l) => l.status === 'Pending');
-  }, [data]);
+  const getEmployee = useCallback(
+    (id: string) => data?.employees.find((e) => e.id === id),
+    [data]
+  );
 
-  const getDraftPayroll = useCallback((): PayrollRecord[] => {
-    return data.payroll.filter((p) => p.status === 'Draft');
-  }, [data]);
+  const getActiveEmployees = useCallback(
+    () => data?.employees.filter((e) => e.employment_status === 'Active') ?? [],
+    [data]
+  );
 
-  const getExpiringDocuments = useCallback((): EmployeeDocument[] => {
-    return data.employee_documents.filter(
-      (d) => d.status === 'Expiring Soon' || d.status === 'Expired'
-    );
-  }, [data]);
+  const getPendingLeaveRequests = useCallback(
+    () => data?.leave_requests.filter((l) => l.status === 'Pending') ?? [],
+    [data]
+  );
 
-  const getUpcomingTrainings = useCallback((): TrainingRecord[] => {
-    return data.training_records.filter((t) => t.status === 'Scheduled');
-  }, [data]);
+  const getDraftPayroll = useCallback(
+    () => data?.payroll.filter((p) => p.status === 'Draft') ?? [],
+    [data]
+  );
 
-  const getTotalPayroll = useMemo(() => {
-    return data.payroll
-      .filter((p) => p.status === 'Paid')
-      .reduce((sum, p) => sum + p.net_salary, 0);
-  }, [data]);
+  const getExpiringDocuments = useCallback(
+    () => data?.employee_documents.filter((d) => d.status === 'Expiring Soon' || d.status === 'Expired') ?? [],
+    [data]
+  );
 
-  const getAveragePerformanceScore = useMemo(() => {
-    if (data.performance_reviews.length === 0) return 0;
-    const total = data.performance_reviews.reduce((sum, r) => sum + r.final_score, 0);
-    return total / data.performance_reviews.length;
-  }, [data]);
+  const getUpcomingTrainings = useCallback(
+    () => data?.training_records.filter((t) => t.status === 'Scheduled') ?? [],
+    [data]
+  );
 
-  const totalHeadcount = data.employees.filter((e) => e.employment_status === 'Active').length;
+  const getTotalPayroll = data?.payroll
+    .filter((p) => p.status === 'Paid')
+    .reduce((sum, p) => sum + p.net_salary, 0) ?? 0;
 
-  const departments = useMemo(() => {
-    return data.departments.map((dept) => ({
-      ...dept,
-      head: getEmployee(dept.head_id),
-    }));
-  }, [data, getEmployee]);
+  const getAveragePerformanceScore = data?.performance_reviews.length
+    ? data.performance_reviews.reduce((sum, r) => sum + r.final_score, 0) / data.performance_reviews.length
+    : 0;
+
+  const totalHeadcount = data?.employees.filter((e) => e.employment_status === 'Active').length ?? 0;
+
+  const departments = data?.departments ?? [];
 
   return {
     data,
-    loading: false,
-    error: '',
+    loading,
+    error,
     getEmployee,
     getActiveEmployees,
     getPendingLeaveRequests,
@@ -66,5 +91,6 @@ export function useHR() {
     getAveragePerformanceScore,
     totalHeadcount,
     departments,
+    refetch: fetchData,
   };
 }

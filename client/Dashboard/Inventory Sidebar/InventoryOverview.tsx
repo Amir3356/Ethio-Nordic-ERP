@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function InventoryOverview({ inventory }: Props) {
-  const { data, getInventoryValue, getLowStockProducts, getExpiringBatches } = inventory;
+  const { data, getInventoryValue, getLowStockAlerts, getExpiringBatches } = inventory;
 
   const stats = useMemo(() => {
     if (!data) return null;
@@ -18,13 +18,13 @@ export default function InventoryOverview({ inventory }: Props) {
     const totalUnits = data.stock_batches
       .reduce((sum, b) => sum + Number(b.available_quantity), 0);
     const totalValue = getInventoryValue();
-    const lowStockCount = getLowStockProducts().length;
+    const lowStockCount = getLowStockAlerts().length;
     const expiringCount = getExpiringBatches(90).length;
     const pendingAdjustments = data.stock_adjustments.filter((a) => a.status === 'pending').length;
     const totalWarehouses = data.warehouses.length;
     const recentMovements = data.stock_ledger.length;
     return { totalProducts, totalBatches, totalUnits, totalValue, lowStockCount, expiringCount, pendingAdjustments, totalWarehouses, recentMovements };
-  }, [data, getInventoryValue, getLowStockProducts, getExpiringBatches]);
+  }, [data, getInventoryValue, getLowStockAlerts, getExpiringBatches]);
 
   if (!stats) return null;
 

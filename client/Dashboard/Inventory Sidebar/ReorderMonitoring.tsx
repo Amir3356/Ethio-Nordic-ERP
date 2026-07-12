@@ -9,9 +9,9 @@ interface Props {
 }
 
 export default function ReorderMonitoring({ inventory }: Props) {
-  const { data, getProduct, getWarehouse, getLowStockProducts } = inventory;
+  const { data, getProduct, getWarehouse, getLowStockAlerts } = inventory;
 
-  const lowStockProducts = useMemo(() => getLowStockProducts(), [getLowStockProducts]);
+  const lowStockAlerts = useMemo(() => getLowStockAlerts(), [getLowStockAlerts]);
 
   const reorderRules = useMemo(() => {
     if (!data) return [];
@@ -33,28 +33,31 @@ export default function ReorderMonitoring({ inventory }: Props) {
         Purchase Request routed to the Procurement module.
       </p>
 
-      {lowStockProducts.length > 0 && (
+      {lowStockAlerts.length > 0 && (
         <>
           <h3 className="inv-subsection-title">
-            <AlertTriangle size={16} /> Active Alerts ({lowStockProducts.length})
+            <AlertTriangle size={16} /> Active Alerts ({lowStockAlerts.length})
           </h3>
           <div className="inv-alert-list">
-            {lowStockProducts.map(({ product, totalStock, warehouseStocks }) => (
-              <div key={product.product_id} className="inv-alert-card">
+            {lowStockAlerts.map(({ rule, product, warehouse, currentStock }) => (
+              <div key={rule.reorder_rule_id} className="inv-alert-card">
                 <div className="inv-alert-header">
                   <span className="inv-alert-product">{product.product_name}</span>
                   <span className="inv-badge inv-badge-red">Low Stock</span>
                 </div>
                 <div className="inv-alert-details">
                   <span>Code: {product.product_code}</span>
-                  <span>Current: {totalStock.toLocaleString()} {product.unit_of_measure}</span>
+                  <span>Current: {currentStock.toLocaleString()} {product.unit_of_measure}</span>
+                  <span>Reorder Point: {Number(rule.reorder_point).toLocaleString()}</span>
+                  <span>Min Stock: {Number(rule.minimum_stock_level).toLocaleString()}</span>
                 </div>
                 <div className="inv-alert-warehouses">
-                  {warehouseStocks.map(({ warehouse, quantity }) => (
-                    <span key={warehouse.warehouse_id} className="inv-alert-wh">
-                      {warehouse.warehouse_name}: {quantity.toLocaleString()}
-                    </span>
-                  ))}
+                  <span className="inv-alert-wh">
+                    {warehouse.warehouse_name}: {currentStock.toLocaleString()}
+                  </span>
+                  {rule.auto_purchase_request && (
+                    <span className="inv-badge inv-badge-blue">Draft Purchase Request → Procurement</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -62,7 +65,7 @@ export default function ReorderMonitoring({ inventory }: Props) {
         </>
       )}
 
-      {lowStockProducts.length === 0 && (
+      {lowStockAlerts.length === 0 && (
         <div className="inv-alert-ok">
           <CheckCircle size={16} /> All products are above reorder levels.
         </div>

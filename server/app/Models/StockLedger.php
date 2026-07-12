@@ -22,6 +22,7 @@ class StockLedger extends Model
         'balance_after',
         'reference_type',
         'reference_id',
+        'notes',
         'transaction_date',
         'created_by',
     ];
