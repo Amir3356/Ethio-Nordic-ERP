@@ -52,8 +52,6 @@
 .hr-stat-icon-red { background: #fef2f2; color: #dc2626; }
 .hr-stat-icon-teal { background: #f0fdfa; color: #0d9488; }
 .hr-stat-icon-indigo { background: #eef2ff; color: #4f46e5; }
-.hr-stat-icon-pink { background: #fdf2f8; color: #db2777; }
-
 .hr-stat-body {
   display: flex;
   flex-direction: column;

@@ -32,6 +32,10 @@ class AccountActivationService
             return response()->json(['success' => false, 'message' => 'Account is already activated.'], 422);
         }
 
+        // Attribute the audited activation update to the user activating
+        // their own account instead of "System".
+        \Illuminate\Support\Facades\Auth::setUser($user);
+
         $user->update([
             'password' => $request->password,
             'is_active' => true,

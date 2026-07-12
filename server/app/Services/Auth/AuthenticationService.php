@@ -8,6 +8,7 @@ use App\Services\Token\TokenStateService;
 use App\Services\Token\TokenRefreshService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class AuthenticationService
@@ -40,6 +41,10 @@ class AuthenticationService
             $this->loginActivity->log($request, $user, 'failed', 'Temporary password expired');
             return response()->json(['success' => false, 'message' => 'Your temporary password has expired. Please contact administrator for a new one.'], 403);
         }
+
+        // Credentials are verified — attribute audited writes in the rest of
+        // this request (2FA secret, tokens, last_login_at) to this user.
+        Auth::setUser($user);
 
         // Invalidate 2FA secret if it can't be decrypted (wrong APP_KEY)
         if ($user->hasTwoFactorEnabled()) {
@@ -118,6 +123,9 @@ class AuthenticationService
             $this->loginActivity->log($request, $user, 'failed', 'Not an admin');
             return response()->json(['success' => false, 'message' => 'Access denied. Only administrators can log in.'], 403);
         }
+
+        // Credentials are verified — attribute audited writes to this user.
+        Auth::setUser($user);
 
         if (!$user->hasTwoFactorEnabled()) {
             return response()->json(['success' => false, 'message' => 'Two-factor authentication is not enabled.'], 422);
@@ -248,14 +256,14 @@ class AuthenticationService
 
         $this->tokenState->storeTokenMetadata($user, $token->accessToken, $request);
 
-        $refreshToken = $this->refreshService->createRefreshToken($user, $token->accessToken, $request);
+        [$refreshToken, $refreshTokenPlain] = $this->refreshService->createRefreshToken($user, $token->accessToken, $request);
 
         $user->recordLogin();
 
         return [
             'user' => $user->load('roles'),
             'token' => $token->plainTextToken,
-            'refresh_token' => $refreshToken->token,
+            'refresh_token' => $refreshTokenPlain,
             'expires_at' => $token->accessToken->expires_at,
             'refresh_expires_at' => $refreshToken->expires_at,
         ];

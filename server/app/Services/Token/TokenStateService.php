@@ -3,8 +3,9 @@
 namespace App\Services\Token;
 
 use App\Models\User;
+use App\Services\Auth\DeviceInfoService;
+use App\Services\Auth\GeoLocationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -13,6 +14,11 @@ class TokenStateService
     private const TOKEN_META_KEY = 'token:%s:metadata';
     private const USER_TOKENS_KEY = 'user:%s:tokens';
     private const BLACKLIST_KEY = 'token:blacklist';
+
+    public function __construct(
+        private readonly DeviceInfoService $deviceInfo,
+        private readonly GeoLocationService $geoLocation,
+    ) {}
 
     private function redis(): \Illuminate\Redis\Connections\Connection
     {
@@ -23,11 +29,11 @@ class TokenStateService
     {
         $metaKey = $this->metaKey($token->getKey());
         $ip = $request->ip();
-        $location = $this->getGeoLocation($ip);
+        $location = $this->geoLocation->resolve($ip);
 
-        $deviceType = $this->parseDeviceType($request->userAgent());
-        $browser = $this->parseBrowser($request->userAgent());
-        $platform = $this->parseOs($request->userAgent());
+        $deviceType = $this->deviceInfo->parseDeviceType($request->userAgent());
+        $browser = $this->deviceInfo->parseBrowser($request->userAgent());
+        $platform = $this->deviceInfo->parseOs($request->userAgent());
 
         $this->redis()->hmset($metaKey, [
             'user_id' => $user->id,
@@ -154,7 +160,7 @@ class TokenStateService
                         $meta['id'] = $matches[1] ?? null;
 
                         if (empty($meta['location']) && !empty($meta['ip_address'])) {
-                            $meta['location'] = $this->getGeoLocation($meta['ip_address']);
+                            $meta['location'] = $this->geoLocation->resolve($meta['ip_address']);
                             if ($meta['location']) {
                                 $this->redis()->hset($key, 'location', $meta['location']);
                             }
@@ -417,44 +423,5 @@ class TokenStateService
                 'last_used_at' => $token->last_used_at?->toIso8601String(),
             ])
             ->toArray();
-    }
-
-    private function parseDeviceType(?string $userAgent): string
-    {
-        if (!$userAgent) return 'Unknown';
-        if (preg_match('/iphone/i', $userAgent)) return 'iPhone';
-        if (preg_match('/ipad/i', $userAgent)) return 'iPad';
-        if (preg_match('/android/i', $userAgent)) {
-            if (preg_match('/tablet|pad/i', $userAgent)) return 'Android Tablet';
-            return 'Android Phone';
-        }
-        if (preg_match('/tablet/i', $userAgent)) return 'Tablet';
-        if (preg_match('/windows/i', $userAgent)) return 'Windows PC';
-        if (preg_match('/macintosh|mac os/i', $userAgent)) return 'Mac';
-        if (preg_match('/linux/i', $userAgent)) return 'Linux PC';
-        if (preg_match('/chromebook/i', $userAgent)) return 'Chromebook';
-        if (preg_match('/mobile/i', $userAgent)) return 'Mobile Device';
-        return 'Desktop';
-    }
-
-    private function parseBrowser(?string $userAgent): string
-    {
-        if (!$userAgent) return 'Unknown';
-        if (preg_match('/edg/i', $userAgent)) return 'Edge';
-        if (preg_match('/chrome/i', $userAgent)) return 'Chrome';
-        if (preg_match('/firefox/i', $userAgent)) return 'Firefox';
-        if (preg_match('/safari/i', $userAgent)) return 'Safari';
-        return 'Other';
-    }
-
-    private function parseOs(?string $userAgent): string
-    {
-        if (!$userAgent) return 'Unknown';
-        if (preg_match('/windows/i', $userAgent)) return 'Windows';
-        if (preg_match('/macintosh|mac os/i', $userAgent)) return 'macOS';
-        if (preg_match('/linux/i', $userAgent)) return 'Linux';
-        if (preg_match('/android/i', $userAgent)) return 'Android';
-        if (preg_match('/iphone|ipad/i', $userAgent)) return 'iOS';
-        return 'Other';
     }
 }

@@ -7,13 +7,4 @@ export const sessionAPI = {
 
   terminate: (tokenId: string) =>
     api.delete(`/sessions/${tokenId}`),
-
-  terminateAllUserSessions: (userId: number) =>
-    api.post(`/sessions/user/${userId}/terminate-all`),
-
-  getIdleTimeout: () =>
-    api.get('/sessions/idle-timeout'),
-
-  updateIdleTimeout: (idleTimeoutMinutes: number) =>
-    api.put('/sessions/idle-timeout', { idle_timeout_minutes: idleTimeoutMinutes }),
 };

@@ -8,6 +8,7 @@ use App\Mail\TwoFactorSetupMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\Auth\AuthenticationService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -125,6 +126,9 @@ class TwoFactorService
             ]);
         }
 
+        // Attribute the audited 2FA secret creation to the onboarding user.
+        Auth::setUser($user);
+
         $setupData = $this->provideSetupData($user);
 
         return response()->json([
@@ -158,6 +162,10 @@ class TwoFactorService
             return response()->json(['success' => false, 'message' => 'Invalid code. Please check your authenticator app and try again.'], 422);
         }
 
+        // 2FA code is verified — attribute the audited writes (2FA enable,
+        // tokens, last_login_at) to the onboarding user.
+        Auth::setUser($user);
+
         $this->enable($user);
 
         return response()->json([
@@ -182,6 +190,9 @@ class TwoFactorService
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'User not found or account not activated.'], 404);
         }
+
+        // Attribute the audited 2FA secret removal to the onboarding user.
+        Auth::setUser($user);
 
         TwoFactorSecret::where('user_id', $user->id)->where('is_enabled', false)->delete();
 

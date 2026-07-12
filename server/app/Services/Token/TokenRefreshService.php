@@ -5,6 +5,7 @@ namespace App\Services\Token;
 use App\Models\RefreshToken;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -14,14 +15,17 @@ class TokenRefreshService
     private const REFRESH_TOKEN_LENGTH = 128;
     private const REFRESH_TOKEN_EXPIRY_DAYS = 30;
 
+    /**
+     * @return array{0: RefreshToken, 1: string} The stored model and the plain-text token.
+     */
     public function createRefreshToken(
         User $user,
         PersonalAccessToken $accessToken,
         Request $request
-    ): RefreshToken {
+    ): array {
         $refreshToken = Str::random(self::REFRESH_TOKEN_LENGTH);
 
-        return RefreshToken::create([
+        $model = RefreshToken::create([
             'user_id' => $user->id,
             'token' => Hash::make($refreshToken),
             'access_token_id' => $accessToken->getKey(),
@@ -32,6 +36,8 @@ class TokenRefreshService
             'platform' => $this->parseOs($request->userAgent()),
             'expires_at' => now()->addDays(self::REFRESH_TOKEN_EXPIRY_DAYS),
         ]);
+
+        return [$model, $refreshToken];
     }
 
     public function refresh(
@@ -52,6 +58,10 @@ class TokenRefreshService
                     $refreshToken->revoke();
                     return null;
                 }
+
+                // Refresh token is verified — attribute the audited token
+                // rotation writes to its owner instead of "System".
+                Auth::setUser($user);
 
                 return $this->rotateRefreshToken($refreshToken, $user, $request);
             }
@@ -74,12 +84,12 @@ class TokenRefreshService
 
         $newAccessToken = $user->createToken('auth-token', ['*'], now()->addHours(12));
 
-        $newRefreshToken = $this->createRefreshToken($user, $newAccessToken->accessToken, $request);
+        [$newRefreshToken, $refreshTokenPlain] = $this->createRefreshToken($user, $newAccessToken->accessToken, $request);
 
         return [
             'access_token' => $newAccessToken->plainTextToken,
             'access_token_id' => $newAccessToken->accessToken->getKey(),
-            'refresh_token' => $newRefreshToken->token,
+            'refresh_token' => $refreshTokenPlain,
             'expires_at' => $newAccessToken->accessToken->expires_at,
             'user' => $user->load('roles'),
         ];
