@@ -5,7 +5,6 @@ export interface AIForecastResponse {
   data: {
     forecast: {
       content: string;
-      reasoning: Record<string, unknown> | null;
     };
     generated_at: string;
     inventory_snapshot: {
@@ -26,7 +25,6 @@ export interface AIReorderResponse {
   data: {
     recommendations: {
       content: string;
-      reasoning: Record<string, unknown> | null;
     };
     generated_at: string;
     active_rules: number;
@@ -38,7 +36,6 @@ export interface AIHealthResponse {
   data: {
     health_analysis: {
       content: string;
-      reasoning: Record<string, unknown> | null;
     };
     generated_at: string;
   };

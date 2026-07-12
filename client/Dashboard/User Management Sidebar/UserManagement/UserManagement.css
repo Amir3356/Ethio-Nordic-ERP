@@ -26,21 +26,24 @@
 
 #users .content-btn-new {
   margin-left: auto;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
   border: none;
-  background: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5, #6d28d9);
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  box-shadow: 0 4px 14px -4px rgba(79, 70, 229, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
   position: relative;
   z-index: 1;
 }
 
 #users .content-btn-new:hover {
-  background: #4338ca;
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.55);
 }
 
 .content-modal-backdrop {

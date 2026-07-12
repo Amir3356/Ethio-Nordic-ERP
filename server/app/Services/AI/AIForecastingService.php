@@ -166,7 +166,8 @@ class AIForecastingService
     private function isExpiringSoon(StockBatch $batch): bool
     {
         if (!$batch->expiry_date) return false;
-        return Carbon::parse($batch->expiry_date)->diffInDays(now()) <= 90;
+        $expiry = Carbon::parse($batch->expiry_date);
+        return $expiry->isFuture() && $expiry->diffInDays(now()) <= 90;
     }
 
     /**
@@ -305,14 +306,14 @@ PROMPT;
     }
 
     /**
-     * Call OpenRouter API with reasoning enabled
+     * Call OpenRouter API
      */
     private function callOpenAI(string $prompt): array
     {
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,
             'Content-Type' => 'application/json',
-        ])->timeout(60)->post($this->apiUrl, [
+        ])->timeout(90)->post($this->apiUrl, [
             'model' => $this->model,
             'messages' => [
                 [
@@ -320,11 +321,12 @@ PROMPT;
                     'content' => $prompt,
                 ],
             ],
-            'reasoning' => ['enabled' => true],
         ]);
 
         if ($response->failed()) {
-            throw new \Exception('API request failed with status: ' . $response->status());
+            $body = $response->json();
+            $errorMsg = $body['error']['message'] ?? 'Unknown error';
+            throw new \Exception('API error (' . $response->status() . '): ' . $errorMsg);
         }
 
         $result = $response->json();
@@ -337,7 +339,6 @@ PROMPT;
 
         return [
             'content' => $message['content'] ?? '',
-            'reasoning' => $message['reasoning_details'] ?? null,
         ];
     }
 }
