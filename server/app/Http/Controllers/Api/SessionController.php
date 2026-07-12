@@ -103,4 +103,42 @@ class SessionController extends Controller
             'revoked_count' => $count,
         ], "{$count} sessions terminated successfully for user {$user->full_name}.");
     }
+
+    /**
+     * Update the location for a specific session.
+     */
+    public function updateLocation(Request $request, string $tokenId): JsonResponse
+    {
+        $request->validate([
+            'location' => 'required|string|max:255',
+        ]);
+
+        $this->tokenState->updateSessionLocation($tokenId, $request->input('location'));
+
+        return $this->successResponse(null, 'Session location updated.');
+    }
+
+    /**
+     * Get idle timeout configuration.
+     */
+    public function getIdleTimeout(): JsonResponse
+    {
+        $timeout = \Cache::get('session_idle_timeout_minutes') ?? config('session.idle_timeout', 30);
+
+        return $this->successResponse(['idle_timeout' => $timeout]);
+    }
+
+    /**
+     * Update idle timeout configuration (admin only).
+     */
+    public function updateIdleTimeout(Request $request): JsonResponse
+    {
+        $request->validate([
+            'idle_timeout' => 'required|integer|min:5|max:480',
+        ]);
+
+        \Cache::put('session_idle_timeout_minutes', $request->input('idle_timeout'));
+
+        return $this->successResponse(null, 'Idle timeout updated successfully.');
+    }
 }

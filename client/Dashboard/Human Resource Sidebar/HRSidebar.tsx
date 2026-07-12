@@ -11,6 +11,10 @@ import './HRSidebar.css';
 export default function HRSidebar() {
   const hr = useHR();
 
+  if (hr.loading) {
+    return null;
+  }
+
   if (hr.error) {
     return (
       <div className="content-error">
