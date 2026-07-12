@@ -75,13 +75,9 @@ export default function Login() {
         )}
 
         <button type="submit" className="login-btn" disabled={loading}>
-          {loading
-            ? requiresTwoFactor || requiresTwoFactorSetup
-              ? 'Verifying...'
-              : 'Signing in...'
-            : requiresTwoFactor || requiresTwoFactorSetup
-              ? 'Verify'
-              : 'Sign In'}
+          {requiresTwoFactor || requiresTwoFactorSetup
+            ? 'Verify'
+            : 'Sign In'}
         </button>
 
         {(requiresTwoFactor || requiresTwoFactorSetup) && (

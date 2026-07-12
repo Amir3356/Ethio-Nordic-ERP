@@ -120,8 +120,6 @@ export default function UserManagement() {
 
       <UserSearch value={search} onChange={setSearch} />
 
-      {loading && <p className="content-loading">Loading...</p>}
-
       <UserTable
         users={filteredUsers}
         onEdit={handleEditUser}

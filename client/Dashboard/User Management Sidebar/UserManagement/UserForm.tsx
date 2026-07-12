@@ -210,7 +210,7 @@ export default function UserForm({
           onClick={onSubmit}
           disabled={loading}
         >
-          {loading ? (mode === 'create' ? 'Creating...' : 'Saving...') : (mode === 'create' ? 'Create User' : 'Save Changes')}
+          {mode === 'create' ? 'Create User' : 'Save Changes'}
         </button>
       </div>
     </div>

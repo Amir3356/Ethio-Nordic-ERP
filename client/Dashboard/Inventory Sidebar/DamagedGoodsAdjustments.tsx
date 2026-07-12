@@ -366,7 +366,7 @@ export default function DamagedGoodsAdjustments({ inventory }: Props) {
               </div>
               <div className="inv-form-actions">
                 <button type="button" className="inv-btn inv-btn-secondary" onClick={() => setShowDamagedForm(false)}>Cancel</button>
-                <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting}>{submitting ? 'Reporting...' : 'Report'}</button>
+                <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting}>Report</button>
               </div>
             </form>
           </div>
@@ -430,7 +430,7 @@ export default function DamagedGoodsAdjustments({ inventory }: Props) {
               </div>
               <div className="inv-form-actions">
                 <button type="button" className="inv-btn inv-btn-secondary" onClick={() => setShowAdjustmentForm(false)}>Cancel</button>
-                <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Submit'}</button>
+                <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting}>Submit</button>
               </div>
             </form>
           </div>

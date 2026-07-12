@@ -23,8 +23,6 @@ export default function AuditTrailLogging() {
         </div>
       )}
 
-      {loading && <p className="content-loading">Loading audit logs...</p>}
-
       <AuditLogTable logs={auditLogs} />
     </section>
   );

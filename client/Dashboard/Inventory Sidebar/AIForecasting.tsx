@@ -80,16 +80,6 @@ export default function AIForecasting() {
   };
 
   const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="inv-ai-loading">
-          <div className="inv-ai-spinner" />
-          <p>Analyzing inventory data...</p>
-          <p className="inv-ai-loading-hint">This may take a moment as AI processes your data</p>
-        </div>
-      );
-    }
-
     if (error) {
       return (
         <div className="inv-ai-error">

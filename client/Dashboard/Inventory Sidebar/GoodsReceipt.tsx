@@ -233,7 +233,7 @@ export default function GoodsReceipt({ inventory }: Props) {
                   Cancel
                 </button>
                 <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting}>
-                  {submitting ? 'Recording...' : 'Record Receipt'}
+                  Record Receipt
                 </button>
               </div>
             </form>

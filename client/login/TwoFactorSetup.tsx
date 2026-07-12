@@ -26,16 +26,6 @@ export default function TwoFactorSetup() {
     );
   }
 
-  if (step === 'loading') {
-    return (
-      <div className="login-page">
-        <div className="tfa-loading-card">
-          <p className="tfa-loading-text">Loading 2FA setup...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (step === 'already_setup') {
     return (
       <AuthCard title="Ethio Nordic Trading PLC">
@@ -59,9 +49,6 @@ export default function TwoFactorSetup() {
           <p className="tfa-success-text">
             Your account is now secured. Redirecting to dashboard...
           </p>
-          <div className="tfa-loading-bar">
-            <div className="tfa-loading-bar-fill" />
-          </div>
         </div>
       </AuthCard>
     );
@@ -82,9 +69,9 @@ export default function TwoFactorSetup() {
             <button
               type="submit"
               className="login-btn"
-              disabled={loading || verifyCode.length !== 6}
+              disabled={verifyCode.length !== 6}
             >
-              {loading ? 'Verifying...' : 'Verify'}
+              Verify
             </button>
           </div>
         )}

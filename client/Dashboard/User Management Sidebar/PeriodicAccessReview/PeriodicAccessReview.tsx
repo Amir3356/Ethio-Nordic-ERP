@@ -29,8 +29,6 @@ export default function PeriodicAccessReview() {
 
       <AccessReviewFilter value={inactiveDays} onChange={setInactiveDays} />
 
-      {loading && <p className="content-loading">Loading access review...</p>}
-
       <AccessReviewSummary reviews={reviews} inactiveDays={inactiveDays} />
 
       <AccessReviewTable reviews={reviews} inactiveDays={inactiveDays} />

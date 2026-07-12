@@ -256,7 +256,7 @@ export default function StockIssuance({ inventory }: Props) {
                   Cancel
                 </button>
                 <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting}>
-                  {submitting ? 'Issuing...' : 'Issue Stock'}
+                  Issue Stock
                 </button>
               </div>
             </form>

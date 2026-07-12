@@ -26,8 +26,6 @@ export default function Sessions() {
         </div>
       )}
 
-      {!isPermissionError && loading && sessions.length === 0 && <p className="content-loading">Loading sessions...</p>}
-
       {!isPermissionError && (
         <SessionTable
           sessions={sessions}

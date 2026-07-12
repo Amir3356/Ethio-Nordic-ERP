@@ -37,9 +37,6 @@ export default function ActivateAccount() {
           <p className="activate-success-text">
             Your password has been set. Redirecting to Two-Factor Authentication setup...
           </p>
-          <div className="activate-loading-bar">
-            <div className="activate-loading-bar-fill" />
-          </div>
         </div>
       </AuthCard>
     );
@@ -79,7 +76,7 @@ export default function ActivateAccount() {
         </div>
 
         <button type="submit" className="login-btn" disabled={loading}>
-          {loading ? 'Activating...' : 'Activate Account'}
+          Activate Account
         </button>
       </form>
     </AuthCard>

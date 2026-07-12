@@ -237,7 +237,7 @@ export default function CycleCounting({ inventory }: Props) {
                   Cancel
                 </button>
                 <button type="submit" className="inv-btn inv-btn-primary" disabled={submitting || variance === 0}>
-                  {submitting ? 'Recording...' : 'Record Count'}
+                  Record Count
                 </button>
               </div>
             </form>
