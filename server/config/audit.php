@@ -15,6 +15,8 @@ return [
         'App\Models\AuditLog',
         'App\Models\LoginActivity',
         'App\Models\PersonalAccessToken',
+        'App\Models\RefreshToken',
+        'App\Models\TwoFactorSecret',
     ],
 
     /*
@@ -33,6 +35,21 @@ return [
         'recovery_codes',
         'two_factor_secret',
         'token',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ignored Update-Only Fields
+    |--------------------------------------------------------------------------
+    |
+    | For the given model, if an "updated" event only changes fields in this
+    | list (plus the model's own "updated_at" timestamp), the update is
+    | considered authentication noise and is not recorded in the audit trail.
+    |
+    */
+
+    'ignored_update_fields' => [
+        'App\Models\User' => ['last_login_at'],
     ],
 
     /*

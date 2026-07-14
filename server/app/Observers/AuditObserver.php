@@ -11,9 +11,32 @@ class AuditObserver
 {
     protected AuditLogger $logger;
 
+    /**
+     * When true, no audit log entries are written at all. Used to silence
+     * bootstrap operations (e.g. database seeding) that aren't real user
+     * activity.
+     */
+    protected static bool $disabled = false;
+
     public function __construct()
     {
         $this->logger = app(AuditLogger::class);
+    }
+
+    /**
+     * Run a callback with auditing turned off, restoring the previous state
+     * afterwards even if the callback throws.
+     */
+    public static function withoutAuditing(callable $callback): mixed
+    {
+        $previous = static::$disabled;
+        static::$disabled = true;
+
+        try {
+            return $callback();
+        } finally {
+            static::$disabled = $previous;
+        }
     }
 
     /**
@@ -32,12 +55,14 @@ class AuditObserver
     public function updated(Model $model): void
     {
         if ($this->shouldAudit($model)) {
-            $original = $this->logger->getAuditableAttributes($model->getOriginal());
             $changes = $this->logger->getAuditableAttributes($model->getChanges());
 
-            if (!empty($changes)) {
-                $this->logger->log($model, 'update', $original, $changes);
+            if (empty($changes) || $this->isIgnorableUpdate($model, $changes)) {
+                return;
             }
+
+            $original = $this->logger->getAuditableAttributes($model->getOriginal());
+            $this->logger->log($model, 'update', $original, $changes);
         }
     }
 
@@ -98,10 +123,31 @@ class AuditObserver
     }
 
     /**
+     * Determine if an update only touches fields configured as noise for this
+     * model (e.g. login timestamp bumps) and should therefore be skipped.
+     */
+    protected function isIgnorableUpdate(Model $model, array $changes): bool
+    {
+        $ignoredFields = config('audit.ignored_update_fields.' . get_class($model), []);
+
+        if (empty($ignoredFields)) {
+            return false;
+        }
+
+        $meaningfulChanges = array_diff(array_keys($changes), $ignoredFields, ['updated_at']);
+
+        return empty($meaningfulChanges);
+    }
+
+    /**
      * Determine if the model should be audited.
      */
     protected function shouldAudit(Model $model): bool
     {
+        if (static::$disabled) {
+            return false;
+        }
+
         $excludedModels = config('audit.excluded_models', []);
 
         if (in_array(get_class($model), $excludedModels)) {
